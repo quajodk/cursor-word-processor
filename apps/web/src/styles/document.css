@@ -1,0 +1,538 @@
+/*
+ * The page.
+ *
+ * This is the surface the whole product is judged on, so the rules here are typographic ones
+ * rather than UI ones: a measured column, a single vertical rhythm every block is a multiple of,
+ * old-style figures in running text and lining figures in tables, hanging list markers, and
+ * booktabs-style tables with no vertical rules. Nothing here is decorative for its own sake —
+ * every value is either the measure, the rhythm, or a contrast decision.
+ *
+ * Specificity note: prosemirror-view injects its own `.ProseMirror` base rules into <head> at
+ * view-construction time, i.e. after this stylesheet. Among them is `font-variant-ligatures:
+ * none; font-feature-settings: "liga" 0`, which is a cursor-mapping workaround for browsers we
+ * do not target and which visibly damages a serif face. Overrides that must beat it are written
+ * `.doc-page .ProseMirror` so they win on specificity rather than on load order.
+ */
+
+.doc-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 28px 24px 96px;
+  background: var(--app-bg);
+  scrollbar-gutter: stable both-edges;
+}
+
+.doc-page {
+  /*
+   * 19px body on a 34.5em column ≈ 68 characters per line at this face's average advance —
+   * inside the 65–75 band where the eye can return to the left margin without losing the row.
+   * Padding is part of the page, not the measure: 6.2em of side margin is what stops the text
+   * from looking like a web column that happens to be centred.
+   */
+  width: min(100%, 47em);
+  margin: 0 auto;
+  padding: 4em 6.2em 8em;
+  font: 19px / 1.62 var(--serif);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  border-radius: 3px;
+  box-shadow: var(--paper-shadow);
+}
+
+:root {
+  --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Charter,
+    "Bitstream Charter", "Source Serif 4", "Source Serif Pro", Georgia, Cambria,
+    "Times New Roman", Times, serif;
+}
+
+@media (max-width: 860px) {
+  .doc-page {
+    padding: 2.4em 2em 5em;
+  }
+
+  .doc-scroll {
+    padding: 12px 10px 64px;
+  }
+}
+
+/* Running head: filename and position, set like a book's, not like a tab bar. */
+
+.doc-runhead {
+  display: flex;
+  align-items: baseline;
+  gap: 1em;
+  margin-bottom: 3.4em;
+  padding-bottom: 0.6em;
+  color: var(--ink-dim);
+  font-size: 0.62em;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.15em;
+  border-bottom: 1px solid var(--rule);
+}
+
+.doc-runhead-right {
+  margin-left: auto;
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: 0.1em;
+}
+
+/* ------------------------------------------------------------------ the prose */
+
+.doc-page .ProseMirror {
+  min-height: 22em;
+  outline: none;
+  /* Re-enable what prosemirror-view turns off; see the note at the top of this file. */
+  font-variant-ligatures: common-ligatures contextual;
+  font-feature-settings: "kern" 1, "liga" 1, "clig" 1, "onum" 1;
+  font-variant-numeric: oldstyle-nums proportional-nums;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  hanging-punctuation: first last;
+  caret-color: var(--ink);
+}
+
+.doc-page .ProseMirror::selection,
+.doc-page .ProseMirror ::selection {
+  background: var(--sel);
+}
+
+.ProseMirror > :first-child {
+  margin-top: 0;
+}
+
+.ProseMirror > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---- paragraphs -------------------------------------------------------- */
+
+.ProseMirror p {
+  margin: 0;
+  text-wrap: pretty;
+  orphans: 2;
+  widows: 2;
+}
+
+/*
+ * Two paragraph regimes, because the right answer differs by document. `book` is the classic
+ * setting — no space between paragraphs, a first-line indent to mark each new one, and no
+ * indent on the paragraph that opens a section. `spaced` is the memo setting. Toggled from the
+ * palette; neither is a compromise between the two.
+ */
+.doc-page[data-para="book"] .ProseMirror p {
+  text-indent: 1.4em;
+}
+
+.doc-page[data-para="book"] .ProseMirror > :first-child,
+.doc-page[data-para="book"] .ProseMirror h1 + p,
+.doc-page[data-para="book"] .ProseMirror h2 + p,
+.doc-page[data-para="book"] .ProseMirror h3 + p,
+.doc-page[data-para="book"] .ProseMirror h4 + p,
+.doc-page[data-para="book"] .ProseMirror h5 + p,
+.doc-page[data-para="book"] .ProseMirror h6 + p,
+.doc-page[data-para="book"] .ProseMirror blockquote + p,
+.doc-page[data-para="book"] .ProseMirror ul + p,
+.doc-page[data-para="book"] .ProseMirror ol + p,
+.doc-page[data-para="book"] .ProseMirror pre + p,
+.doc-page[data-para="book"] .ProseMirror hr + p,
+.doc-page[data-para="book"] .ProseMirror figure + p,
+.doc-page[data-para="book"] .ProseMirror .tableWrapper + p {
+  text-indent: 0;
+}
+
+.doc-page[data-para="spaced"] .ProseMirror p {
+  margin-bottom: 0.8em;
+  text-indent: 0;
+}
+
+.doc-page[data-align="justify"] .ProseMirror p,
+.doc-page[data-align="justify"] .ProseMirror li {
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+/* ---- headings ---------------------------------------------------------- */
+
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 600;
+  text-wrap: balance;
+  /* Lining figures: "Section 4.2" wants aligned numerals, running prose wants old-style. */
+  font-variant-numeric: lining-nums;
+}
+
+.ProseMirror h1 {
+  margin-bottom: 0.66em;
+  font-size: 2.05em;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.022em;
+}
+
+.ProseMirror h2 {
+  margin-top: 1.75em;
+  margin-bottom: 0.42em;
+  font-size: 1.46em;
+  line-height: 1.2;
+  letter-spacing: -0.014em;
+}
+
+.ProseMirror h3 {
+  margin-top: 1.7em;
+  margin-bottom: 0.3em;
+  font-size: 1.15em;
+  line-height: 1.32;
+  letter-spacing: -0.005em;
+}
+
+.ProseMirror h4 {
+  margin-top: 1.55em;
+  margin-bottom: 0.24em;
+  font-size: 1em;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.075em;
+}
+
+.ProseMirror h5 {
+  margin-top: 1.45em;
+  margin-bottom: 0.2em;
+  color: var(--ink-soft);
+  font-size: 0.94em;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.09em;
+}
+
+.ProseMirror h6 {
+  margin-top: 1.4em;
+  margin-bottom: 0.2em;
+  color: var(--ink-dim);
+  font-size: 0.92em;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* ---- lists ------------------------------------------------------------- */
+
+.ProseMirror ul,
+.ProseMirror ol {
+  margin: 0.95em 0;
+  padding-left: 1.5em;
+}
+
+.ProseMirror li {
+  margin: 0.2em 0;
+  padding-left: 0.15em;
+}
+
+.ProseMirror li > p {
+  margin: 0;
+  text-indent: 0;
+}
+
+.ProseMirror li > p + p {
+  margin-top: 0.5em;
+}
+
+.ProseMirror li > ul,
+.ProseMirror li > ol {
+  margin: 0.24em 0;
+}
+
+.ProseMirror ul {
+  list-style: none;
+}
+
+.ProseMirror ul > li {
+  position: relative;
+}
+
+/* Hanging markers, optically sized. A bullet at full text weight is a blot. */
+.ProseMirror ul > li::before {
+  position: absolute;
+  left: -1.05em;
+  color: var(--ink-faint);
+  content: "\2022";
+}
+
+.ProseMirror ul ul > li::before {
+  content: "\2013";
+}
+
+.ProseMirror ul ul ul > li::before {
+  content: "\25E6";
+}
+
+.ProseMirror ol {
+  list-style: decimal;
+}
+
+.ProseMirror ol ol {
+  list-style: lower-alpha;
+}
+
+.ProseMirror ol ol ol {
+  list-style: lower-roman;
+}
+
+.ProseMirror ol > li::marker {
+  color: var(--ink-dim);
+  font-size: 0.9em;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* ---- blockquote -------------------------------------------------------- */
+
+.ProseMirror blockquote {
+  margin: 1.5em 0 1.5em 0.4em;
+  padding-left: 1.5em;
+  color: var(--ink-soft);
+  font-size: 0.955em;
+  line-height: 1.6;
+  border-left: 2px solid var(--rule);
+}
+
+.ProseMirror blockquote p {
+  text-indent: 0;
+}
+
+.ProseMirror blockquote p + p {
+  margin-top: 0.7em;
+}
+
+/* ---- rule -------------------------------------------------------------- */
+
+.ProseMirror hr {
+  height: auto;
+  margin: 2.4em 0;
+  color: var(--ink-faint);
+  text-align: center;
+  border: 0;
+}
+
+.ProseMirror hr::before {
+  display: block;
+  font-size: 0.85em;
+  letter-spacing: 1.1em;
+  text-indent: 1.1em;
+  content: "\2217\2009\2217\2009\2217";
+}
+
+.ProseMirror hr.ProseMirror-selectednode::before {
+  color: var(--accent);
+}
+
+/* ---- code -------------------------------------------------------------- */
+
+.ProseMirror code {
+  padding: 0.08em 0.32em;
+  color: var(--code-fg);
+  font-family: var(--mono);
+  font-size: 0.83em;
+  font-variant-ligatures: none;
+  background: var(--code-bg);
+  border-radius: 3px;
+}
+
+.ProseMirror pre {
+  margin: 1.4em 0;
+  padding: 0.85em 1.1em;
+  overflow-x: auto;
+  color: var(--code-fg);
+  font-family: var(--mono);
+  font-size: 0.8em;
+  line-height: 1.6;
+  background: var(--code-bg);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.ProseMirror pre code {
+  padding: 0;
+  font-size: inherit;
+  background: none;
+}
+
+/* ---- links & marks ------------------------------------------------------ */
+
+.ProseMirror a {
+  color: var(--link);
+  text-decoration: underline;
+  text-decoration-thickness: 0.055em;
+  text-underline-offset: 0.16em;
+  text-decoration-skip-ink: auto;
+}
+
+.ProseMirror .scriv-comment {
+  background: var(--mark);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--ink-dim) 55%, transparent);
+}
+
+.ProseMirror .scriv-ins {
+  color: var(--ok);
+  text-decoration: underline;
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.18em;
+}
+
+.ProseMirror .scriv-del {
+  color: var(--danger);
+  text-decoration: line-through;
+}
+
+.ProseMirror .scriv-ins-ai {
+  background: color-mix(in oklab, var(--ok) 12%, transparent);
+}
+
+/* ---- figures ------------------------------------------------------------ */
+
+.ProseMirror figure {
+  margin: 1.9em 0;
+  text-align: center;
+}
+
+.ProseMirror figure img {
+  max-width: 100%;
+  height: auto;
+}
+
+.ProseMirror figcaption {
+  margin-top: 0.7em;
+  color: var(--ink-dim);
+  font-size: 0.82em;
+  font-style: italic;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ---- tables ------------------------------------------------------------- */
+
+/*
+ * Booktabs, not gridlines. A heavy rule above the head and below the body, a light rule under
+ * the head, and no vertical rules at all — which is what every typeset table in a journal or a
+ * standards document does, and the single clearest place a word processor's defaults give
+ * themselves away. Row separators are kept but pushed almost to the threshold of visibility so
+ * that a cell is still findable while editing.
+ */
+
+.ProseMirror .tableWrapper {
+  margin: 1.8em 0;
+  overflow-x: auto;
+}
+
+.ProseMirror table {
+  width: 100%;
+  font-size: 0.905em;
+  font-variant-numeric: lining-nums tabular-nums;
+  line-height: 1.45;
+  border-collapse: collapse;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.ProseMirror th,
+.ProseMirror td {
+  position: relative;
+  padding: 0.46em 0.75em;
+  text-align: left;
+  vertical-align: top;
+  border: 0;
+}
+
+.ProseMirror th > p,
+.ProseMirror td > p {
+  margin: 0;
+  text-indent: 0;
+  text-wrap: pretty;
+}
+
+.ProseMirror tr:first-child th,
+.ProseMirror tr:first-child td {
+  border-top: 1.5px solid var(--rule-strong);
+}
+
+.ProseMirror th {
+  color: var(--ink-soft);
+  font-size: 0.86em;
+  font-weight: 600;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.07em;
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+.ProseMirror tr:last-child td,
+.ProseMirror tr:last-child th {
+  border-bottom: 1.5px solid var(--rule-strong);
+}
+
+.ProseMirror td {
+  border-top: 1px solid color-mix(in oklab, var(--rule) 45%, transparent);
+}
+
+.ProseMirror tr:nth-child(2) td {
+  border-top: 0;
+}
+
+/* prosemirror-tables affordances */
+
+.ProseMirror .selectedCell::after {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: var(--sel);
+  opacity: 0.45;
+  pointer-events: none;
+  content: "";
+}
+
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  bottom: 0;
+  z-index: 20;
+  width: 3px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
+/* ---- ProseMirror chrome ------------------------------------------------- */
+
+.ProseMirror-gapcursor::after {
+  border-top: 1.5px solid var(--ink);
+}
+
+.ProseMirror-selectednode {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.ProseMirror-dropcursor {
+  background: var(--accent) !important;
+}
+
+/*
+ * The empty-document prompt. A `::before` on the first empty paragraph rather than a real node,
+ * so it never enters the document, never serializes, and never has to be deleted before typing.
+ * The text rides on the paragraph as a data attribute set by a decoration, so `attr()` resolves.
+ */
+.ProseMirror p.is-empty:first-child::before {
+  position: absolute;
+  color: var(--ink-faint);
+  font-style: italic;
+  pointer-events: none;
+  content: attr(data-placeholder);
+}

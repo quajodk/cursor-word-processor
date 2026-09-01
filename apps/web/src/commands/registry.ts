@@ -40,6 +40,15 @@ export interface CommandUi {
   saveFile(): Promise<void>;
   newFile(): Promise<void>;
   reloadFromDisk(): Promise<void>;
+  /**
+   * Ask for one line of text, keyboard-only, in the same overlay as the palette. Resolves to
+   * null when dismissed. A command that needs a filename or a URL uses this rather than
+   * `window.prompt`, which steals focus from the document and cannot be styled or escaped
+   * consistently across browsers.
+   */
+  prompt(label: string, initial?: string): Promise<string | null>;
+  /** Expand the file tree to `path` and select it. */
+  revealInTree(path: string): void;
 }
 
 export interface Command {
