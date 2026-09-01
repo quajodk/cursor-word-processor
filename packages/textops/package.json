@@ -1,0 +1,8 @@
+{
+  "name": "@scriv/textops",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": { "@scriv/doc-model": "workspace:*", "prosemirror-state": "^1.4.4", "prosemirror-view": "^1.42.3", "prosemirror-commands": "^1.7.1", "prosemirror-keymap": "^1.2.3" }
+}

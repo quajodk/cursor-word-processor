@@ -1,0 +1,21 @@
+{
+  "name": "scriv",
+  "private": true,
+  "type": "module",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "bun run --filter '*' dev",
+    "web": "bun run --cwd apps/web dev",
+    "server": "bun run --cwd apps/server dev",
+    "typecheck": "tsc -b --pretty false",
+    "test": "bun test",
+    "perf": "bun run --cwd packages/perf bench",
+    "roundtrip": "bun run --cwd packages/ooxml score"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "@types/bun": "latest",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2"
+  }
+}

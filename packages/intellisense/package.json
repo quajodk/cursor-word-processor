@@ -1,0 +1,8 @@
+{
+  "name": "@scriv/intellisense",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": { "@scriv/doc-model": "workspace:*", "@scriv/md": "workspace:*" }
+}
