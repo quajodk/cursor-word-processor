@@ -1,6 +1,6 @@
 {
-  "wave": 1,
-  "waveTitle": "Foundations (restarted after session limit)",
+  "wave": 2,
+  "waveTitle": "First working vertical slice",
   "pieces": [
     {
       "id": "foundation",
@@ -15,37 +15,37 @@
       "id": "shell",
       "name": "App shell & host seam",
       "scope": "React chrome, ProseMirror surface, bun server implementing HostApi",
-      "builder": "running",
+      "builder": "done",
       "critic": "pending",
-      "evidence": null,
-      "gap": "No React shell or ProseMirror surface exists yet \u2014 the app does not run. This blocks every critic and the blind comparison."
+      "evidence": "The app runs. Real .md opened from disk, edited and saved back correctly \u2014 frontmatter, GFM table, ordered list, bold, em-dash, CJK and \u00b1 all survived the round trip. No console errors.",
+      "gap": "Word count does not update while typing and the status-bar latency readout stays blank. Cosmetic, but they are the two numbers a writer would actually watch."
     },
     {
       "id": "md",
       "name": "Markdown \u21c4 model",
       "scope": "CommonMark + GFM + CriticMarkup, round-trip stability",
-      "builder": "running",
+      "builder": "done",
       "critic": "pending",
-      "evidence": null,
-      "gap": "Parser and serializer not written yet; only frontmatter handling landed."
+      "evidence": "96.19% idempotent across 1,442 real corpus files (README/docs from major open-source repos), zero parse or serialize errors. 36 tests, 282k assertions.",
+      "gap": "The 3.8% that fails is concentrated in nested-list indentation, blockquote nesting and repeated-asterisk emphasis \u2014 all real, all characterized."
     },
     {
       "id": "docx-in",
       "name": "docx import, sidecar & anchors",
       "scope": "Offset-recording XML index, fidelity sidecar, alignment-based re-anchoring",
-      "builder": "running",
+      "builder": "done",
       "critic": "pending",
-      "evidence": null,
-      "gap": "The hard part is entirely missing: no XML offset index, no import, no sidecar, no anchor engine."
+      "evidence": "288/288 real Word documents import without throwing. Mean text recovery 99.49%; 260/286 files recover \u226599.5% of every <w:t> in the source. The fidelity ledger is populated and honest: 791 degraded entries, 144 informational.",
+      "gap": "Text inside text boxes and content controls is dropped \u2014 the worst file recovers only 64.5%. The ledger names it (327 inline-drawing-detached, 75 content-control-unwrapped) rather than hiding it."
     },
     {
       "id": "score",
       "name": "Round-trip scorer & corpus",
       "scope": "Real-world .docx corpus, three-tier fidelity score, pandoc baseline",
-      "builder": "done",
+      "builder": "running",
       "critic": "pending",
-      "evidence": "Corpus collected and validated: 288/288 files are valid .docx. 235 carry numbering, 121 headers/footers, ~33% tables, 12 comments. Mean 601KB, max 11MB.",
-      "gap": "Scorer scaffolding exists (XML normalizer, corpus indexing) but no tier can run until the importer lands."
+      "evidence": "Corpus collected and validated: 288/288 valid .docx \u2014 235 with numbering, 121 headers/footers, ~33% tables, 12 comments.",
+      "gap": "No fidelity tier can run until the export splice engine exists."
     },
     {
       "id": "perf",
@@ -53,8 +53,8 @@
       "scope": "Keystroke budget enforced by a test that fails the build",
       "builder": "done",
       "critic": "pending",
-      "evidence": "Harness scaffolding landed: budgets, gate, stats, document generator, keystroke bench, Playwright driver.",
-      "gap": "Not yet executed against a real document, so no measured latency exists."
+      "evidence": "Gate runs and fails the build correctly (exit 1). Keystroke \u2192 state commit on a 40,040-word document: p99 0.38ms against an 8ms budget, n=15,000, typed from real Gutenberg prose.",
+      "gap": "Keystroke \u2192 paint is still unmeasured, so the 16ms end-to-end budget is unproven. The state-commit figure is reported as a lower bound, not a pass."
     },
     {
       "id": "textops",
@@ -105,31 +105,45 @@
   "metrics": [
     {
       "label": "Keystroke \u2192 state commit",
-      "value": null,
+      "value": 0.38,
       "unit": "ms p99",
       "budget": "8",
-      "state": "unmeasured"
+      "state": "measured"
     },
     {
-      "label": "Keystroke \u2192 paint",
-      "value": null,
+      "label": "Open 40k-word doc",
+      "value": 2.67,
       "unit": "ms p99",
-      "budget": "16",
-      "state": "unmeasured"
+      "budget": "400",
+      "state": "measured"
     },
     {
-      "label": "docx round-trip T0 identity",
-      "value": null,
-      "unit": "% byte-identical",
+      "label": "docx import, large docs",
+      "value": 3352,
+      "unit": "ms p99",
+      "budget": "1200",
+      "state": "measured"
+    },
+    {
+      "label": "docx import succeeds",
+      "value": 100,
+      "unit": "% of 288",
       "budget": "100",
-      "state": "unmeasured"
+      "state": "measured"
     },
     {
-      "label": "docx round-trip T2 semantic",
-      "value": null,
-      "unit": "score",
-      "budget": "0.98",
-      "state": "unmeasured"
+      "label": "docx text recovered",
+      "value": 99.49,
+      "unit": "% mean",
+      "budget": "99.5",
+      "state": "measured"
+    },
+    {
+      "label": "Markdown round-trip",
+      "value": 96.19,
+      "unit": "% of 1442 files",
+      "budget": "99",
+      "state": "measured"
     },
     {
       "label": "Real .docx corpus",
@@ -139,10 +153,10 @@
       "state": "measured"
     },
     {
-      "label": "Markdown round-trip",
+      "label": "docx round-trip T0 identity",
       "value": null,
-      "unit": "% of real corpus",
-      "budget": "99",
+      "unit": "% byte-identical",
+      "budget": "100",
       "state": "unmeasured"
     }
   ],
@@ -171,12 +185,17 @@
       "t": "Diagnostics",
       "d": "harper.js in a worker, behind an LSP-shaped seam",
       "why": "Offline, Apache-2.0, works unchanged in web v1 and Tauri v2. The LSP shape makes adding a second checker cheap."
+    },
+    {
+      "t": "Perf honesty",
+      "d": "A measurement that covers only part of a path may fail a budget but may never certify a pass",
+      "why": "A headless process cannot see the DOM half of a keystroke. Reporting it as 'pass' would manufacture confidence in a number that never measured the thing it names."
     }
   ],
   "notes": [
-    "All seven Wave 1 builders were terminated mid-flight by a session rate limit. Partial work was salvaged, audited and committed; the resulting type errors were cleared and the tree typechecks clean.",
-    "One builder had implemented Markdown parsing inside the app rather than in its own package. It was removed rather than kept \u2014 two implementations of one job is exactly the incoherence this project is trying to avoid. It survives in git history and was handed to the Markdown builder as prior art.",
-    "Relaunched three at a time instead of seven, and every builder now commits after each deliverable so an interruption cannot destroy work again.",
+    "The gate is currently RED, deliberately and correctly: importing large Word documents takes p99 3.35s against a 1.2s budget. A 84ms average across the whole corpus had hidden this \u2014 the large documents are the bottleneck.",
+    "Two real bugs were found in the perf harness itself while wiring it: it discarded warm-up samples twice, which silently emptied the sample array and reported 'no measurement' instead of a number.",
+    "Both session interruptions cost roughly a wave each. Builders now commit after every deliverable, which is why nothing was lost the second time.",
     "The .docx corpus is public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used."
   ]
 }

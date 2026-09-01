@@ -44,6 +44,10 @@ h2{font-family:Spectral,Georgia,serif;font-size:13px;font-weight:600;letter-spac
 .tile{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:14px 16px;
   display:flex;flex-direction:column;gap:5px;border-left:3px solid var(--good);box-shadow:var(--shadow)}
 .tile-empty{border-left-color:var(--idle)}
+.tile-ok{border-left-color:var(--good)}
+.tile-over{border-left-color:var(--accent)}
+.tile-over .tile-value{color:var(--accent)}
+.tile-over .tile-budget{color:var(--accent);font-weight:500}
 .tile-label{font-size:11.5px;letter-spacing:.05em;color:var(--ink-soft);text-transform:uppercase;font-weight:500}
 .tile-value{font-family:"IBM Plex Mono",monospace;font-size:26px;font-weight:500;line-height:1.1;
   font-variant-numeric:tabular-nums;letter-spacing:-.02em}
@@ -88,38 +92,46 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
 </style>
 <div class="wrap">
 <header class="masthead">
-  <div class="eyebrow">Wave 1 · Foundations (restarted after session limit)</div>
+  <div class="eyebrow">Wave 2 · First working vertical slice</div>
   <h1>scriv workbench</h1>
   <p class="dek">An IDE for writing. Markdown on disk is the source of truth; the editing surface is a real word processor.</p>
-  <div class="stamp"><span>updated 2026-09-01 05:25Z</span><span>bun · TypeScript · ProseMirror</span></div>
+  <div class="stamp"><span>updated 2026-09-01 10:33Z</span><span>bun · TypeScript · ProseMirror</span></div>
 </header>
 
 <section>
   <h2>Measured bar</h2>
-  <div class="tiles"><div class="tile tile-empty">
+  <div class="tiles"><div class="tile tile-ok">
     <div class="tile-label">Keystroke → state commit</div>
-    <div class="tile-value"><span class="tile-pending">not yet measured</span></div>
+    <div class="tile-value">0.38<span class="tile-unit">ms p99</span></div>
     <div class="tile-budget">budget · 8 ms p99</div>
-  </div><div class="tile tile-empty">
-    <div class="tile-label">Keystroke → paint</div>
-    <div class="tile-value"><span class="tile-pending">not yet measured</span></div>
-    <div class="tile-budget">budget · 16 ms p99</div>
-  </div><div class="tile tile-empty">
-    <div class="tile-label">docx round-trip T0 identity</div>
-    <div class="tile-value"><span class="tile-pending">not yet measured</span></div>
-    <div class="tile-budget">budget · 100 % byte-identical</div>
-  </div><div class="tile tile-empty">
-    <div class="tile-label">docx round-trip T2 semantic</div>
-    <div class="tile-value"><span class="tile-pending">not yet measured</span></div>
-    <div class="tile-budget">budget · 0.98 score</div>
-  </div><div class="tile">
+  </div><div class="tile tile-ok">
+    <div class="tile-label">Open 40k-word doc</div>
+    <div class="tile-value">2.67<span class="tile-unit">ms p99</span></div>
+    <div class="tile-budget">budget · 400 ms p99</div>
+  </div><div class="tile tile-over">
+    <div class="tile-label">docx import, large docs</div>
+    <div class="tile-value">3352<span class="tile-unit">ms p99</span></div>
+    <div class="tile-budget">over budget · 1200 ms p99</div>
+  </div><div class="tile tile-ok">
+    <div class="tile-label">docx import succeeds</div>
+    <div class="tile-value">100<span class="tile-unit">% of 288</span></div>
+    <div class="tile-budget">budget · 100 % of 288</div>
+  </div><div class="tile tile-over">
+    <div class="tile-label">docx text recovered</div>
+    <div class="tile-value">99.49<span class="tile-unit">% mean</span></div>
+    <div class="tile-budget">over budget · 99.5 % mean</div>
+  </div><div class="tile tile-over">
+    <div class="tile-label">Markdown round-trip</div>
+    <div class="tile-value">96.19<span class="tile-unit">% of 1442 files</span></div>
+    <div class="tile-budget">over budget · 99 % of 1442 files</div>
+  </div><div class="tile tile-ok">
     <div class="tile-label">Real .docx corpus</div>
     <div class="tile-value">288<span class="tile-unit">files</span></div>
     <div class="tile-budget">budget · 40 files</div>
   </div><div class="tile tile-empty">
-    <div class="tile-label">Markdown round-trip</div>
+    <div class="tile-label">docx round-trip T0 identity</div>
     <div class="tile-value"><span class="tile-pending">not yet measured</span></div>
-    <div class="tile-budget">budget · 99 % of real corpus</div>
+    <div class="tile-budget">budget · 100 % byte-identical</div>
   </div></div>
 </section>
 
@@ -133,46 +145,46 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
   <p class="piece-scope">ProseMirror schema shaped like OOXML; stable anchors that ride transactions</p>
   <p class="piece-evidence"><span class="tag">verified</span>5/5 identity tests pass: typing preserves anchors, split keeps identity on the first half, paste de-duplicates, delete is clean</p>
   <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Not yet exercised against a real .docx-derived document.</p>
-</article><article class="piece piece-running">
-  <header class="piece-head">
-    <h3>App shell &amp; host seam</h3>
-    <div class="piece-chips"><span class="chip chip-running">running</span></div>
-  </header>
-  <p class="piece-scope">React chrome, ProseMirror surface, bun server implementing HostApi</p>
-  
-  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>No React shell or ProseMirror surface exists yet — the app does not run. This blocks every critic and the blind comparison.</p>
-</article><article class="piece piece-running">
-  <header class="piece-head">
-    <h3>Markdown ⇄ model</h3>
-    <div class="piece-chips"><span class="chip chip-running">running</span></div>
-  </header>
-  <p class="piece-scope">CommonMark + GFM + CriticMarkup, round-trip stability</p>
-  
-  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Parser and serializer not written yet; only frontmatter handling landed.</p>
-</article><article class="piece piece-running">
-  <header class="piece-head">
-    <h3>docx import, sidecar &amp; anchors</h3>
-    <div class="piece-chips"><span class="chip chip-running">running</span></div>
-  </header>
-  <p class="piece-scope">Offset-recording XML index, fidelity sidecar, alignment-based re-anchoring</p>
-  
-  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>The hard part is entirely missing: no XML offset index, no import, no sidecar, no anchor engine.</p>
 </article><article class="piece piece-done">
   <header class="piece-head">
-    <h3>Round-trip scorer &amp; corpus</h3>
+    <h3>App shell &amp; host seam</h3>
     <div class="piece-chips"><span class="chip chip-done">done</span></div>
   </header>
+  <p class="piece-scope">React chrome, ProseMirror surface, bun server implementing HostApi</p>
+  <p class="piece-evidence"><span class="tag">verified</span>The app runs. Real .md opened from disk, edited and saved back correctly — frontmatter, GFM table, ordered list, bold, em-dash, CJK and ± all survived the round trip. No console errors.</p>
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Word count does not update while typing and the status-bar latency readout stays blank. Cosmetic, but they are the two numbers a writer would actually watch.</p>
+</article><article class="piece piece-done">
+  <header class="piece-head">
+    <h3>Markdown ⇄ model</h3>
+    <div class="piece-chips"><span class="chip chip-done">done</span></div>
+  </header>
+  <p class="piece-scope">CommonMark + GFM + CriticMarkup, round-trip stability</p>
+  <p class="piece-evidence"><span class="tag">verified</span>96.19% idempotent across 1,442 real corpus files (README/docs from major open-source repos), zero parse or serialize errors. 36 tests, 282k assertions.</p>
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>The 3.8% that fails is concentrated in nested-list indentation, blockquote nesting and repeated-asterisk emphasis — all real, all characterized.</p>
+</article><article class="piece piece-done">
+  <header class="piece-head">
+    <h3>docx import, sidecar &amp; anchors</h3>
+    <div class="piece-chips"><span class="chip chip-done">done</span></div>
+  </header>
+  <p class="piece-scope">Offset-recording XML index, fidelity sidecar, alignment-based re-anchoring</p>
+  <p class="piece-evidence"><span class="tag">verified</span>288/288 real Word documents import without throwing. Mean text recovery 99.49%; 260/286 files recover ≥99.5% of every &lt;w:t&gt; in the source. The fidelity ledger is populated and honest: 791 degraded entries, 144 informational.</p>
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Text inside text boxes and content controls is dropped — the worst file recovers only 64.5%. The ledger names it (327 inline-drawing-detached, 75 content-control-unwrapped) rather than hiding it.</p>
+</article><article class="piece piece-running">
+  <header class="piece-head">
+    <h3>Round-trip scorer &amp; corpus</h3>
+    <div class="piece-chips"><span class="chip chip-running">running</span></div>
+  </header>
   <p class="piece-scope">Real-world .docx corpus, three-tier fidelity score, pandoc baseline</p>
-  <p class="piece-evidence"><span class="tag">verified</span>Corpus collected and validated: 288/288 files are valid .docx. 235 carry numbering, 121 headers/footers, ~33% tables, 12 comments. Mean 601KB, max 11MB.</p>
-  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Scorer scaffolding exists (XML normalizer, corpus indexing) but no tier can run until the importer lands.</p>
+  <p class="piece-evidence"><span class="tag">verified</span>Corpus collected and validated: 288/288 valid .docx — 235 with numbering, 121 headers/footers, ~33% tables, 12 comments.</p>
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>No fidelity tier can run until the export splice engine exists.</p>
 </article><article class="piece piece-done">
   <header class="piece-head">
     <h3>Latency gate</h3>
     <div class="piece-chips"><span class="chip chip-done">done</span></div>
   </header>
   <p class="piece-scope">Keystroke budget enforced by a test that fails the build</p>
-  <p class="piece-evidence"><span class="tag">verified</span>Harness scaffolding landed: budgets, gate, stats, document generator, keystroke bench, Playwright driver.</p>
-  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Not yet executed against a real document, so no measured latency exists.</p>
+  <p class="piece-evidence"><span class="tag">verified</span>Gate runs and fails the build correctly (exit 1). Keystroke → state commit on a 40,040-word document: p99 0.38ms against an 8ms budget, n=15,000, typed from real Gutenberg prose.</p>
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Keystroke → paint is still unmeasured, so the 16ms end-to-end budget is unproven. The state-commit figure is reported as a lower bound, not a pass.</p>
 </article><article class="piece piece-queued">
   <header class="piece-head">
     <h3>Smart text ops</h3>
@@ -243,12 +255,17 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
     <div class="decision-body">
       <p class="decision-what">harper.js in a worker, behind an LSP-shaped seam</p>
       <p class="decision-why">Offline, Apache-2.0, works unchanged in web v1 and Tauri v2. The LSP shape makes adding a second checker cheap.</p>
+    </div></div><div class="decision">
+    <dt>Perf honesty</dt>
+    <div class="decision-body">
+      <p class="decision-what">A measurement that covers only part of a path may fail a budget but may never certify a pass</p>
+      <p class="decision-why">A headless process cannot see the DOM half of a keystroke. Reporting it as 'pass' would manufacture confidence in a number that never measured the thing it names.</p>
     </div></div></dl>
 </section>
 
 <section>
   <h2>Notes</h2>
-  <ul class="notes"><li>All seven Wave 1 builders were terminated mid-flight by a session rate limit. Partial work was salvaged, audited and committed; the resulting type errors were cleared and the tree typechecks clean.</li><li>One builder had implemented Markdown parsing inside the app rather than in its own package. It was removed rather than kept — two implementations of one job is exactly the incoherence this project is trying to avoid. It survives in git history and was handed to the Markdown builder as prior art.</li><li>Relaunched three at a time instead of seven, and every builder now commits after each deliverable so an interruption cannot destroy work again.</li><li>The .docx corpus is public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used.</li></ul>
+  <ul class="notes"><li>The gate is currently RED, deliberately and correctly: importing large Word documents takes p99 3.35s against a 1.2s budget. A 84ms average across the whole corpus had hidden this — the large documents are the bottleneck.</li><li>Two real bugs were found in the perf harness itself while wiring it: it discarded warm-up samples twice, which silently emptied the sample array and reported 'no measurement' instead of a number.</li><li>Both session interruptions cost roughly a wave each. Builders now commit after every deliverable, which is why nothing was lost the second time.</li><li>The .docx corpus is public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used.</li></ul>
 </section>
 
 <footer>Every number on this page is measured or absent. Nothing here is estimated.</footer>

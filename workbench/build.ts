@@ -39,12 +39,26 @@ for (const [file, apply] of [
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
 const chip = (s: State | string) => `<span class="chip chip-${esc(s)}">${esc(s)}</span>`;
 
+/**
+ * Budget direction is inferred from the unit: a millisecond figure must come in UNDER its
+ * budget, a percentage or a count must reach it. A tile that is over budget reads red —
+ * a progress page that shows green while the gate is failing is worse than no page.
+ */
+const overBudget = (m: Metric): boolean | null => {
+  if (m.value === null || m.state !== "measured") return null;
+  const v = Number(m.value), b = Number(m.budget);
+  if (!Number.isFinite(v) || !Number.isFinite(b)) return null;
+  return m.unit.includes("ms") ? v > b : v < b;
+};
+
 const metricTile = (m: Metric) => {
   const has = m.value !== null && m.state === "measured";
-  return `<div class="tile${has ? "" : " tile-empty"}">
+  const over = overBudget(m);
+  const cls = !has ? " tile-empty" : over === true ? " tile-over" : over === false ? " tile-ok" : "";
+  return `<div class="tile${cls}">
     <div class="tile-label">${esc(m.label)}</div>
     <div class="tile-value">${has ? `${esc(m.value)}<span class="tile-unit">${esc(m.unit)}</span>` : `<span class="tile-pending">not yet measured</span>`}</div>
-    <div class="tile-budget">budget · ${esc(m.budget)} ${esc(m.unit)}</div>
+    <div class="tile-budget">${over === true ? "over budget · " : "budget · "}${esc(m.budget)} ${esc(m.unit)}</div>
   </div>`;
 };
 
@@ -104,6 +118,10 @@ h2{font-family:Spectral,Georgia,serif;font-size:13px;font-weight:600;letter-spac
 .tile{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:14px 16px;
   display:flex;flex-direction:column;gap:5px;border-left:3px solid var(--good);box-shadow:var(--shadow)}
 .tile-empty{border-left-color:var(--idle)}
+.tile-ok{border-left-color:var(--good)}
+.tile-over{border-left-color:var(--accent)}
+.tile-over .tile-value{color:var(--accent)}
+.tile-over .tile-budget{color:var(--accent);font-weight:500}
 .tile-label{font-size:11.5px;letter-spacing:.05em;color:var(--ink-soft);text-transform:uppercase;font-weight:500}
 .tile-value{font-family:"IBM Plex Mono",monospace;font-size:26px;font-weight:500;line-height:1.1;
   font-variant-numeric:tabular-nums;letter-spacing:-.02em}
