@@ -1018,7 +1018,49 @@ function rebuildParagraph(
   } else {
     ledger.add({ code: "splice-regenerated", severity: "info", stage: "export", aid, detail: "inline structure changed; paragraph content regenerated from the doc model" });
   }
+
+  // Name what the rebuild actually dropped.
+  //
+  // "content regenerated" is true but useless on its own: it does not distinguish losing
+  // `<w:rtl w:val="0"/>` (the default, harmless) from losing something the writer would
+  // notice. The ledger is this subsystem's quality metric, so it has to say WHICH run
+  // properties did not survive, not merely that a rebuild happened.
+  const lost = droppedRunProps(ix, op, generated);
+  if (lost.length > 0) {
+    ledger.add({
+      code: "run-property-dropped", severity: "degraded", stage: "export", aid,
+      detail: `run properties not carried through the rebuild: ${lost.join(", ")}`,
+    });
+  }
+
   return `${out}</${p.name}>`;
+}
+
+
+/**
+ * Run properties present on the paragraph's original text-only runs that do not appear in
+ * the regenerated markup. Compared as element names rather than whole `rPr` payloads: a run
+ * that was split or merged legitimately changes payload grouping without losing anything,
+ * and reporting that as loss would make the ledger noisy enough to be ignored.
+ */
+function droppedRunProps(ix: XmlIndex, op: OriginPara, generated: string): string[] {
+  const namesIn = (xml: string): Set<string> => {
+    const out = new Set<string>();
+    for (const rPr of xml.match(/<w:rPr\b[^>]*>[\s\S]*?<\/w:rPr>/g) ?? []) {
+      for (const el of rPr.match(/<w:([A-Za-z]+)\b/g) ?? []) {
+        const local = el.slice(3);
+        if (local !== "rPr") out.add(local);
+      }
+    }
+    return out;
+  };
+
+  let originalXml = "";
+  for (const r of op.textOnlyRuns) originalXml += ix.raw(r);
+  const before = namesIn(originalXml);
+  if (before.size === 0) return [];
+  const after = namesIn(generated);
+  return [...before].filter((n) => !after.has(n)).sort();
 }
 
 /* ------------------------------------------------------------------ tracked deletion */
