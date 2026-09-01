@@ -3,11 +3,11 @@ import type { Node as PMNode } from "prosemirror-model";
 import { CodecError, type CodecResult, type DocumentCodec } from "./codec";
 
 /**
- * The provisional codec: plain text in, plain text out, byte for byte.
+ * Plain text in, plain text out, byte for byte.
  *
- * It has no Markdown knowledge whatsoever — that belongs to `@scriv/md` and duplicating it here
- * would be the wrong kind of progress. What it does have is an exact round trip, which is the
- * property the file-I/O path actually needs to be trustworthy while the real codec lands:
+ * This is what a file the Markdown codec has no business touching opens with — a `.txt`, a
+ * `.json`, a `.csv`, anything without a Markdown extension. It has no syntax knowledge at all,
+ * which is the point: opening an unrecognised file must never rewrite it.
  *
  *   - A *block* is a maximal run of lines that are not empty. It becomes one `paragraph`, with
  *     the interior line breaks kept as `hard_break` nodes.
@@ -58,8 +58,8 @@ function linesOf(paragraph: PMNode): string[] {
       current += child.text ?? "";
     } else {
       throw new CodecError(
-        `the provisional plain-text codec cannot write a "${child.type.name}" node — ` +
-          `@scriv/md has not landed yet, so structured documents cannot be saved`,
+        `plain text cannot represent a "${child.type.name}" node — ` +
+          `save this document with a Markdown extension instead`,
       );
     }
   });
@@ -103,8 +103,8 @@ function serialize(doc: PMNode, meta: unknown): string {
   doc.forEach((node) => {
     if (node.type.name !== "paragraph") {
       throw new CodecError(
-        `the provisional plain-text codec cannot write a "${node.type.name}" block — ` +
-          `@scriv/md has not landed yet, so structured documents cannot be saved`,
+        `plain text cannot represent a "${node.type.name}" block — ` +
+          `save this document with a Markdown extension instead`,
       );
     }
     // A paragraph created by typing has no recorded gap: one blank line between blocks is the
@@ -126,7 +126,7 @@ function isPlainMeta(meta: unknown): meta is PlainMeta {
 
 export const plainTextCodec: DocumentCodec = {
   id: "plain-text",
-  label: "plain text (provisional — @scriv/md pending)",
+  label: "plain text (verbatim round trip)",
   structural: false,
   parse,
   serialize,

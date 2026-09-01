@@ -30,6 +30,13 @@ export const MD_STYLE = {
   /** `list_item` that is a GFM task list item. */
   taskChecked: "md:task=checked",
   taskUnchecked: "md:task=unchecked",
+  /**
+   * `bullet_list` / `ordered_list` that was loose in the source (blank line between items).
+   * `mdast-util-to-markdown` only respects an explicit `spread` — it does not infer
+   * tightness from content — so this is what keeps a loose list from silently collapsing to
+   * tight (or a tight one inflating to loose) on serialize. Absent → tight.
+   */
+  listSpread: "md:spread",
 } as const;
 
 /** `rPrRef` sentinel: the text node's content is verbatim Markdown, not prose. */

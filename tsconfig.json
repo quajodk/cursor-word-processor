@@ -3,6 +3,7 @@
   "references": [
     { "path": "packages/doc-model" },
     { "path": "packages/host-api" },
+    { "path": "packages/md" },
     { "path": "apps/server" },
     { "path": "apps/web" }
   ]

@@ -49,8 +49,8 @@ export function StatusBar() {
         data-tone={status.codecStructural ? "ok" : "warn"}
         title={
           status.codecStructural
-            ? "Markdown codec active"
-            : "@scriv/md is not exporting parseMarkdown yet — files open as plain text and round-trip byte for byte, but structured documents cannot be saved"
+            ? "Markdown, via @scriv/md: structure round-trips through mdast and the file's own style profile"
+            : "This file has no Markdown extension, so it opens as plain text and round-trips byte for byte"
         }
       >
         {status.codecId}

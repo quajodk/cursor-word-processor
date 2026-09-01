@@ -172,6 +172,6 @@ export function specimenDoc(): PMNode {
 
     h(6, "Editorial note"),
 
-    p("This page is generated from the schema, not parsed from a file. Saving it requires the Markdown codec."),
+    p("This page is generated from the schema, not parsed from a file. Save it anywhere with ⌘⇧S and @scriv/md will write it out as Markdown."),
   ]);
 }

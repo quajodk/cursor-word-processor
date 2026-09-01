@@ -3,7 +3,7 @@ import type { Node as PMNode } from "prosemirror-model";
 import type { Transaction } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { latencyPercentiles, recordLatency, resetLatency, setStatus } from "../app/status";
-import { documentCodec } from "../doc/codec";
+import { codecFor, markdownCodec, type DocumentCodec } from "../doc/codec";
 import { createEditorState, emptyDoc } from "./setup";
 
 /**
@@ -29,6 +29,8 @@ export class EditorController {
   path: string | null = null;
   /** Round-trip state from the codec that parsed the open file. */
   meta: unknown = null;
+  /** Chosen per document by extension, so a `.txt` is never rewritten as Markdown. */
+  codec: DocumentCodec = markdownCodec;
   /** Exactly the bytes last read from or written to disk. */
   savedText = "";
   dirty = false;
@@ -140,7 +142,7 @@ export class EditorController {
 
     const $from = selection.$from;
     const { p50, p99, samples } = latencyPercentiles();
-    const codec = documentCodec();
+    const codec = this.codec;
     setStatus({
       words,
       chars,
@@ -158,10 +160,11 @@ export class EditorController {
   // ---------------------------------------------------------------- documents
 
   /** Replace the document without tearing the view down: the DOM node is never remounted. */
-  setDocument(path: string | null, doc: PMNode, meta: unknown, savedText: string): void {
+  setDocument(path: string | null, doc: PMNode, meta: unknown, savedText: string, codec?: DocumentCodec): void {
     if (!this.view) return;
     this.path = path;
     this.meta = meta;
+    this.codec = codec ?? codecFor(path);
     this.savedText = savedText;
     this.dirty = false;
     resetLatency();
@@ -174,14 +177,15 @@ export class EditorController {
 
   async open(path: string): Promise<void> {
     const text = await this.host.fs.read(path);
-    const { doc, meta } = documentCodec().parse(text);
-    this.setDocument(path, doc, meta, text);
+    const codec = codecFor(path);
+    const { doc, meta } = codec.parse(text);
+    this.setDocument(path, doc, meta, text, codec);
   }
 
   async save(): Promise<string> {
     if (!this.view) throw new Error("no editor");
     if (!this.path) throw new Error("this document has no path yet — use “File: Save As”");
-    const text = documentCodec().serialize(this.view.state.doc, this.meta);
+    const text = this.codec.serialize(this.view.state.doc, this.meta);
     await this.host.fs.write(this.path, text);
     this.savedText = text;
     this.dirty = false;
@@ -192,9 +196,12 @@ export class EditorController {
 
   async saveAs(path: string): Promise<string> {
     if (!this.view) throw new Error("no editor");
-    const text = documentCodec().serialize(this.view.state.doc, this.meta);
+    // Save-as to a different kind of file changes which codec owns the document.
+    const codec = codecFor(path);
+    const text = codec.serialize(this.view.state.doc, this.meta);
     await this.host.fs.write(path, text);
     this.path = path;
+    this.codec = codec;
     this.savedText = text;
     this.dirty = false;
     setStatus({ path, dirty: false }, true);
@@ -222,8 +229,9 @@ export class EditorController {
       }
       void this.host.fs.read(ev.path).then((text) => {
         if (text === this.savedText || this.dirty || ev.path !== this.path) return;
-        const { doc, meta } = documentCodec().parse(text);
-        this.setDocument(ev.path, doc, meta, text);
+        const codec = codecFor(ev.path);
+        const { doc, meta } = codec.parse(text);
+        this.setDocument(ev.path, doc, meta, text, codec);
       });
     });
   }

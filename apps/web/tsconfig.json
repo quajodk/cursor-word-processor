@@ -16,6 +16,9 @@
     },
     {
       "path": "../../packages/host-api"
+    },
+    {
+      "path": "../../packages/md"
     }
   ]
 }

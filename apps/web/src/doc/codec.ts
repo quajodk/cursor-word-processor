@@ -1,29 +1,19 @@
 import type { Node as PMNode } from "prosemirror-model";
+import { markdownCodec } from "./markdown";
 import { plainTextCodec } from "./plain";
 
 /**
  * The text ⇄ document seam.
  *
- * Markdown is the on-disk truth, and turning Markdown into a `@scriv/doc-model` document is
- * `@scriv/md`'s job — mdast in, schema nodes out, style profile preserved for the round trip.
- * That package is being built in parallel and does not export `parseMarkdown` /
- * `serializeMarkdown` yet, so this module exists to make the dependency explicit and one-line
- * swappable rather than to pre-empt it.
+ * Markdown is the on-disk truth and `@scriv/md` owns the translation: mdast in, `@scriv/doc-model`
+ * nodes out, with the file's own style profile (bullet character, fence style, emphasis marker,
+ * setext or ATX headings) carried in `meta` so that serializing an untouched document gives back
+ * the bytes it arrived as. `apps/web` deliberately contains no Markdown syntax knowledge of its
+ * own; this module only decides *which* codec a given path gets.
  *
- * Deliberately *not* here: any knowledge of Markdown syntax. The fallback codec below reads and
- * writes plain text and knows nothing about `#`, `-` or `|`. Re-implementing a Markdown parser
- * in `apps/web` would duplicate `@scriv/md` and guarantee two divergent answers to the same
- * question; a shell that can open, edit and save a file losslessly without one is the honest
- * intermediate state.
- *
- * Wiring `@scriv/md` when it lands is exactly:
- *
- *     import { parseMarkdown, serializeMarkdown } from "@scriv/md";
- *     setDocumentCodec({
- *       id: "scriv-md", label: "Markdown", structural: true,
- *       parse: (text) => parseMarkdown(text),
- *       serialize: (doc, meta) => serializeMarkdown(doc, meta as DocMeta),
- *     });
+ * Anything that is not Markdown opens through the plain-text codec, which has no syntax knowledge
+ * at all and round-trips byte for byte. That is what makes it safe to open a `.txt`, a `.json` or
+ * an unrecognised file in the same editor without silently rewriting it.
  */
 
 export interface CodecResult {
@@ -38,8 +28,8 @@ export interface DocumentCodec {
   label: string;
   /**
    * True when the codec maps document *structure* (headings, lists, tables) to schema nodes.
-   * False means it only carries text, and `serialize` will refuse a structured document rather
-   * than silently flatten one.
+   * False means it only carries text, and `serialize` refuses a structured document rather than
+   * silently flattening one.
    */
   structural: boolean;
   parse(text: string): CodecResult;
@@ -54,19 +44,14 @@ export class CodecError extends Error {
   }
 }
 
-let active: DocumentCodec = plainTextCodec;
-const listeners = new Set<() => void>();
+const MARKDOWN_EXTENSIONS = new Set(["md", "markdown", "mdown", "mkd", "mdx", "qmd", "rmd"]);
 
-export function documentCodec(): DocumentCodec {
-  return active;
+export function codecFor(path: string | null): DocumentCodec {
+  if (!path) return markdownCodec;
+  const dot = path.lastIndexOf(".");
+  if (dot < 0) return plainTextCodec;
+  const extension = path.slice(dot + 1).toLowerCase();
+  return MARKDOWN_EXTENSIONS.has(extension) ? markdownCodec : plainTextCodec;
 }
 
-export function setDocumentCodec(codec: DocumentCodec): void {
-  active = codec;
-  for (const l of listeners) l();
-}
-
-export function onCodecChange(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export { markdownCodec, plainTextCodec };

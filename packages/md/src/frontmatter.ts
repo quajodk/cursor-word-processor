@@ -23,18 +23,18 @@ export function splitFrontmatter(src: string): Split {
     // Must be the very first thing in the file, alone on its line.
     if (!src.startsWith(fence)) continue;
     const firstEol = eolAt(src, fence.length);
-    if (firstEol < 0) continue;
+    if (firstEol === -1) continue;
     if (src.slice(fence.length, firstEol.at).trim() !== "") continue;
 
     let pos = firstEol.after;
     const contentStart = pos;
     while (pos <= src.length) {
       const lineEnd = eolAt(src, pos);
-      const line = src.slice(pos, lineEnd < 0 ? src.length : lineEnd.at);
+      const line = src.slice(pos, lineEnd === -1 ? src.length : lineEnd.at);
       const closes = line.trimEnd() === fence || (fence === "---" && line.trimEnd() === "...");
       if (closes) {
         const raw = src.slice(contentStart, pos);
-        const blockEnd = lineEnd < 0 ? src.length : lineEnd.after;
+        const blockEnd = lineEnd === -1 ? src.length : lineEnd.after;
         return {
           frontmatter: {
             fence,
@@ -45,7 +45,7 @@ export function splitFrontmatter(src: string): Split {
           body: src.slice(blockEnd),
         };
       }
-      if (lineEnd < 0) break;
+      if (lineEnd === -1) break;
       pos = lineEnd.after;
     }
   }
