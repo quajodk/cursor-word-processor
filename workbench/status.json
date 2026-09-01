@@ -1,36 +1,182 @@
 {
   "wave": 1,
-  "waveTitle": "Foundations",
+  "waveTitle": "Foundations (restarted after session limit)",
   "pieces": [
-    { "id": "foundation", "name": "Document model & block identity", "scope": "ProseMirror schema shaped like OOXML; stable anchors that ride transactions", "builder": "done", "critic": "pending", "evidence": "5/5 identity tests pass: typing preserves anchors, split keeps identity on the first half, paste de-duplicates, delete is clean", "gap": "Not yet exercised against a real .docx-derived document." },
-    { "id": "shell", "name": "App shell & host seam", "scope": "React chrome, ProseMirror surface, bun server implementing HostApi", "builder": "running", "critic": "pending", "evidence": null, "gap": null },
-    { "id": "md", "name": "Markdown ⇄ model", "scope": "CommonMark + GFM + CriticMarkup, round-trip stability", "builder": "running", "critic": "pending", "evidence": null, "gap": null },
-    { "id": "docx-in", "name": "docx import, sidecar & anchors", "scope": "Offset-recording XML index, fidelity sidecar, alignment-based re-anchoring", "builder": "running", "critic": "pending", "evidence": null, "gap": null },
-    { "id": "score", "name": "Round-trip scorer & corpus", "scope": "Real-world .docx corpus, three-tier fidelity score, pandoc baseline", "builder": "running", "critic": "pending", "evidence": null, "gap": null },
-    { "id": "perf", "name": "Latency gate", "scope": "Keystroke budget enforced by a test that fails the build", "builder": "running", "critic": "pending", "evidence": null, "gap": null },
-    { "id": "textops", "name": "Smart text ops", "scope": "Selection-aware surrounds, multi-cursor, motions, transpose, join, kill-line", "builder": "queued", "critic": "pending", "evidence": null, "gap": null },
-    { "id": "intel", "name": "Prose IntelliSense", "scope": "Workspace symbol index, completions, Harper diagnostics over an LSP seam", "builder": "queued", "critic": "pending", "evidence": null, "gap": null },
-    { "id": "ai", "name": "AI inline edit", "scope": "Cmd-K streaming rewrite as accept/reject diff; three-way merge; agent mode", "builder": "queued", "critic": "pending", "evidence": null, "gap": null },
-    { "id": "git", "name": "Workspace & git", "scope": "Fuzzy open, search, diff and blame at sentence granularity", "builder": "queued", "critic": "pending", "evidence": null, "gap": null },
-    { "id": "docx-out", "name": "docx export splice", "scope": "Edit the original zip rather than regenerate it", "builder": "queued", "critic": "pending", "evidence": null, "gap": null }
+    {
+      "id": "foundation",
+      "name": "Document model & block identity",
+      "scope": "ProseMirror schema shaped like OOXML; stable anchors that ride transactions",
+      "builder": "done",
+      "critic": "pending",
+      "evidence": "5/5 identity tests pass: typing preserves anchors, split keeps identity on the first half, paste de-duplicates, delete is clean",
+      "gap": "Not yet exercised against a real .docx-derived document."
+    },
+    {
+      "id": "shell",
+      "name": "App shell & host seam",
+      "scope": "React chrome, ProseMirror surface, bun server implementing HostApi",
+      "builder": "running",
+      "critic": "pending",
+      "evidence": null,
+      "gap": "No React shell or ProseMirror surface exists yet \u2014 the app does not run. This blocks every critic and the blind comparison."
+    },
+    {
+      "id": "md",
+      "name": "Markdown \u21c4 model",
+      "scope": "CommonMark + GFM + CriticMarkup, round-trip stability",
+      "builder": "running",
+      "critic": "pending",
+      "evidence": null,
+      "gap": "Parser and serializer not written yet; only frontmatter handling landed."
+    },
+    {
+      "id": "docx-in",
+      "name": "docx import, sidecar & anchors",
+      "scope": "Offset-recording XML index, fidelity sidecar, alignment-based re-anchoring",
+      "builder": "running",
+      "critic": "pending",
+      "evidence": null,
+      "gap": "The hard part is entirely missing: no XML offset index, no import, no sidecar, no anchor engine."
+    },
+    {
+      "id": "score",
+      "name": "Round-trip scorer & corpus",
+      "scope": "Real-world .docx corpus, three-tier fidelity score, pandoc baseline",
+      "builder": "done",
+      "critic": "pending",
+      "evidence": "Corpus collected and validated: 288/288 files are valid .docx. 235 carry numbering, 121 headers/footers, ~33% tables, 12 comments. Mean 601KB, max 11MB.",
+      "gap": "Scorer scaffolding exists (XML normalizer, corpus indexing) but no tier can run until the importer lands."
+    },
+    {
+      "id": "perf",
+      "name": "Latency gate",
+      "scope": "Keystroke budget enforced by a test that fails the build",
+      "builder": "done",
+      "critic": "pending",
+      "evidence": "Harness scaffolding landed: budgets, gate, stats, document generator, keystroke bench, Playwright driver.",
+      "gap": "Not yet executed against a real document, so no measured latency exists."
+    },
+    {
+      "id": "textops",
+      "name": "Smart text ops",
+      "scope": "Selection-aware surrounds, multi-cursor, motions, transpose, join, kill-line",
+      "builder": "queued",
+      "critic": "pending",
+      "evidence": null,
+      "gap": "Only locale data and text helpers landed; no commands yet."
+    },
+    {
+      "id": "intel",
+      "name": "Prose IntelliSense",
+      "scope": "Workspace symbol index, completions, Harper diagnostics over an LSP seam",
+      "builder": "queued",
+      "critic": "pending",
+      "evidence": null,
+      "gap": null
+    },
+    {
+      "id": "ai",
+      "name": "AI inline edit",
+      "scope": "Cmd-K streaming rewrite as accept/reject diff; three-way merge; agent mode",
+      "builder": "queued",
+      "critic": "pending",
+      "evidence": null,
+      "gap": null
+    },
+    {
+      "id": "git",
+      "name": "Workspace & git",
+      "scope": "Fuzzy open, search, diff and blame at sentence granularity",
+      "builder": "queued",
+      "critic": "pending",
+      "evidence": "Sentence segmentation, alignment and word-level intra-sentence diff landed.",
+      "gap": "File tree, fuzzy open and search not started; nothing measured."
+    },
+    {
+      "id": "docx-out",
+      "name": "docx export splice",
+      "scope": "Edit the original zip rather than regenerate it",
+      "builder": "queued",
+      "critic": "pending",
+      "evidence": null,
+      "gap": null
+    }
   ],
   "metrics": [
-    { "label": "Keystroke → state commit", "value": null, "unit": "ms p99", "budget": "8", "state": "unmeasured" },
-    { "label": "Keystroke → paint", "value": null, "unit": "ms p99", "budget": "16", "state": "unmeasured" },
-    { "label": "docx round-trip T0 identity", "value": null, "unit": "% byte-identical", "budget": "100", "state": "unmeasured" },
-    { "label": "docx round-trip T2 semantic", "value": null, "unit": "score", "budget": "0.98", "state": "unmeasured" },
-    { "label": "Real .docx corpus", "value": null, "unit": "files", "budget": "40", "state": "unmeasured" },
-    { "label": "Markdown round-trip", "value": null, "unit": "% of real corpus", "budget": "99", "state": "unmeasured" }
+    {
+      "label": "Keystroke \u2192 state commit",
+      "value": null,
+      "unit": "ms p99",
+      "budget": "8",
+      "state": "unmeasured"
+    },
+    {
+      "label": "Keystroke \u2192 paint",
+      "value": null,
+      "unit": "ms p99",
+      "budget": "16",
+      "state": "unmeasured"
+    },
+    {
+      "label": "docx round-trip T0 identity",
+      "value": null,
+      "unit": "% byte-identical",
+      "budget": "100",
+      "state": "unmeasured"
+    },
+    {
+      "label": "docx round-trip T2 semantic",
+      "value": null,
+      "unit": "score",
+      "budget": "0.98",
+      "state": "unmeasured"
+    },
+    {
+      "label": "Real .docx corpus",
+      "value": 288,
+      "unit": "files",
+      "budget": "40",
+      "state": "measured"
+    },
+    {
+      "label": "Markdown round-trip",
+      "value": null,
+      "unit": "% of real corpus",
+      "budget": "99",
+      "state": "unmeasured"
+    }
   ],
   "decisions": [
-    { "t": "Editor engine", "d": "ProseMirror, used directly — not Tiptap, not Lexical", "why": "Pure decorations are load-bearing for AI diffs, diagnostics and blame. Lexical and Quill lack them; Tiptap's auto-schema fights the OOXML mapping." },
-    { "t": "The docx tension", "d": "Splice the original zip; never regenerate it", "why": "Turns 'how much OOXML can we model?' into 'how little must we touch?'. An unedited round-trip is byte-identical, and fidelity degrades only in proportion to what was actually edited." },
-    { "t": "Anchors", "d": "Exact in-session, fuzzy only for externally-edited files", "why": "While the doc is open we observed every change, so identity needs no guessing. Sequence alignment is reserved for files edited by another tool — that split is what makes the problem tractable." },
-    { "t": "Confidence floor", "d": "Drop formatting rather than risk misapplying it", "why": "A dropped style is a visible bug the writer can fix; a misapplied one silently corrupts a document they trusted." },
-    { "t": "Diagnostics", "d": "harper.js in a worker, behind an LSP-shaped seam", "why": "Offline, Apache-2.0, works unchanged in web v1 and Tauri v2. The LSP shape makes adding a second checker cheap." }
+    {
+      "t": "Editor engine",
+      "d": "ProseMirror, used directly \u2014 not Tiptap, not Lexical",
+      "why": "Pure decorations are load-bearing for AI diffs, diagnostics and blame. Lexical and Quill lack them; Tiptap's auto-schema fights the OOXML mapping."
+    },
+    {
+      "t": "The docx tension",
+      "d": "Splice the original zip; never regenerate it",
+      "why": "Turns 'how much OOXML can we model?' into 'how little must we touch?'. An unedited round-trip is byte-identical, and fidelity degrades only in proportion to what was actually edited."
+    },
+    {
+      "t": "Anchors",
+      "d": "Exact in-session, fuzzy only for externally-edited files",
+      "why": "While the doc is open we observed every change, so identity needs no guessing. Sequence alignment is reserved for files edited by another tool \u2014 that split is what makes the problem tractable."
+    },
+    {
+      "t": "Confidence floor",
+      "d": "Drop formatting rather than risk misapplying it",
+      "why": "A dropped style is a visible bug the writer can fix; a misapplied one silently corrupts a document they trusted."
+    },
+    {
+      "t": "Diagnostics",
+      "d": "harper.js in a worker, behind an LSP-shaped seam",
+      "why": "Offline, Apache-2.0, works unchanged in web v1 and Tauri v2. The LSP shape makes adding a second checker cheap."
+    }
   ],
   "notes": [
-    "No RESEARCH.md was present on disk; the research brief arrived by message and its load-bearing claims were verified against the npm registry before anything was built on them.",
-    "The .docx corpus is collected from public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used."
+    "All seven Wave 1 builders were terminated mid-flight by a session rate limit. Partial work was salvaged, audited and committed; the resulting type errors were cleared and the tree typechecks clean.",
+    "One builder had implemented Markdown parsing inside the app rather than in its own package. It was removed rather than kept \u2014 two implementations of one job is exactly the incoherence this project is trying to avoid. It survives in git history and was handed to the Markdown builder as prior art.",
+    "Relaunched three at a time instead of seven, and every builder now commits after each deliverable so an interruption cannot destroy work again.",
+    "The .docx corpus is public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used."
   ]
 }

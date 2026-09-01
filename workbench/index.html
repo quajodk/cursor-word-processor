@@ -88,10 +88,10 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
 </style>
 <div class="wrap">
 <header class="masthead">
-  <div class="eyebrow">Wave 1 · Foundations</div>
+  <div class="eyebrow">Wave 1 · Foundations (restarted after session limit)</div>
   <h1>scriv workbench</h1>
   <p class="dek">An IDE for writing. Markdown on disk is the source of truth; the editing surface is a real word processor.</p>
-  <div class="stamp"><span>updated 2026-09-01 00:31Z</span><span>bun · TypeScript · ProseMirror</span></div>
+  <div class="stamp"><span>updated 2026-09-01 05:25Z</span><span>bun · TypeScript · ProseMirror</span></div>
 </header>
 
 <section>
@@ -112,9 +112,9 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
     <div class="tile-label">docx round-trip T2 semantic</div>
     <div class="tile-value"><span class="tile-pending">not yet measured</span></div>
     <div class="tile-budget">budget · 0.98 score</div>
-  </div><div class="tile tile-empty">
+  </div><div class="tile">
     <div class="tile-label">Real .docx corpus</div>
-    <div class="tile-value"><span class="tile-pending">not yet measured</span></div>
+    <div class="tile-value">288<span class="tile-unit">files</span></div>
     <div class="tile-budget">budget · 40 files</div>
   </div><div class="tile tile-empty">
     <div class="tile-label">Markdown round-trip</div>
@@ -140,7 +140,7 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
   </header>
   <p class="piece-scope">React chrome, ProseMirror surface, bun server implementing HostApi</p>
   
-  
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>No React shell or ProseMirror surface exists yet — the app does not run. This blocks every critic and the blind comparison.</p>
 </article><article class="piece piece-running">
   <header class="piece-head">
     <h3>Markdown ⇄ model</h3>
@@ -148,7 +148,7 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
   </header>
   <p class="piece-scope">CommonMark + GFM + CriticMarkup, round-trip stability</p>
   
-  
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Parser and serializer not written yet; only frontmatter handling landed.</p>
 </article><article class="piece piece-running">
   <header class="piece-head">
     <h3>docx import, sidecar &amp; anchors</h3>
@@ -156,23 +156,23 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
   </header>
   <p class="piece-scope">Offset-recording XML index, fidelity sidecar, alignment-based re-anchoring</p>
   
-  
-</article><article class="piece piece-running">
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>The hard part is entirely missing: no XML offset index, no import, no sidecar, no anchor engine.</p>
+</article><article class="piece piece-done">
   <header class="piece-head">
     <h3>Round-trip scorer &amp; corpus</h3>
-    <div class="piece-chips"><span class="chip chip-running">running</span></div>
+    <div class="piece-chips"><span class="chip chip-done">done</span></div>
   </header>
   <p class="piece-scope">Real-world .docx corpus, three-tier fidelity score, pandoc baseline</p>
-  
-  
-</article><article class="piece piece-running">
+  <p class="piece-evidence"><span class="tag">verified</span>Corpus collected and validated: 288/288 files are valid .docx. 235 carry numbering, 121 headers/footers, ~33% tables, 12 comments. Mean 601KB, max 11MB.</p>
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Scorer scaffolding exists (XML normalizer, corpus indexing) but no tier can run until the importer lands.</p>
+</article><article class="piece piece-done">
   <header class="piece-head">
     <h3>Latency gate</h3>
-    <div class="piece-chips"><span class="chip chip-running">running</span></div>
+    <div class="piece-chips"><span class="chip chip-done">done</span></div>
   </header>
   <p class="piece-scope">Keystroke budget enforced by a test that fails the build</p>
-  
-  
+  <p class="piece-evidence"><span class="tag">verified</span>Harness scaffolding landed: budgets, gate, stats, document generator, keystroke bench, Playwright driver.</p>
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Not yet executed against a real document, so no measured latency exists.</p>
 </article><article class="piece piece-queued">
   <header class="piece-head">
     <h3>Smart text ops</h3>
@@ -180,7 +180,7 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
   </header>
   <p class="piece-scope">Selection-aware surrounds, multi-cursor, motions, transpose, join, kill-line</p>
   
-  
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Only locale data and text helpers landed; no commands yet.</p>
 </article><article class="piece piece-queued">
   <header class="piece-head">
     <h3>Prose IntelliSense</h3>
@@ -203,8 +203,8 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
     <div class="piece-chips"><span class="chip chip-queued">queued</span></div>
   </header>
   <p class="piece-scope">Fuzzy open, search, diff and blame at sentence granularity</p>
-  
-  
+  <p class="piece-evidence"><span class="tag">verified</span>Sentence segmentation, alignment and word-level intra-sentence diff landed.</p>
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>File tree, fuzzy open and search not started; nothing measured.</p>
 </article><article class="piece piece-queued">
   <header class="piece-head">
     <h3>docx export splice</h3>
@@ -248,7 +248,7 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
 
 <section>
   <h2>Notes</h2>
-  <ul class="notes"><li>No RESEARCH.md was present on disk; the research brief arrived by message and its load-bearing claims were verified against the npm registry before anything was built on them.</li><li>The .docx corpus is collected from public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used.</li></ul>
+  <ul class="notes"><li>All seven Wave 1 builders were terminated mid-flight by a session rate limit. Partial work was salvaged, audited and committed; the resulting type errors were cleared and the tree typechecks clean.</li><li>One builder had implemented Markdown parsing inside the app rather than in its own package. It was removed rather than kept — two implementations of one job is exactly the incoherence this project is trying to avoid. It survives in git history and was handed to the Markdown builder as prior art.</li><li>Relaunched three at a time instead of seven, and every builder now commits after each deliverable so an interruption cannot destroy work again.</li><li>The .docx corpus is public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used.</li></ul>
 </section>
 
 <footer>Every number on this page is measured or absent. Nothing here is estimated.</footer>
