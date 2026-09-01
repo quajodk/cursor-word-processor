@@ -7,3 +7,12 @@ bench/out/
 .scriv-cache/
 .env
 .env.local
+
+# Corpus: real-world documents collected from the wild. Large and re-fetchable,
+# so contents stay out of git while provenance manifests stay tracked.
+corpus/docx/*
+!corpus/docx/MANIFEST.json
+corpus/md/*
+!corpus/md/MANIFEST.json
+corpus/text/*
+!corpus/text/MANIFEST.json

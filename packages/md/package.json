@@ -4,5 +4,18 @@
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
-  "dependencies": { "@scriv/doc-model": "workspace:*", "mdast-util-from-markdown": "^2.0.3", "mdast-util-to-markdown": "^2.1.2", "mdast-util-gfm": "^3.1.0", "micromark-extension-gfm": "^3.0.0" }
+  "scripts": {
+    "corpus": "bun run scripts/fetch-corpus.ts"
+  },
+  "dependencies": {
+    "@scriv/doc-model": "workspace:*",
+    "@types/mdast": "^4.0.4",
+    "mdast-util-from-markdown": "^2.0.3",
+    "mdast-util-gfm": "^3.1.0",
+    "mdast-util-to-markdown": "^2.1.2",
+    "micromark-extension-gfm": "^3.0.0",
+    "micromark-util-character": "^2.1.1",
+    "micromark-util-symbol": "^2.0.1",
+    "micromark-util-types": "^2.0.2"
+  }
 }

@@ -2,6 +2,6 @@
   "name": "@scriv/server",
   "version": "0.1.0",
   "type": "module",
-  "scripts": { "dev": "bun run --hot src/index.ts", "start": "bun run src/index.ts" },
+  "scripts": { "dev": "bun run --hot src/index.ts --root ../..", "start": "bun run src/index.ts" },
   "dependencies": { "@scriv/host-api": "workspace:*" }
 }

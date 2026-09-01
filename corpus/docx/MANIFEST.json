@@ -1,0 +1,1484 @@
+{
+  "note": "Real-world public .docx files collected from the wild. No fixture in this corpus was authored by this project.",
+  "generatedBy": "packages/ooxml/scripts/fetch-corpus.ts",
+  "files": [
+    {
+      "file": "3gpp-org__S2-2506104.zip.docx",
+      "url": "https://www.3gpp.org/ftp/tsg_sa/WG2_Arch/TSGS2_170_Goteborg_2025-08/Docs/S2-2506104.zip",
+      "fetchedAt": "2026-09-01T00:40:30.354Z",
+      "sha256": "3255a7e18d7d5f06692826fb826f57f08ed9fefe094077a92cba1d51e515805d",
+      "bytes": 88574,
+      "features": [
+        "tables",
+        "numbering",
+        "tracked-insertions",
+        "tracked-deletions",
+        "hyperlinks",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "3gpp-org__S2-2506286.zip.docx",
+      "url": "https://www.3gpp.org/ftp/tsg_sa/WG2_Arch/TSGS2_170_Goteborg_2025-08/Docs/S2-2506286.zip",
+      "fetchedAt": "2026-09-01T00:40:31.113Z",
+      "sha256": "996b264904a29cb53ff902357f059755f46e5e3a65639546a4de3da4eb8eb2cf",
+      "bytes": 45489,
+      "features": [
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "3gpp-org__S2-2506469.zip.docx",
+      "url": "https://www.3gpp.org/ftp/tsg_sa/WG2_Arch/TSGS2_170_Goteborg_2025-08/Docs/S2-2506469.zip",
+      "fetchedAt": "2026-09-01T00:40:31.875Z",
+      "sha256": "e2b6d239cf10a04e7b3f9416d6ef0b227c7f2f7d4aaf3099839e52b5ce44cc5e",
+      "bytes": 48245,
+      "features": [
+        "numbering",
+        "tracked-insertions",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "3gpp-org__S2-2506661.zip.docx",
+      "url": "https://www.3gpp.org/ftp/tsg_sa/WG2_Arch/TSGS2_170_Goteborg_2025-08/Docs/S2-2506661.zip",
+      "fetchedAt": "2026-09-01T00:40:32.670Z",
+      "sha256": "68fcd30f2c0098a3c12ee39ec2a61363ceb7a6fca012caa2f95abc03c548d166",
+      "bytes": 25216,
+      "features": [
+        "hyperlinks",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "3gpp-org__S2-2506847.zip.docx",
+      "url": "https://www.3gpp.org/ftp/tsg_sa/WG2_Arch/TSGS2_170_Goteborg_2025-08/Docs/S2-2506847.zip",
+      "fetchedAt": "2026-09-01T00:40:32.950Z",
+      "sha256": "8bd3cf3486ac4f40bd3759d1859ea6546ba7c571e9363fde9becb8f47986ca7b",
+      "bytes": 37334,
+      "features": [
+        "hyperlinks",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "3gpp-org__S2-2507028.zip.docx",
+      "url": "https://www.3gpp.org/ftp/tsg_sa/WG2_Arch/TSGS2_170_Goteborg_2025-08/Docs/S2-2507028.zip",
+      "fetchedAt": "2026-09-01T00:40:33.712Z",
+      "sha256": "5920d69c70df4df6dd89d9270d5442c3a5285f59366804059a2f37fbfcf17917",
+      "bytes": 45790,
+      "features": [
+        "tracked-insertions",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "3gpp-org__S2-2507214.zip.docx",
+      "url": "https://www.3gpp.org/ftp/tsg_sa/WG2_Arch/TSGS2_170_Goteborg_2025-08/Docs/S2-2507214.zip",
+      "fetchedAt": "2026-09-01T00:40:34.355Z",
+      "sha256": "d367dfc87de41a7d8d9dea3a96240394cbedd6a5f6d7ff92222e6e99b08171bc",
+      "bytes": 39260,
+      "features": [
+        "tables",
+        "tracked-deletions",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "3gpp-org__S2-2507397.zip.docx",
+      "url": "https://www.3gpp.org/ftp/tsg_sa/WG2_Arch/TSGS2_170_Goteborg_2025-08/Docs/S2-2507397.zip",
+      "fetchedAt": "2026-09-01T00:40:35.115Z",
+      "sha256": "f5e6364c2003f1869f16685cdd7cac56e3984c0990bd8a22157b09f7b8cd6cc1",
+      "bytes": 49496,
+      "features": [
+        "sections",
+        "fields",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "3gpp-org__S2-2507579.zip.docx",
+      "url": "https://www.3gpp.org/ftp/tsg_sa/WG2_Arch/TSGS2_170_Goteborg_2025-08/Docs/S2-2507579.zip",
+      "fetchedAt": "2026-09-01T00:40:35.889Z",
+      "sha256": "c01adfb2732e5308e1183249ab623b8fa1de407597ffe8c4d6232f2c756a4037",
+      "bytes": 63506,
+      "features": [
+        "tables",
+        "numbering",
+        "tracked-insertions",
+        "tracked-deletions",
+        "drawings",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "3gpp-org__S2-2507994.zip.docx",
+      "url": "https://www.3gpp.org/ftp/tsg_sa/WG2_Arch/TSGS2_170_Goteborg_2025-08/Docs/S2-2507994.zip",
+      "fetchedAt": "2026-09-01T00:40:37.538Z",
+      "sha256": "8b18302c130a58bed44e690a4e695236d7235132b122cf51237f27d0b88cda66",
+      "bytes": 31961,
+      "features": [
+        "tables",
+        "hyperlinks",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__creating-a-new-record-entry-9-2015.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/fdr-hms-training-materials/creating-a-new-record-entry-9-2015.docx",
+      "fetchedAt": "2026-09-01T00:35:18.528Z",
+      "sha256": "f398476e65140364a2d7a98b71366cdceada9c90a59aa5cc52b402c52cea634d",
+      "bytes": 71229,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "sections",
+        "numbering-part"
+      ]
+    },
+    {
+      "file": "archives-gov__creating-record-entries-in-ll-hms.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/ll-documents/creating-record-entries-in-ll-hms.docx",
+      "fetchedAt": "2026-09-01T00:38:53.168Z",
+      "sha256": "2134ec2afbb7123a1a25e97d3d1be430f49f85fd740097ab7861cf63524e08e8",
+      "bytes": 1032172,
+      "features": [
+        "drawings",
+        "sections",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__example-pmrs2.0-strs-v.1.1-2018may23.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/ir-templates/example-pmrs2.0-strs-v.1.1-2018may23.docx",
+      "fetchedAt": "2026-09-01T00:38:51.221Z",
+      "sha256": "9e18bad75b371d3d47ab9c6067770ca957eeb5f48407264aad15dd3d8e2555a9",
+      "bytes": 116659,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "footnotes",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__explanation-of-record-entry-fields-and-tabs-fdr.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/fdr-hms-training-materials/explanation-of-record-entry-fields-and-tabs-fdr.docx",
+      "fetchedAt": "2026-09-01T00:35:18.792Z",
+      "sha256": "828d6e8b264b3910dbc063ebbc87bc887f28296a93755513744fae5d79d0e902",
+      "bytes": 16326,
+      "features": [
+        "tables",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__hms-accessioning.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/hms/hms-accessioning.docx",
+      "fetchedAt": "2026-09-01T00:35:21.248Z",
+      "sha256": "9f61e0a2d15ef0ce0e790baf83010c5e24a4b760d44ff38d7cda86f8b0f61b8c",
+      "bytes": 3668593,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__hms-assets-and-barcoding.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/hms/hms-assets-and-barcoding.docx",
+      "fetchedAt": "2026-09-01T00:35:22.517Z",
+      "sha256": "98e3014c368798b4b5c954afbd512f93e6dba9969be7bf93b39f4dc76da0898b",
+      "bytes": 7355085,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__hms-auditing.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/hms/hms-auditing.docx",
+      "fetchedAt": "2026-09-01T00:35:22.878Z",
+      "sha256": "841d28a2aafd1708d538a2e81933c93122e80d22f850390838a8ffff7a140c70",
+      "bytes": 18360,
+      "features": [
+        "tables",
+        "numbering",
+        "hyperlinks",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__hms-getting-started-a1-a2.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/hms/hms-getting-started-a1-a2.docx",
+      "fetchedAt": "2026-09-01T00:35:23.183Z",
+      "sha256": "688259cef3e087efc1e0f3301628337da2b40d0c56bfd91bd4c84b44d97d4d3d",
+      "bytes": 608402,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__hms-needs-assessments.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/hms/hms-needs-assessments.docx",
+      "fetchedAt": "2026-09-01T00:38:44.407Z",
+      "sha256": "087053aa80bcfeb2863c08b90b30915161ab23470b5caf17e7a322437b2682f8",
+      "bytes": 3630130,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__hms-processing-assessments.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/hms/hms-processing-assessments.docx",
+      "fetchedAt": "2026-09-01T00:38:45.349Z",
+      "sha256": "75b0ead7ba9eecbc248a63d1f58b45c2a609216bbb44ec5b428e0dc962cc9881",
+      "bytes": 963213,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__hms-relocation-type-move-3-19-2012.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/hms/hms-relocation-type-move-3-19-2012.docx",
+      "fetchedAt": "2026-09-01T00:38:46.382Z",
+      "sha256": "bdcb15ea6da0f0b95e09280ade21791e6cd837f50d4af06ea5d986c608453445",
+      "bytes": 1730873,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__hms-relocations.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/hms/hms-relocations.docx",
+      "fetchedAt": "2026-09-01T00:38:47.771Z",
+      "sha256": "78eba2a82b16904e2f6d0bd5964a8839acb9e3b790783e41ca2511c4e16bc896",
+      "bytes": 4907025,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__hms-user-guides.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/hms/hms-user-guides.docx",
+      "fetchedAt": "2026-09-01T00:38:48.923Z",
+      "sha256": "2a579aa6d55a678acbd40b1b9b2c1c8c7afdbb159cdaeb95a1a2d11a9619681c",
+      "bytes": 2587031,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__hms-work-requests.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/hms/hms-work-requests.docx",
+      "fetchedAt": "2026-09-01T00:38:49.433Z",
+      "sha256": "4d7c0c47fd40d365cb9560649702ae42a9d5ef67e21e37f08536647cae680290",
+      "bytes": 1937703,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__ir-quality-standards-strs-pdd.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/ir-templates/ir-quality-standards-strs-pdd.docx",
+      "fetchedAt": "2026-09-01T00:38:51.550Z",
+      "sha256": "a047f696f126ebb3b39cd309214fc6e45ef2b30c0ac35a29ab82460a1ce09aac",
+      "bytes": 19522,
+      "features": [
+        "tables",
+        "numbering",
+        "sections",
+        "footnotes",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__pdd-template-v.1.2.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/ir-templates/pdd-template-v.1.2.docx",
+      "fetchedAt": "2026-09-01T00:38:52.248Z",
+      "sha256": "403159115beafd29639917ed75956903720db7fd9c2bf3e735b1d3f3b83fdafd",
+      "bytes": 319831,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "footnotes",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__querying-and-searching-in-hms.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/fdr-hms-training-materials/querying-and-searching-in-hms.docx",
+      "fetchedAt": "2026-09-01T00:35:19.180Z",
+      "sha256": "2bd0a964626f400a82ec73356874df306f234b9c733b5969e021fbc0f407aafc",
+      "bytes": 58447,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__sofa-and-related.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/hms/sofa-and-related.docx",
+      "fetchedAt": "2026-09-01T00:38:50.912Z",
+      "sha256": "263e249cab5c1436e62787143c5a8ea6e6fe96400a32c0fc67248b293f089ac3",
+      "bytes": 5369988,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__strs-template-v.4.0.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/ir-templates/strs-template-v.4.0.docx",
+      "fetchedAt": "2026-09-01T00:38:52.536Z",
+      "sha256": "6ae1420e433a03028178d3118e02580e718603724ef868f2620a52906669d5f6",
+      "bytes": 52834,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "footnotes",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "archives-gov__updating-and-editing-hms-data-9-2015.docx",
+      "url": "https://www.archives.gov/files/contracts/hipgfi/fdr-hms-training-materials/updating-and-editing-hms-data-9-2015.docx",
+      "fetchedAt": "2026-09-01T00:35:20.060Z",
+      "sha256": "fb5bf8054a9cb53bdb96e1425b2386e616312404887ac053f73268bf00342bac",
+      "bytes": 852005,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "caed-uscourts-gov__ArialPleadingPaper.docx",
+      "url": "https://www.caed.uscourts.gov/caednew/assets/File/ArialPleadingPaper.docx",
+      "fetchedAt": "2026-09-01T00:35:24.512Z",
+      "sha256": "abfff0b6c6437388ba2b1eff21ef6f35d9949f3d549a044cdb620c6b7a37bcef",
+      "bytes": 25780,
+      "features": [
+        "tables",
+        "sections",
+        "headers-footers",
+        "numbering-part"
+      ]
+    },
+    {
+      "file": "caed-uscourts-gov__CourierPleadingPaper.docx",
+      "url": "https://www.caed.uscourts.gov/caednew/assets/File/CourierPleadingPaper.docx",
+      "fetchedAt": "2026-09-01T00:35:25.124Z",
+      "sha256": "81837d24bd4c632722597dfdbb36921122faa7a0b0815975e64f28de03bced91",
+      "bytes": 25820,
+      "features": [
+        "tables",
+        "sections",
+        "headers-footers",
+        "numbering-part"
+      ]
+    },
+    {
+      "file": "caed-uscourts-gov__TimesNewRomanPleadingPaper.docx",
+      "url": "https://www.caed.uscourts.gov/caednew/assets/File/TimesNewRomanPleadingPaper.docx",
+      "fetchedAt": "2026-09-01T00:35:25.453Z",
+      "sha256": "467a1527bc28ba9cd1029105c55b5e49ee0dffc623aaaf618c120b962dc2147e",
+      "bytes": 25696,
+      "features": [
+        "tables",
+        "sections",
+        "headers-footers",
+        "numbering-part"
+      ]
+    },
+    {
+      "file": "calibre-ebook-com__demo.docx",
+      "url": "https://calibre-ebook.com/downloads/demos/demo.docx",
+      "fetchedAt": "2026-09-01T00:33:47.476Z",
+      "sha256": "269329fc7ae54b3f289b3ac52efde387edc2e566ef9a48d637e841022c7e0eab",
+      "bytes": 1311881,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "footnotes",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__appendix-s1-minimum-logging-requirements-v.26.1.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/appendix-s1-minimum-logging-requirements-v.26.1.docx",
+      "fetchedAt": "2026-09-01T00:33:49.199Z",
+      "sha256": "c8a73cd1e9d35f7edb4f7781a6bb858504064c1fb090d461b76959c3e751a20d",
+      "bytes": 24562,
+      "features": [
+        "sections",
+        "headers-footers",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__boa-over-50k-v.23.3.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/boa-over-50k-v.23.3.docx",
+      "fetchedAt": "2026-09-01T00:33:49.635Z",
+      "sha256": "0592d62241d15b7ff4024bb03c6a3740b123bd420d5cfd35a64b21e02201c380",
+      "bytes": 85835,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__boa-under-50k-v.23.2.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/boa-under-50k-v.23.2.docx",
+      "fetchedAt": "2026-09-01T00:33:50.052Z",
+      "sha256": "0aa0c3f7a8729eafaaa1abd6b9e579066e7f21e1c08272c0d499ff81a12daef3",
+      "bytes": 84066,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__certification-of-no-change-for-contract-renewal-v-23.1.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/certification-of-no-change-for-contract-renewal-v-23.1.docx",
+      "fetchedAt": "2026-09-01T00:33:50.412Z",
+      "sha256": "35a1eb3b0848010bd119142ea435df92959e3b8d3af382b593c6959a814b1ff9",
+      "bytes": 50109,
+      "features": [
+        "tables",
+        "numbering",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__contract-amendment-v.23.1.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/contract-amendment-v.23.1.docx",
+      "fetchedAt": "2026-09-01T00:33:50.798Z",
+      "sha256": "63a52975bccf688525ad44f19b96e6631e044cac11855fbb05f97d5278898031",
+      "bytes": 64321,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__Contract-Renewal-v.24.1.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/Contract%20Renewal%20v.24.1.docx",
+      "fetchedAt": "2026-09-01T00:33:48.683Z",
+      "sha256": "9d313b3e3888704f8c283b6e1e24d9bcd0d4dac262f1ff4ef13b024915371ddb",
+      "bytes": 62696,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__contract-template-v-25-4.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/contract-template-v-25-4.docx",
+      "fetchedAt": "2026-09-01T00:33:51.161Z",
+      "sha256": "c858f95aa2f911d4fcb55d1a6265b667e2d65935dd73f9951f649b8ba4b7a525",
+      "bytes": 72155,
+      "features": [
+        "tables",
+        "numbering",
+        "comments",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "comments-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__disclosure-for-leasing-vendors-v-27-1-version-2026.0624.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/disclosure-for-leasing-vendors-v-27-1-version%202026.0624.docx",
+      "fetchedAt": "2026-09-01T00:33:51.813Z",
+      "sha256": "ec21504978f139e7166e96bbda9c2bca762b19a47986fd7f757a96b58e682b50",
+      "bytes": 628206,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__financial-disclosures-and-conflicts-of-interest-v27-1-2026-0.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/financial-disclosures-and-conflicts-of-interest-v27-1-2026-0624.docx",
+      "fetchedAt": "2026-09-01T00:37:19.238Z",
+      "sha256": "66c6b63bacb34172ed9073a12ed907635dd2cf9335706df3662a6f249d1b829c",
+      "bytes": 84738,
+      "features": [
+        "tables",
+        "numbering",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__information-and-technology-contract-v.26.1.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/information-and-technology-contract-v.26.1.docx",
+      "fetchedAt": "2026-09-01T00:37:19.787Z",
+      "sha256": "49e0ef306649709a17263a6091bf826fd7b5dd4bdc01bb1dfc6c0e58f4492f8e",
+      "bytes": 186186,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__invitation-for-bid-vendor-instructions-and-requirements-v26-.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/invitation-for-bid-vendor-instructions-and-requirements-v26-1.docx",
+      "fetchedAt": "2026-09-01T00:37:20.114Z",
+      "sha256": "a8a9c7b4e613a752c6030fd12fcd6dd8632ba52dc52c4162ac56ca5896aea2b8",
+      "bytes": 56649,
+      "features": [
+        "tables",
+        "numbering",
+        "comments",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "comments-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__ipg-active-registered-disclosure-for-leasing-vendors-v.25.1.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/ipg-active-registered-disclosure-for-leasing-vendors-v.25.1.docx",
+      "fetchedAt": "2026-09-01T00:37:20.691Z",
+      "sha256": "4ce94bfada59ffcedb0f6161bb6ccb1fcd2c2274a4e75317c8112f8b1b1b2a58",
+      "bytes": 53025,
+      "features": [
+        "tables",
+        "numbering",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__ipg-active-registered-vendor-disclosure-formerly-forms-b-v-2.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/ipg-active-registered-vendor-disclosure-formerly-forms-b-v-26-1-8-26-2025-1.docx",
+      "fetchedAt": "2026-09-01T00:37:21.086Z",
+      "sha256": "5a32458147e397664412687656ba40c55d6c68a0ce9c523268909ffceae5be25",
+      "bytes": 53357,
+      "features": [
+        "tables",
+        "numbering",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__lease-renewal-v-23-1-published-05.18.23.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/lease-renewal-v-23-1-published-05.18.23.docx",
+      "fetchedAt": "2026-09-01T00:37:21.430Z",
+      "sha256": "e20242dc752f437d01a8c4628599c73b86a7e199a25440c889ec4cdce448d65c",
+      "bytes": 62632,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__p-and-a-rfp-v.24.1-8.4.23.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/p-and-a-rfp-v.24.1%208.4.23.docx",
+      "fetchedAt": "2026-09-01T00:37:21.881Z",
+      "sha256": "3484d4df654aeae957117d2a685b4182ed34c2f2452d7ea18e44dcee8c53296a",
+      "bytes": 183129,
+      "features": [
+        "tables",
+        "numbering",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__rfi-leasing-template-v-25-2-6-17-25.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/rfi-leasing-template-v-25-2-6-17-25.docx",
+      "fetchedAt": "2026-09-01T00:37:22.252Z",
+      "sha256": "8f4e01ef804a1048160a07b69ffa08b38603da4da6722c6b8c90cbb1a3b60e00",
+      "bytes": 114026,
+      "features": [
+        "tables",
+        "numbering",
+        "comments",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "comments-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__rfp-template-v-26-2.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/rfp-template-v-26-2.docx",
+      "fetchedAt": "2026-09-01T00:37:22.600Z",
+      "sha256": "dec043afff212e5322dc9200baef7134f77c515536b5e00c7d2485176dd8bcde",
+      "bytes": 79730,
+      "features": [
+        "tables",
+        "numbering",
+        "comments",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "comments-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "cpo-general-illinois-gov__vendor-disclosure-formerly-forms-a-v27-1-2026-0624.docx",
+      "url": "https://cpo-general.illinois.gov/content/dam/soi/en/web/cpo-general/documents/vendor-disclosure-formerly-forms-a-v27-1-2026-0624.docx",
+      "fetchedAt": "2026-09-01T00:37:23.208Z",
+      "sha256": "1f8b259c353542c28805188644a988e12b64b6b905721cbedfa692b1040f085d",
+      "bytes": 616368,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "des-wa-gov__RFI-Template.docx",
+      "url": "https://des.wa.gov/sites/default/files/2022-11/RFI-Template.docx",
+      "fetchedAt": "2026-09-01T00:33:52.219Z",
+      "sha256": "ba487ab92d8c6118adc4bc29230fa190ce3c989a2d07743718cf980024ff507e",
+      "bytes": 40155,
+      "features": [
+        "numbering",
+        "comments",
+        "hyperlinks",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "comments-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "grad-gatech-edu__gatechthesis_word_-_08262016.docx",
+      "url": "https://grad.gatech.edu/sites/default/files/documents/gatechthesis_word_-_08262016.docx",
+      "fetchedAt": "2026-09-01T00:33:53.386Z",
+      "sha256": "87ddbfca5164303170e634bb588cc7effcc8cdb3cffcdd49495ca64290f68255",
+      "bytes": 78696,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "irbo-nih-gov__2026_04_20_NIH_interventional_protocol_template_final_v10.docx",
+      "url": "https://irbo.nih.gov/documents/321/2026_04_20_NIH_interventional_protocol_template_final_v10.docx",
+      "fetchedAt": "2026-09-01T00:35:11.532Z",
+      "sha256": "721f56d83b91c4f090f8a4a25bf800560643e60460c4144b18b462449365131e",
+      "bytes": 245209,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "footnotes",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "irbo-nih-gov__Behavioral__Social_Science_Research_Protocol_template.docx",
+      "url": "https://irbo.nih.gov/documents/320/Behavioral__Social_Science_Research_Protocol_template.docx",
+      "fetchedAt": "2026-09-01T00:35:11.005Z",
+      "sha256": "f14aa0aa9a29e1ab0585e957461c9dd59d70ca6eeb80567488e8141fc1937a9f",
+      "bytes": 216445,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "footnotes",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "irbo-nih-gov__Natural__History_and_Observational_Trials_Protocol_Template.docx",
+      "url": "https://irbo.nih.gov/documents/323/Natural__History_and_Observational_Trials_Protocol_Template.docx",
+      "fetchedAt": "2026-09-01T00:35:12.069Z",
+      "sha256": "f19cdc442d26d395241fcf85b61227a70a93a4a530bffd9878f0b3098dd2a9a5",
+      "bytes": 150520,
+      "features": [
+        "tables",
+        "numbering",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "footnotes",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "irbo-nih-gov__NIH_Protocol_Addendum_Template_When_NIH_is_the_Reviewing_IRB.docx",
+      "url": "https://irbo.nih.gov/documents/322/NIH_Protocol_Addendum_Template_When_NIH_is_the_Reviewing_IRB.docx",
+      "fetchedAt": "2026-09-01T00:35:11.827Z",
+      "sha256": "46e93f47c37ae58ab91a89dbae2e7b2e9788fe720136563c3982250f0f1d316c",
+      "bytes": 55947,
+      "features": [
+        "numbering",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "irbo-nih-gov__NIH_Protocol_Template_for_Repositories.docx",
+      "url": "https://irbo.nih.gov/documents/325/NIH_Protocol_Template_for_Repositories.docx",
+      "fetchedAt": "2026-09-01T00:35:12.586Z",
+      "sha256": "10be596eeda7f401152a31c18c13d927c01c17d8691592f8d201ad6ef905a813",
+      "bytes": 100468,
+      "features": [
+        "tables",
+        "numbering",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "irbo-nih-gov__NIH_Protocol_Template_for_Secondary_Research.docx",
+      "url": "https://irbo.nih.gov/documents/324/NIH_Protocol_Template_for_Secondary_Research.docx",
+      "fetchedAt": "2026-09-01T00:35:12.350Z",
+      "sha256": "2bf7d1c16b35be0244daa23d07d8230a21a618a6c3249116f1ebcdd78c8e6873",
+      "bytes": 95733,
+      "features": [
+        "tables",
+        "numbering",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "irbo-nih-gov__pSITE_Protocol_Addendum_May2024.docx",
+      "url": "https://irbo.nih.gov/documents/501/pSITE_Protocol_Addendum_May2024.docx",
+      "fetchedAt": "2026-09-01T00:35:12.875Z",
+      "sha256": "d53427b2613a1afa22e9f6cea66953aa9fbb7849ecb2fed04e3024b712a1cc55",
+      "bytes": 68796,
+      "features": [
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "mtu-edu__dissertation-template.docx",
+      "url": "https://www.mtu.edu/gradschool/policies-procedures/theses-dissertations/formatting/docs/dissertation-template.docx",
+      "fetchedAt": "2026-09-01T00:35:29.235Z",
+      "sha256": "8e409b327cb6cdef938cf294a3eccd2696bc0e00847ed6481698752ea2ab294b",
+      "bytes": 917593,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "mtu-edu__thesis-template.docx",
+      "url": "https://www.mtu.edu/gradschool/policies-procedures/theses-dissertations/formatting/docs/thesis-template.docx",
+      "fetchedAt": "2026-09-01T00:35:31.454Z",
+      "sha256": "1cfd6103c3a18ba3670efb887ca70de5c4ebe64561689362c9d0d4f08a599135",
+      "bytes": 918533,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "nia-nih-gov__nia-informed-consent-template.docx",
+      "url": "https://www.nia.nih.gov/sites/default/files/2022-03/nia-informed-consent-template.docx",
+      "fetchedAt": "2026-09-01T00:35:32.788Z",
+      "sha256": "49df86b890f29a71882e111ef19d3b674030c76ae85fa4224cf07f01f2886100",
+      "bytes": 64835,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "nia-nih-gov__startup_protocol_template_09202019.docx",
+      "url": "https://www.nia.nih.gov/sites/default/files/2019-10/startup_protocol_template_09202019.docx",
+      "fetchedAt": "2026-09-01T00:35:32.078Z",
+      "sha256": "5a2d5b12118af47f6c3f6389d03010ea08086a055324ad03433028f10f60eb33",
+      "bytes": 84723,
+      "features": [
+        "tables",
+        "numbering",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "oregon-gov__QAManualTemplate.docx",
+      "url": "https://www.oregon.gov/deq/FilterDocs/QAManualTemplate.docx",
+      "fetchedAt": "2026-09-01T00:35:34.060Z",
+      "sha256": "63eaa1bbaa79b4772cd3ece02cc6ec0e00a98526a16ba36ca41a14d972f4f492",
+      "bytes": 100387,
+      "features": [
+        "tables",
+        "numbering",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "rib-uscourts-gov__Affidavit_of_Non_Existence_of_Pay_Advices2020.docx",
+      "url": "https://www.rib.uscourts.gov/sites/default/files/Forms/chapter_7_and_13/Affidavit_of_Non_Existence_of_Pay_Advices2020.docx",
+      "fetchedAt": "2026-09-01T00:35:35.928Z",
+      "sha256": "116a648b5f2acd59146ee4b44802807859ef8bbf314c5805ca2775e5448e0b43",
+      "bytes": 15324,
+      "features": [
+        "numbering",
+        "sections",
+        "numbering-part"
+      ]
+    },
+    {
+      "file": "rib-uscourts-gov__AP-header2020.docx",
+      "url": "https://www.rib.uscourts.gov/sites/default/files/Forms/chapter_7_and_13/AP%20header2020.docx",
+      "fetchedAt": "2026-09-01T00:35:35.598Z",
+      "sha256": "f34d8becc4562ec4ccab4ae5a9801d77e1fa70ca25952b5734e42e6daf4a9484",
+      "bytes": 18123,
+      "features": [
+        "drawings",
+        "sections"
+      ]
+    },
+    {
+      "file": "rib-uscourts-gov__Debtor_Change_Address.docx",
+      "url": "https://www.rib.uscourts.gov/sites/default/files/Forms/chapter_7_and_13/Debtor_Change_Address.docx",
+      "fetchedAt": "2026-09-01T00:35:36.534Z",
+      "sha256": "3eb91fe00a0ded985615f38c4ee50b9ef4295b1a51c576b8aabc9b92f2949188",
+      "bytes": 25521,
+      "features": [
+        "numbering",
+        "sections",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "rib-uscourts-gov__Motion-for-Authority-to-Obtain-Credit2020.docx",
+      "url": "https://www.rib.uscourts.gov/sites/default/files/Forms/chapter_7_and_13/Motion%20for%20Authority%20to%20Obtain%20Credit2020.docx",
+      "fetchedAt": "2026-09-01T00:35:37.011Z",
+      "sha256": "3a62350ae3cabf21dba3fcfe3931c88887265af62075f42fd9f742b9f981ddb4",
+      "bytes": 35561,
+      "features": [
+        "numbering",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "rib-uscourts-gov__Motion-to-Avoid-Judicial-Lien2020.docx",
+      "url": "https://www.rib.uscourts.gov/sites/default/files/Forms/chapter_7_and_13/Motion%20to%20Avoid%20Judicial%20Lien2020.docx",
+      "fetchedAt": "2026-09-01T00:35:37.656Z",
+      "sha256": "d3d8003f05a2e3a6648002073769f816da0fea41a6f8f8a8f64efdab6674b7a1",
+      "bytes": 32982,
+      "features": [
+        "numbering",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "rib-uscourts-gov__Motion-to-Dismiss2020.docx",
+      "url": "https://www.rib.uscourts.gov/sites/default/files/Forms/chapter_7_and_13/Motion%20to%20Dismiss2020.docx",
+      "fetchedAt": "2026-09-01T00:35:38.026Z",
+      "sha256": "7f62d2b79f26afd2391cdda42a67e911291eaae64318769329f73a5d3a1568ca",
+      "bytes": 30377,
+      "features": [
+        "sections",
+        "numbering-part"
+      ]
+    },
+    {
+      "file": "rib-uscourts-gov__Motion-to-Extend-Time2020.docx",
+      "url": "https://www.rib.uscourts.gov/sites/default/files/Forms/chapter_7_and_13/Motion%20to%20Extend%20Time2020.docx",
+      "fetchedAt": "2026-09-01T00:35:38.275Z",
+      "sha256": "0267c30d1b8c991716cd206ee600c6145f7edd3a2554805367814dc20633786b",
+      "bytes": 32058,
+      "features": [
+        "drawings",
+        "sections",
+        "numbering-part"
+      ]
+    },
+    {
+      "file": "rib-uscourts-gov__Notice-of-Intended-Sale.docx",
+      "url": "https://www.rib.uscourts.gov/sites/default/files/Templates/MicrosoftWord/Notice%20of%20Intended%20Sale.docx",
+      "fetchedAt": "2026-09-01T00:38:55.154Z",
+      "sha256": "c72833267acbfcaeb282729f89ed97d734c4011ec81544325b7535ac3775576a",
+      "bytes": 32427,
+      "features": [
+        "drawings",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "rib-uscourts-gov__Notice-to-Added-Creditors2020.docx",
+      "url": "https://www.rib.uscourts.gov/sites/default/files/Forms/chapter_7_and_13/Notice%20to%20Added%20Creditors2020.docx",
+      "fetchedAt": "2026-09-01T00:35:38.552Z",
+      "sha256": "97106f0e02c782afcb5011bbf102f2b6291527c44660ff286de007e25b787686",
+      "bytes": 34516,
+      "features": [
+        "hyperlinks",
+        "sections",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__Appendix-C---Example-Case-Scheduling-Order.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/Appendix%20C%20-%20Example%20Case%20Scheduling%20Order.docx",
+      "fetchedAt": "2026-09-01T00:35:40.205Z",
+      "sha256": "2ab8320295b4230e087c8e69ece5843a83c906b92fb27cfd8a2ea740b2a5a10e",
+      "bytes": 41784,
+      "features": [
+        "tables",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__Appendix-D---Example-Complex-Case-Scheduling-Order.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/Appendix%20D%20-%20Example%20Complex%20Case%20Scheduling%20Order.docx",
+      "fetchedAt": "2026-09-01T00:35:40.656Z",
+      "sha256": "7b7d62cf248795732b4057ca4d6718d73d672cd490a9151b12ef9f7a47f51cc2",
+      "bytes": 39130,
+      "features": [
+        "tables",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ModelESIAgreement_CLEAN_2.1.23.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ModelESIAgreement_CLEAN_2.1.23.docx",
+      "fetchedAt": "2026-09-01T00:35:41.075Z",
+      "sha256": "fa45618bf1ecc52ac56ace8754ca1fbacf67baeb4022001e0b34c57a67d4e79d",
+      "bytes": 47080,
+      "features": [
+        "tables",
+        "numbering",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ModelIndividualizedTrialAgreement_Nov30.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ModelIndividualizedTrialAgreement_Nov30.docx",
+      "fetchedAt": "2026-09-01T00:35:41.373Z",
+      "sha256": "90b85f524bc649dd876c4363c9c5103cd29241458394a03ec6f5357fc3c9e33c",
+      "bytes": 13099,
+      "features": [
+        "sections",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ModelStipulatedProtectiveOrder-CLEAN_2.1.23.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ModelStipulatedProtectiveOrder%20CLEAN_2.1.23.docx",
+      "fetchedAt": "2026-09-01T00:35:41.992Z",
+      "sha256": "a3cfb29b0e25795c3fde98f4e7be1f17263894dd5835ffd65d3141ebc688b3c9",
+      "bytes": 77296,
+      "features": [
+        "tables",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__Pretrial_Order_template.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/Pretrial_Order_template.docx",
+      "fetchedAt": "2026-09-01T00:35:42.424Z",
+      "sha256": "b3b5e49b063a15ebf226b6ba46c48c6b1b467bbc4c4ff8f9b6355cc871cbdff2",
+      "bytes": 58831,
+      "features": [
+        "tables",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ProSe10Complaint-ConversionofProperty.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ProSe10Complaint-ConversionofProperty.docx",
+      "fetchedAt": "2026-09-01T00:35:42.838Z",
+      "sha256": "b651e0f9d32a916787e79a652ef55725d17fa878bab21fa6f29d6e1081f09058",
+      "bytes": 60647,
+      "features": [
+        "tables",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ProSe11Complaint-ThirdParty.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ProSe11Complaint-ThirdParty.docx",
+      "fetchedAt": "2026-09-01T00:35:43.058Z",
+      "sha256": "9ebc2bc5e72f40bee45c09d170e20a163c34988c5ac007a21a24ce6dde9be26f",
+      "bytes": 56654,
+      "features": [
+        "tables",
+        "numbering",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ProSe12Complaint-InterpleaderandDeclaratoryRelief.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ProSe12Complaint-InterpleaderandDeclaratoryRelief.docx",
+      "fetchedAt": "2026-09-01T00:38:56.280Z",
+      "sha256": "596b0b0b5e77165e1c50b4634de27271e9e11178368d459c9fcea81ad8e22e0f",
+      "bytes": 67770,
+      "features": [
+        "tables",
+        "numbering",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ProSe15Complaint-ViolationofCivilRights.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ProSe15Complaint-ViolationofCivilRights.docx",
+      "fetchedAt": "2026-09-01T00:38:56.730Z",
+      "sha256": "8a74ee3c22e8e31c07affcc907dcd0a42eb03aba0c98d6cae9d9d2beb1c48dac",
+      "bytes": 60156,
+      "features": [
+        "tables",
+        "numbering",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ProSe1Complaint-CivilCaseBasic.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ProSe1Complaint-CivilCaseBasic.docx",
+      "fetchedAt": "2026-09-01T00:38:57.141Z",
+      "sha256": "9844c98dbd2cc73ad584c19555d1c348a4ceb6afba2deee303236142db56f2a9",
+      "bytes": 64832,
+      "features": [
+        "tables",
+        "numbering",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ProSe2Complaint-RequestforInjunction.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ProSe2Complaint-RequestforInjunction.docx",
+      "fetchedAt": "2026-09-01T00:38:57.552Z",
+      "sha256": "de127929ad0ce9b119bc4a97fa067290fcba16d3b8516555c3d0a59a09dceac1",
+      "bytes": 60839,
+      "features": [
+        "tables",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ProSe4Complaint-BreachofContract.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ProSe4Complaint-BreachofContract.docx",
+      "fetchedAt": "2026-09-01T00:38:57.970Z",
+      "sha256": "adf7590e4dd2f739e717d7832d8c16b48ab13fb0104c6983cf183c18021b2877",
+      "bytes": 61217,
+      "features": [
+        "tables",
+        "numbering",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ProSe5Complaint-Negligence.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ProSe5Complaint-Negligence.docx",
+      "fetchedAt": "2026-09-01T00:38:58.187Z",
+      "sha256": "a15325ccb579742acc2bb8a0ae6052b0a0fa1d2e37118653ecafde1fde095784",
+      "bytes": 60717,
+      "features": [
+        "tables",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ProSe6Complaint-DefendantOwesPlaintiffMoney.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ProSe6Complaint-DefendantOwesPlaintiffMoney.docx",
+      "fetchedAt": "2026-09-01T00:40:27.537Z",
+      "sha256": "7107a5650462f174c46d95669bb7314ad896e022118a6cebbee38f213d9480d7",
+      "bytes": 64243,
+      "features": [
+        "tables",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ProSe7Complaint-EmploymentDiscrimination.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ProSe7Complaint-EmploymentDiscrimination.docx",
+      "fetchedAt": "2026-09-01T00:40:27.972Z",
+      "sha256": "50447c054ffcb5835e26b1735dca6374694b284ee1f7d2a3b6da14c16aa604b9",
+      "bytes": 62359,
+      "features": [
+        "tables",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ProSe8Complaint-ViolationofFairLaborStandardsAct.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ProSe8Complaint-ViolationofFairLaborStandardsAct.docx",
+      "fetchedAt": "2026-09-01T00:40:28.686Z",
+      "sha256": "16f22c3bcae5517d4b02e939db1421183c11985d5470cb219638830855b688e9",
+      "bytes": 60929,
+      "features": [
+        "tables",
+        "numbering",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ProSe9Complaint-RequirePerformanceofaContracttoConveyRealPro.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ProSe9Complaint-RequirePerformanceofaContracttoConveyRealProperty.docx",
+      "fetchedAt": "2026-09-01T00:40:29.241Z",
+      "sha256": "1c7061a755cf7519d19b533e6d41ba3288987e802823c52c76d55a9bf25b600f",
+      "bytes": 62357,
+      "features": [
+        "tables",
+        "numbering",
+        "sections",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "wawd-uscourts-gov__ProSeComplaintforSocialSecurity.docx",
+      "url": "https://www.wawd.uscourts.gov/sites/wawd/files/ProSeComplaintforSocialSecurity.docx",
+      "fetchedAt": "2026-09-01T00:40:29.520Z",
+      "sha256": "227738a3670f9d254b60a7ea87190ae1b181ebb57c4e2d8f6a1b2545ccabd374",
+      "bytes": 43802,
+      "features": [
+        "tables",
+        "numbering",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "non-ascii"
+      ]
+    },
+    {
+      "file": "weber-edu__Thesis-Template.docx",
+      "url": "https://www.weber.edu/wsuimages/mscs/Thesis%20Template.docx",
+      "fetchedAt": "2026-09-01T00:35:44.316Z",
+      "sha256": "c7334e935929d5c27a91dc5676adafe7f413efdea949c8e67b7b2290503aebf1",
+      "bytes": 58928,
+      "features": [
+        "tables",
+        "numbering",
+        "comments",
+        "drawings",
+        "hyperlinks",
+        "sections",
+        "fields",
+        "headers-footers",
+        "numbering-part",
+        "comments-part",
+        "non-ascii"
+      ]
+    }
+  ]
+}

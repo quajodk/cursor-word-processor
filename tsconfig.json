@@ -1,0 +1,9 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/doc-model" },
+    { "path": "packages/host-api" },
+    { "path": "apps/server" },
+    { "path": "apps/web" }
+  ]
+}

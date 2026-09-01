@@ -68,24 +68,76 @@ export interface FeatureInventory {
   generator: string | null;
 }
 
+/**
+ * MANIFEST.json is a SHARED record — another agent writes it concurrently with
+ * a flatter schema (`{note, generatedBy, files: [{file,url,sha256,bytes,
+ * fetchedAt, features: string[]}]}`). Rather than fight over the shape, we
+ * read either shape, key by sha256, and write back their array shape with our
+ * richer data added under keys they don't use:
+ *
+ *   features   string[]          — their tag list, kept (we produce a superset)
+ *   inventory  FeatureInventory  — our part-level inventory, added
+ *   urls       string[]          — union of every URL this sha was fetched from
+ *   source     string            — provenance note
+ *
+ * Nothing they write is ever dropped. Fields we don't understand are carried
+ * through verbatim.
+ */
 export interface ManifestEntry {
   sha256: string;
   /** Filename on disk, relative to corpus/docx/. */
   file: string;
+  /** Primary URL (their schema uses a single `url`). */
+  url?: string;
   /** Every URL this exact byte sequence was retrieved from. */
   urls: string[];
   /** Human note about where this came from / why it's interesting. */
   source: string;
   bytes: number;
+  /** Their key. */
+  fetchedAt?: string;
   retrieved: string;
-  features: FeatureInventory;
+  /** Their coarse tag list. */
+  features: string[];
+  /** Our part-level inventory. */
+  inventory: FeatureInventory;
+  [carried: string]: unknown;
 }
 
 export interface Manifest {
-  version: 1;
-  updated: string;
-  /** Keyed by sha256. */
-  files: Record<string, ManifestEntry>;
+  note?: string;
+  generatedBy?: string;
+  updated?: string;
+  files: ManifestEntry[];
+}
+
+/** Coarse tags, compatible with the other agent's `features: string[]`. */
+export function featureTags(f: FeatureInventory): string[] {
+  const t: string[] = [];
+  if (f.tables > 0) t.push("tables");
+  if (f.maxTableDepth > 1) t.push("nested-tables");
+  if (f.numbering) t.push("numbering");
+  if (f.numberingLevels >= 9) t.push("multi-level-numbering");
+  if (f.headers > 0) t.push("headers");
+  if (f.footers > 0) t.push("footers");
+  if (f.footnotes > 0) t.push("footnotes");
+  if (f.endnotes > 0) t.push("endnotes");
+  if (f.comments > 0) t.push("comments");
+  if (f.revisions > 0) t.push("revisions");
+  if (f.images > 0) t.push("images");
+  if (f.embeddedObjects > 0) t.push("embedded-objects");
+  if (f.sections > 1) t.push("section-breaks");
+  if (f.fields > 0) t.push("fields");
+  if (f.hyperlinks > 0) t.push("hyperlinks");
+  if (f.bookmarks > 0) t.push("bookmarks");
+  if (f.textboxes > 0) t.push("textboxes");
+  if (f.contentControls > 0) t.push("content-controls");
+  if (f.nonLatinText) t.push("non-latin-text");
+  if (f.languages.length > 1) t.push("multilingual");
+  if (f.rsidAttrs > 0) t.push("rsids");
+  if ((f.reportedPages ?? 0) >= 50) t.push("50-plus-pages");
+  else if ((f.reportedPages ?? 0) >= 20) t.push("20-plus-pages");
+  return t;
 }
 
 const WORD_NS_DOC = "word/document.xml";
@@ -260,43 +312,115 @@ export function inventory(entries: Record<string, Uint8Array>): FeatureInventory
 /* Manifest I/O — merge, never overwrite                               */
 /* ------------------------------------------------------------------ */
 
-export async function readManifest(): Promise<Manifest> {
+/** Raw manifest read, tolerating either schema. Returns entries keyed by sha256. */
+export async function readManifest(): Promise<Map<string, Partial<ManifestEntry>>> {
+  const out = new Map<string, Partial<ManifestEntry>>();
   const f = Bun.file(MANIFEST_PATH);
-  if (!(await f.exists())) return { version: 1, updated: new Date().toISOString(), files: {} };
+  if (!(await f.exists())) return out;
+  let raw: unknown;
   try {
-    const m = (await f.json()) as Manifest;
-    if (!m.files) return { version: 1, updated: new Date().toISOString(), files: {} };
-    return m;
+    raw = await f.json();
   } catch {
-    return { version: 1, updated: new Date().toISOString(), files: {} };
+    return out; // half-written by a concurrent writer; treat as empty and re-derive
   }
+  const filesField = (raw as { files?: unknown }).files;
+  const list: unknown[] = Array.isArray(filesField)
+    ? filesField
+    : filesField && typeof filesField === "object"
+      ? Object.values(filesField as Record<string, unknown>)
+      : [];
+  for (const e of list) {
+    if (!e || typeof e !== "object") continue;
+    const entry = e as Partial<ManifestEntry> & { url?: string };
+    const sha = entry.sha256;
+    if (!sha) continue;
+    out.set(sha, entry);
+  }
+  return out;
 }
 
 /**
- * Re-reads the manifest immediately before writing and merges into it, so that
- * a concurrent agent's entries survive. Union on `urls`; incoming feature
- * inventory wins (it is derived from bytes, so it is identical anyway).
+ * Append-only provenance journal, private to this rig. MANIFEST.json is shared
+ * and another agent rewrites it wholesale; the journal is how our source notes
+ * survive that. One JSON object per line, last write per sha wins.
  */
-export async function mergeManifest(incoming: Record<string, ManifestEntry>): Promise<Manifest> {
-  const current = await readManifest();
-  for (const [sha, entry] of Object.entries(incoming)) {
-    const prev = current.files[sha];
-    if (prev) {
-      current.files[sha] = {
-        ...prev,
-        ...entry,
-        urls: [...new Set([...prev.urls, ...entry.urls])].sort(),
-        source: prev.source || entry.source,
-        retrieved: prev.retrieved < entry.retrieved ? prev.retrieved : entry.retrieved,
-      };
-    } else {
-      current.files[sha] = entry;
+const JOURNAL_PATH = `${CORPUS_DIR}/PROVENANCE.bench.jsonl`;
+
+export async function appendProvenance(
+  rows: { sha256: string; file: string; url: string; source: string; retrieved: string }[],
+): Promise<void> {
+  if (rows.length === 0) return;
+  await ensureDir(CORPUS_DIR);
+  const existing = (await Bun.file(JOURNAL_PATH).exists())
+    ? await Bun.file(JOURNAL_PATH).text()
+    : "";
+  await Bun.write(JOURNAL_PATH, existing + rows.map((r) => JSON.stringify(r)).join("\n") + "\n");
+}
+
+export async function readProvenance(): Promise<Map<string, { urls: Set<string>; source: string; retrieved: string }>> {
+  const out = new Map<string, { urls: Set<string>; source: string; retrieved: string }>();
+  if (!(await Bun.file(JOURNAL_PATH).exists())) return out;
+  for (const line of (await Bun.file(JOURNAL_PATH).text()).split("\n")) {
+    if (!line.trim()) continue;
+    try {
+      const r = JSON.parse(line) as { sha256: string; url: string; source: string; retrieved: string };
+      const cur = out.get(r.sha256) ?? { urls: new Set<string>(), source: r.source, retrieved: r.retrieved };
+      cur.urls.add(r.url);
+      if (!cur.source) cur.source = r.source;
+      if (r.retrieved < cur.retrieved) cur.retrieved = r.retrieved;
+      out.set(r.sha256, cur);
+    } catch {
+      /* skip malformed line */
     }
   }
-  current.updated = new Date().toISOString();
+  return out;
+}
+
+/**
+ * Re-reads MANIFEST.json immediately before writing and merges into it, so a
+ * concurrent agent's entries survive. Their fields are carried through
+ * verbatim; ours are added under keys they don't use.
+ */
+export async function mergeManifest(incoming: Map<string, ManifestEntry>): Promise<ManifestEntry[]> {
+  const current = await readManifest();
+  for (const [sha, entry] of incoming) {
+    const prev = current.get(sha);
+    const prevUrls = [
+      ...(prev?.urls ?? []),
+      ...(prev?.url ? [prev.url] : []),
+    ].filter(Boolean) as string[];
+    const urls = [...new Set([...prevUrls, ...entry.urls])].sort();
+    current.set(sha, {
+      ...prev,
+      ...entry,
+      url: prev?.url ?? entry.url ?? urls[0],
+      urls,
+      source: (prev?.source && prev.source !== "unknown" ? prev.source : "") || entry.source,
+      fetchedAt: prev?.fetchedAt ?? entry.fetchedAt ?? entry.retrieved,
+      /* Union of both tag lists — never drop a tag the other agent recorded. */
+      features: [...new Set([...(prev?.features ?? []), ...entry.features])].sort(),
+    });
+  }
+  const files = [...current.values()].sort((a, b) => (a.file ?? "").localeCompare(b.file ?? ""));
   await ensureDir(CORPUS_DIR);
-  await Bun.write(MANIFEST_PATH, JSON.stringify(current, null, 2) + "\n");
-  return current;
+  await Bun.write(
+    MANIFEST_PATH,
+    JSON.stringify(
+      {
+        note:
+          "Real-world public .docx corpus for the round-trip fidelity rig. Keyed by sha256; " +
+          "`features` is a coarse tag list, `inventory` is a part-level inventory derived by " +
+          "unzipping and inspecting the OOXML parts. Merged from multiple agents — merge, do not overwrite.",
+        generatedBy: "packages/ooxml/src/bench/corpus.ts",
+        updated: new Date().toISOString(),
+        count: files.length,
+        files,
+      },
+      null,
+      2,
+    ) + "\n",
+  );
+  return files as ManifestEntry[];
 }
 
 /* ------------------------------------------------------------------ */
@@ -335,7 +459,10 @@ function safeName(c: Candidate): string {
   );
 }
 
-export async function fetchCandidate(c: Candidate, existing: Manifest): Promise<FetchOutcome> {
+export async function fetchCandidate(
+  c: Candidate,
+  existing: Map<string, Partial<ManifestEntry>>,
+): Promise<FetchOutcome> {
   let res: Response;
   try {
     res = await fetch(c.url, {
@@ -352,8 +479,8 @@ export async function fetchCandidate(c: Candidate, existing: Manifest): Promise<
   const v = validateDocx(bytes);
   if ("error" in v) return { url: c.url, ok: false, reason: v.error };
 
-  const prior = existing.files[v.sha256];
-  if (prior) {
+  const prior = existing.get(v.sha256);
+  if (prior?.file) {
     return {
       url: c.url,
       ok: true,
@@ -375,14 +502,13 @@ export async function fetchCandidate(c: Candidate, existing: Manifest): Promise<
  * run, and standalone to pick up files another agent downloaded without
  * writing a manifest entry.
  */
-export async function reinventory(
-  sourceHints: Map<string, { source: string; urls: string[] }> = new Map(),
-): Promise<Manifest> {
+export async function reinventory(): Promise<ManifestEntry[]> {
   const files = await listCorpusFiles();
-  const incoming: Record<string, ManifestEntry> = {};
+  const incoming = new Map<string, ManifestEntry>();
   const existing = await readManifest();
-  const byFile = new Map<string, ManifestEntry>();
-  for (const e of Object.values(existing.files)) byFile.set(e.file, e);
+  const journal = await readProvenance();
+  const byFile = new Map<string, Partial<ManifestEntry>>();
+  for (const e of existing.values()) if (e.file) byFile.set(e.file, e);
 
   for (const file of files) {
     const bytes = new Uint8Array(await Bun.file(`${CORPUS_DIR}/${file}`).arrayBuffer());
@@ -391,17 +517,21 @@ export async function reinventory(
       console.warn(`  ! skipping ${file}: ${v.error}`);
       continue;
     }
-    const hint = sourceHints.get(file);
-    const prev = byFile.get(file) ?? existing.files[v.sha256];
-    incoming[v.sha256] = {
+    const j = journal.get(v.sha256);
+    const prev = existing.get(v.sha256) ?? byFile.get(file);
+    const inv = inventory(v.entries);
+    const prevUrls = [...(prev?.urls ?? []), ...(prev?.url ? [prev.url] : [])].filter(Boolean) as string[];
+    incoming.set(v.sha256, {
+      ...prev,
       sha256: v.sha256,
       file,
-      urls: [...new Set([...(prev?.urls ?? []), ...(hint?.urls ?? [])])].sort(),
-      source: hint?.source ?? prev?.source ?? "unknown (present on disk before this run)",
+      urls: [...new Set([...prevUrls, ...(j ? [...j.urls] : [])])].sort(),
+      source: j?.source ?? prev?.source ?? "unknown (present on disk before this run)",
       bytes: bytes.length,
-      retrieved: prev?.retrieved ?? new Date().toISOString(),
-      features: inventory(v.entries),
-    };
+      retrieved: j?.retrieved ?? prev?.retrieved ?? prev?.fetchedAt ?? new Date().toISOString(),
+      features: [...new Set([...(prev?.features ?? []), ...featureTags(inv)])].sort(),
+      inventory: inv,
+    });
   }
   return mergeManifest(incoming);
 }

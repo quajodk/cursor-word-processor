@@ -1,1 +1,6 @@
-{ "extends": "../../tsconfig.base.json", "compilerOptions": { "outDir": "dist" }, "include": ["src"] }
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "outDir": "dist", "rootDir": "src", "types": ["bun"] },
+  "include": ["src"],
+  "references": [{ "path": "../../packages/host-api" }]
+}

@@ -12,6 +12,7 @@
  */
 
 import {
+  appendProvenance,
   fetchCandidate,
   readManifest,
   reinventory,
@@ -38,8 +39,8 @@ async function loadList(path: string): Promise<Candidate[]> {
 
 async function main(): Promise<void> {
   if (args.includes("--reinventory")) {
-    const m = await reinventory();
-    console.log(`Re-inventoried ${Object.keys(m.files).length} files in ${CORPUS_DIR}`);
+    const files = await reinventory();
+    console.log(`Re-inventoried ${files.length} files in ${CORPUS_DIR}`);
     return;
   }
 
@@ -48,14 +49,16 @@ async function main(): Promise<void> {
   if (li >= 0 && args[li + 1]) candidates = await loadList(args[li + 1]!);
 
   const manifest = await readManifest();
-  const known = new Set(Object.values(manifest.files).flatMap((e) => e.urls));
+  const known = new Set(
+    [...manifest.values()].flatMap((e) => [...(e.urls ?? []), ...(e.url ? [e.url] : [])]),
+  );
   const todo = candidates.filter((c) => !known.has(c.url) || args.includes("--force"));
 
-  console.log(`${candidates.length} candidates, ${todo.length} to try, ${Object.keys(manifest.files).length} already in manifest`);
+  console.log(`${candidates.length} candidates, ${todo.length} to try, ${manifest.size} already in manifest`);
 
   const CONCURRENCY = 6;
   const results: FetchOutcome[] = [];
-  const hints = new Map<string, { source: string; urls: string[] }>();
+  const journal: { sha256: string; file: string; url: string; source: string; retrieved: string }[] = [];
 
   let cursor = 0;
   const worker = async (): Promise<void> => {
@@ -65,11 +68,13 @@ async function main(): Promise<void> {
       if (!c) return;
       const r = await fetchCandidate(c, manifest);
       results.push(r);
-      if (r.ok && r.file) {
-        const prev = hints.get(r.file);
-        hints.set(r.file, {
-          source: prev?.source ?? c.source,
-          urls: [...new Set([...(prev?.urls ?? []), c.url])],
+      if (r.ok && r.file && r.sha256) {
+        journal.push({
+          sha256: r.sha256,
+          file: r.file,
+          url: c.url,
+          source: c.source,
+          retrieved: new Date().toISOString(),
         });
         console.log(`  ok   ${r.duplicateOf ? "(dup) " : ""}${((r.bytes ?? 0) / 1024).toFixed(0).padStart(6)}K  ${r.file}`);
       } else {
@@ -79,9 +84,10 @@ async function main(): Promise<void> {
   };
   await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 
-  const m = await reinventory(hints);
+  await appendProvenance(journal);
+  const files = await reinventory();
   const ok = results.filter((r) => r.ok).length;
-  console.log(`\n${ok}/${todo.length} retrieved. Corpus now ${Object.keys(m.files).length} unique files.`);
+  console.log(`\n${ok}/${todo.length} retrieved. Corpus now ${files.length} unique files.`);
 }
 
 await main();

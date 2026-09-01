@@ -97,3 +97,9 @@ export interface HostApi {
   /** Absolute path of the open workspace root. */
   root(): Promise<string>;
 }
+
+/**
+ * v1 web implementation of the seam: HTTP + WebSocket against `apps/server`.
+ * The base URL is a parameter, never a constant — see the layering rule in ARCHITECTURE.md.
+ */
+export { createHttpHost, HostError, type HttpHostOptions, type FetchLike } from "./http";
