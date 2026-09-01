@@ -17,8 +17,8 @@
       "scope": "React chrome, ProseMirror surface, bun server implementing HostApi",
       "builder": "done",
       "critic": "pending",
-      "evidence": "The app runs. Real .md opened from disk, edited and saved back correctly \u2014 frontmatter, GFM table, ordered list, bold, em-dash, CJK and \u00b1 all survived the round trip. No console errors.",
-      "gap": "Word count does not update while typing and the status-bar latency readout stays blank. Cosmetic, but they are the two numbers a writer would actually watch."
+      "evidence": "The app runs. Real .md opened from disk, edited and saved back correctly \u2014 frontmatter, GFM table, ordered list, bold, em-dash, CJK and \u00b1 all survived. Live status bar reads 2.7 ms p99 keystroke latency in a real browser, including ProseMirror\u2019s DOM write, against an 8 ms budget.",
+      "gap": "Only the Markdown path is wired. Opening a .docx in the app is not possible yet, so the document-polish comparison against Google Docs cannot be run."
     },
     {
       "id": "md",
@@ -111,6 +111,13 @@
       "state": "measured"
     },
     {
+      "label": "Keystroke \u2192 DOM, in browser",
+      "value": 2.7,
+      "unit": "ms p99",
+      "budget": "8",
+      "state": "measured"
+    },
+    {
       "label": "Open 40k-word doc",
       "value": 2.67,
       "unit": "ms p99",
@@ -194,7 +201,7 @@
   ],
   "notes": [
     "The gate is currently RED, deliberately and correctly: importing large Word documents takes p99 3.35s against a 1.2s budget. A 84ms average across the whole corpus had hidden this \u2014 the large documents are the bottleneck.",
-    "Two real bugs were found in the perf harness itself while wiring it: it discarded warm-up samples twice, which silently emptied the sample array and reported 'no measurement' instead of a number.",
+    "A status-bar reading that looked like two bugs turned out to be the 220 ms coalescing timer doing its job \u2014 the status store deliberately keeps typing off React\u2019s render path. Verified by measurement rather than patched on suspicion.",
     "Both session interruptions cost roughly a wave each. Builders now commit after every deliverable, which is why nothing was lost the second time.",
     "The .docx corpus is public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used."
   ]

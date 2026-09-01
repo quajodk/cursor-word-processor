@@ -95,7 +95,7 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
   <div class="eyebrow">Wave 2 · First working vertical slice</div>
   <h1>scriv workbench</h1>
   <p class="dek">An IDE for writing. Markdown on disk is the source of truth; the editing surface is a real word processor.</p>
-  <div class="stamp"><span>updated 2026-09-01 10:33Z</span><span>bun · TypeScript · ProseMirror</span></div>
+  <div class="stamp"><span>updated 2026-09-01 10:35Z</span><span>bun · TypeScript · ProseMirror</span></div>
 </header>
 
 <section>
@@ -103,6 +103,10 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
   <div class="tiles"><div class="tile tile-ok">
     <div class="tile-label">Keystroke → state commit</div>
     <div class="tile-value">0.38<span class="tile-unit">ms p99</span></div>
+    <div class="tile-budget">budget · 8 ms p99</div>
+  </div><div class="tile tile-ok">
+    <div class="tile-label">Keystroke → DOM, in browser</div>
+    <div class="tile-value">2.7<span class="tile-unit">ms p99</span></div>
     <div class="tile-budget">budget · 8 ms p99</div>
   </div><div class="tile tile-ok">
     <div class="tile-label">Open 40k-word doc</div>
@@ -151,8 +155,8 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
     <div class="piece-chips"><span class="chip chip-done">done</span></div>
   </header>
   <p class="piece-scope">React chrome, ProseMirror surface, bun server implementing HostApi</p>
-  <p class="piece-evidence"><span class="tag">verified</span>The app runs. Real .md opened from disk, edited and saved back correctly — frontmatter, GFM table, ordered list, bold, em-dash, CJK and ± all survived the round trip. No console errors.</p>
-  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Word count does not update while typing and the status-bar latency readout stays blank. Cosmetic, but they are the two numbers a writer would actually watch.</p>
+  <p class="piece-evidence"><span class="tag">verified</span>The app runs. Real .md opened from disk, edited and saved back correctly — frontmatter, GFM table, ordered list, bold, em-dash, CJK and ± all survived. Live status bar reads 2.7 ms p99 keystroke latency in a real browser, including ProseMirror’s DOM write, against an 8 ms budget.</p>
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Only the Markdown path is wired. Opening a .docx in the app is not possible yet, so the document-polish comparison against Google Docs cannot be run.</p>
 </article><article class="piece piece-done">
   <header class="piece-head">
     <h3>Markdown ⇄ model</h3>
@@ -265,7 +269,7 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
 
 <section>
   <h2>Notes</h2>
-  <ul class="notes"><li>The gate is currently RED, deliberately and correctly: importing large Word documents takes p99 3.35s against a 1.2s budget. A 84ms average across the whole corpus had hidden this — the large documents are the bottleneck.</li><li>Two real bugs were found in the perf harness itself while wiring it: it discarded warm-up samples twice, which silently emptied the sample array and reported 'no measurement' instead of a number.</li><li>Both session interruptions cost roughly a wave each. Builders now commit after every deliverable, which is why nothing was lost the second time.</li><li>The .docx corpus is public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used.</li></ul>
+  <ul class="notes"><li>The gate is currently RED, deliberately and correctly: importing large Word documents takes p99 3.35s against a 1.2s budget. A 84ms average across the whole corpus had hidden this — the large documents are the bottleneck.</li><li>A status-bar reading that looked like two bugs turned out to be the 220 ms coalescing timer doing its job — the status store deliberately keeps typing off React’s render path. Verified by measurement rather than patched on suspicion.</li><li>Both session interruptions cost roughly a wave each. Builders now commit after every deliverable, which is why nothing was lost the second time.</li><li>The .docx corpus is public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used.</li></ul>
 </section>
 
 <footer>Every number on this page is measured or absent. Nothing here is estimated.</footer>
