@@ -55,6 +55,14 @@ export interface Frontmatter {
   /** The whole block including fences and its trailing newline, verbatim. */
   block: string;
   /**
+   * The blank lines between the closing fence and the first body block, verbatim.
+   *
+   * This is presentation belonging to the frontmatter, not content, so the Markdown parser
+   * never sees it — but it is part of the source and dropping it rewrites the file on every
+   * save. Usually `"\n"`; `""` when the body starts on the very next line.
+   */
+  gap: string;
+  /**
    * Best-effort structured view of `raw`. A deliberately small YAML subset: block maps,
    * block sequences, quoted and plain scalars, nesting by indentation. Anything it does not
    * understand is left out of `data` — `raw` never loses it.
@@ -94,6 +102,14 @@ export interface StyleProfile {
   hardBreak: "backslash" | "spaces";
   /** Trailing newline at end of file. */
   finalNewline: boolean;
+  /**
+   * Dashes in a table's delimiter row, as the source writes them. Hand-written tables
+   * overwhelmingly use `---` regardless of column width; re-deriving the width from the
+   * content rewrites every table in the file on save.
+   */
+  tableDelimiter: number;
+  /** true → cells padded so the pipes line up in a column. false → single-space cells. */
+  tablePad: boolean;
 }
 
 export const DEFAULT_STYLE: StyleProfile = {
@@ -114,6 +130,8 @@ export const DEFAULT_STYLE: StyleProfile = {
   resourceLink: false,
   hardBreak: "backslash",
   finalNewline: true,
+  tableDelimiter: 3,
+  tablePad: false,
 };
 
 /** A CriticMarkup comment: `{>>body<<}`. The body lives in the Markdown; the thread does not. */

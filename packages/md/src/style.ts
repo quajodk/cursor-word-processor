@@ -28,6 +28,8 @@ export function detectStyle(src: string, tree: Root): StyleProfile {
     incrementListMarker: new Tally<boolean>(DEFAULT_STYLE.incrementListMarker),
     quote: new Tally<StyleProfile["quote"]>(DEFAULT_STYLE.quote),
     hardBreak: new Tally<StyleProfile["hardBreak"]>(DEFAULT_STYLE.hardBreak),
+    tableDelimiter: new Tally<number>(DEFAULT_STYLE.tableDelimiter),
+    tablePad: new Tally<boolean>(DEFAULT_STYLE.tablePad),
   };
 
   const at = (offset: number, len = 1) => src.slice(offset, offset + len);
@@ -35,6 +37,31 @@ export function detectStyle(src: string, tree: Root): StyleProfile {
   const walk = (node: any): void => {
     const pos = node.position;
     switch (node.type) {
+      case "table": {
+        // The delimiter row is the second line of the table in the source. Its dash count
+        // and the cell padding are both source formatting, not content.
+        if (!pos) break;
+        const lines = src.slice(pos.start.offset, pos.end.offset).split("\n");
+        // Padding shows up as a cell whose content is followed by more than one space.
+        let padded = false;
+        for (const line of lines) {
+          for (const cell of splitPipeRow(line)) {
+            if (/\S {2,}$/.test(cell) || /^ {2,}\S/.test(cell)) { padded = true; break; }
+          }
+          if (padded) break;
+        }
+        votes.tablePad.add(padded);
+        // Only an UNPADDED table votes on the dash count. In a padded table the delimiter is
+        // stretched to the column width, so its dash count reports the content, not a style.
+        const delimiter = lines[1];
+        if (delimiter && !padded) {
+          for (const cell of splitPipeRow(delimiter)) {
+            const dashes = (cell.match(/-/g) ?? []).length;
+            if (dashes > 0) votes.tableDelimiter.add(dashes);
+          }
+        }
+        break;
+      }
       case "list": {
         if (node.ordered) {
           const first = node.children?.[0];
@@ -138,6 +165,8 @@ export function detectStyle(src: string, tree: Root): StyleProfile {
     resourceLink: DEFAULT_STYLE.resourceLink,
     hardBreak: votes.hardBreak.winner(),
     finalNewline: src.length === 0 || src.endsWith("\n"),
+    tableDelimiter: votes.tableDelimiter.winner(),
+    tablePad: votes.tablePad.winner(),
   };
 }
 
@@ -165,4 +194,24 @@ class Tally<T> {
     }
     return best;
   }
+}
+
+
+/**
+ * Cells of one `| a | b |` row, without the outer empties. Escaped pipes (`\|`) are part of
+ * a cell, not a separator.
+ */
+function splitPipeRow(line: string): string[] {
+  const t = line.trim();
+  if (!t.startsWith("|")) return [];
+  const cells: string[] = [];
+  let cur = "";
+  for (let i = 1; i < t.length; i++) {
+    const c = t[i]!;
+    if (c === "\\" && t[i + 1] === "|") { cur += "\\|"; i++; continue; }
+    if (c === "|") { cells.push(cur); cur = ""; continue; }
+    cur += c;
+  }
+  if (cur.trim() !== "") cells.push(cur);
+  return cells;
 }

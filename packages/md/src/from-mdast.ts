@@ -208,10 +208,20 @@ function blocksFromInline(
   const out: PMNode[] = [];
   let run: PMNode[] = [];
   const flush = () => {
-    if (run.length) {
-      out.push(type.create({ aid: nextAid(ctx), ...extraAttrs }, run));
+    if (!run.length) return;
+    // Whitespace left stranded by splitting around a figure is a separator, not content.
+    // The source `[![a](x)](y)\n[![b](x)](y)` is one paragraph of two linked images joined
+    // by a soft break; splitting it around the figures leaves that newline behind as a run
+    // of its own, and emitting it as a paragraph writes blank lines into the file that were
+    // never there. A whitespace-only paragraph is not representable in Markdown regardless.
+    // A hard break stranded the same way is equally contentless: emitted as a paragraph it
+    // becomes a lone `\` on its own line, which reparses as a literal backslash.
+    if (run.every((n) => (n.isText && !/\S/.test(n.text ?? "")) || n.type.name === "hard_break")) {
       run = [];
+      return;
     }
+    out.push(type.create({ aid: nextAid(ctx), ...extraAttrs }, run));
+    run = [];
   };
   for (const piece of pieces) {
     if (piece.kind === "figure") {
@@ -264,6 +274,12 @@ function convertInline(rawChildren: PhrasingContent[], ctx: Ctx, extraMarks: Mar
 
   const marksHere = () => [...extraMarks, ...htmlStack];
 
+  /** True when the piece most recently emitted was a hard break. */
+  const lastWasHardBreak = (): boolean => {
+    const last = out[out.length - 1];
+    return !!last && last.kind === "inline" && last.node.type.name === "hard_break";
+  };
+
   const emit = (piece: Piece) => {
     if (pendingComment && piece.kind === "inline" && piece.node.isText) {
       piece = inlinePiece(piece.node.mark(piece.node.marks.concat(schema.marks.comment!.create({ anchorId: pendingComment.anchorId }))));
@@ -275,16 +291,24 @@ function convertInline(rawChildren: PhrasingContent[], ctx: Ctx, extraMarks: Mar
   for (const child of children) {
     switch (child.type) {
       case "text": {
-        // A `text` node's value can carry a literal embedded newline: CommonMark joins the
-        // physically-wrapped lines of a multi-line paragraph into one text run separated by
-        // "\n", which *renders* as a soft break (a space), not a structural boundary — it
-        // never crosses a block boundary, mdast only ever puts it inside one text node. Left
-        // verbatim, that byte is usually harmless (it re-serializes as another soft wrap),
-        // but immediately after a real hard break (e.g. one synthesized from `<br />`) it
-        // combines with the hard break's own trailing newline into a blank line that was
-        // never there, which then reparses as an unintended paragraph split. Normalizing to
-        // a space is what CommonMark itself says the byte means.
-        const normalized = child.value.includes("\n") ? child.value.replace(/[ \t]*\n[ \t]*/g, " ") : child.value;
+        // A `text` node's value carries the literal newline where the author wrapped the
+        // line: CommonMark joins a physically-wrapped paragraph into one text run separated
+        // by "\n", which RENDERS as a space but is real source formatting.
+        //
+        // It is preserved verbatim. Collapsing it to a space renders correctly and destroys
+        // the file: saving a document a human wrapped at 80 columns rewrites every paragraph
+        // in it, so the git diff of a one-word edit becomes the whole document. Markdown on
+        // disk is the source of truth (ARCHITECTURE.md §4), and a source of truth that
+        // reformats itself on save is not one.
+        //
+        // The single exception is the case this normalization originally existed to fix: a
+        // newline immediately after a hard break. The hard break already emits its own line
+        // ending, so keeping both yields a blank line that was never in the source and that
+        // reparses as an unintended paragraph split. There, and only there, the leading
+        // newline is dropped.
+        let value = child.value;
+        if (lastWasHardBreak()) value = value.replace(/^[ \t]*\r?\n/, "");
+        const normalized = value;
         for (const p of splitCritic(normalized)) {
           if (p.kind === "text") {
             if (p.value.length) emit(inlinePiece(schema.text(p.value, marksHere())));

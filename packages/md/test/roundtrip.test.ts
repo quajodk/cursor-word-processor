@@ -1,6 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { schema } from "@scriv/doc-model";
 import { parseMarkdown } from "../src/from-mdast";
 import { serializeMarkdown } from "../src/serialize";
 
@@ -168,5 +169,74 @@ describe("round-trip stability against the real corpus", () => {
     expect(total).toBeGreaterThan(0);
     // Honest bar, not a rubber stamp: fail the suite outright if the pipeline regresses hard.
     expect(rate).toBeGreaterThan(50);
+  }, 60_000);
+});
+
+/**
+ * Regressions for the four defects that broke the "Markdown on disk is the source of truth"
+ * claim: saving an unedited file must not rewrite it.
+ */
+describe("a no-op save does not rewrite the file", () => {
+  const rt = (src: string) => {
+    const { doc, meta } = parseMarkdown(src);
+    return serializeMarkdown(doc, meta);
+  };
+
+  test("keeps the blank line between frontmatter and the first block", () => {
+    const src = "---\ntitle: T\n---\n\n# Heading\n\nBody.\n";
+    expect(rt(src)).toBe(src);
+  });
+
+  test("keeps a body that starts immediately after the closing fence", () => {
+    const src = "---\ntitle: T\n---\n# Heading\n";
+    expect(rt(src)).toBe(src);
+  });
+
+  test("preserves hand-wrapped paragraph line breaks", () => {
+    const src = "Measurements were taken at fourteen fixed transects at monthly\nintervals. Each transect was surveyed using differential GPS,\nwith a vertical accuracy of 2cm.\n";
+    expect(rt(src)).toBe(src);
+  });
+
+  test("a soft break after a hard break does not become a paragraph split", () => {
+    const src = "one\\\ntwo three\n";
+    const out = rt(src);
+    const { doc } = parseMarkdown(out);
+    expect(doc.childCount).toBe(1);
+  });
+
+  test("does not escape a lone tilde in prose", () => {
+    const src = "Recovery was ~99% across the sector.\n";
+    expect(rt(src)).toBe(src);
+  });
+
+  test("still escapes a literal tilde pair so it does not become strikethrough", () => {
+    // The narrowed rule must still protect text that contains `~~` without carrying a
+    // strike mark — otherwise serializing it would invent strikethrough on the next read.
+    const doc = schema.node("doc", null, [
+      schema.node("paragraph", null, [schema.text("literal ~~tildes~~ here")]),
+    ]);
+    const out = serializeMarkdown(doc);
+    let struck = false;
+    parseMarkdown(out).doc.descendants((n) => {
+      if (n.marks.some((m) => m.type.name === "strike")) struck = true;
+      return true;
+    });
+    expect(struck).toBe(false);
+  });
+
+  test("keeps compact table delimiters at their source width", () => {
+    const src = "| a | b |\n| --- | --- |\n| 1 | 2 |\n";
+    expect(rt(src)).toBe(src);
+  });
+
+  test("table style is a fixed point across repeated saves", () => {
+    const src = "| Feature | x |\n| :-- | :-: |\n| Core | y |\n";
+    const once = rt(src);
+    expect(rt(once)).toBe(once);
+  });
+
+  test("images joined by a soft break do not gain blank lines", () => {
+    const out = rt("![a](u1)\n![b](u2)\n");
+    expect(out).not.toContain("\n\n\n");
   });
 });

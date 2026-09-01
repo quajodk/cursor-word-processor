@@ -35,14 +35,19 @@ export function splitFrontmatter(src: string): Split {
       if (closes) {
         const raw = src.slice(contentStart, pos);
         const blockEnd = lineEnd === -1 ? src.length : lineEnd.after;
+        // Blank lines after the closing fence are the frontmatter's trailing separation.
+        // They must not reach the Markdown parser (which discards leading blank lines), so
+        // they are captured here and re-emitted on serialize.
+        const gapEnd = endOfBlankRun(src, blockEnd);
         return {
           frontmatter: {
             fence,
             raw,
             block: src.slice(0, blockEnd),
+            gap: src.slice(blockEnd, gapEnd),
             data: parseYamlSubset(fence === "---" ? raw : ""),
           },
-          body: src.slice(blockEnd),
+          body: src.slice(gapEnd),
         };
       }
       if (lineEnd === -1) break;
@@ -50,6 +55,18 @@ export function splitFrontmatter(src: string): Split {
     }
   }
   return { frontmatter: null, body: src };
+}
+
+/** Index just past the run of whitespace-only lines starting at `from`. */
+function endOfBlankRun(s: string, from: number): number {
+  let pos = from;
+  while (pos < s.length) {
+    const nl = s.indexOf("\n", pos);
+    if (nl === -1) return /^[ \t]*$/.test(s.slice(pos)) ? s.length : pos;
+    if (!/^[ \t\r]*$/.test(s.slice(pos, nl))) return pos;
+    pos = nl + 1;
+  }
+  return pos;
 }
 
 type Eol = { at: number; after: number };
