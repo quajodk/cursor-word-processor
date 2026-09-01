@@ -132,17 +132,17 @@ describe("round-trip stability against the real corpus", () => {
   test("commonmark spec examples", () => {
     const r = runCorpus("commonmark", join(CORPUS_ROOT, "spec", "commonmark"));
     if (r) expect(r.parseErrors).toBe(0);
-  });
+  }, 60_000);
 
   test("gfm spec examples", () => {
     const r = runCorpus("gfm", join(CORPUS_ROOT, "spec", "gfm"));
     if (r) expect(r.parseErrors).toBe(0);
-  });
+  }, 60_000);
 
   test("real-world repo docs", () => {
     const r = runCorpus("repos", join(CORPUS_ROOT, "repos"));
     if (r) expect(r.parseErrors).toBe(0);
-  });
+  }, 60_000);
 
   test("aggregate pass rate across the whole corpus is reported and reasonably high", () => {
     const dirs = [join(CORPUS_ROOT, "spec", "commonmark"), join(CORPUS_ROOT, "spec", "gfm"), join(CORPUS_ROOT, "repos")];

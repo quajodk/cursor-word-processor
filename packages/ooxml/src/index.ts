@@ -11,3 +11,5 @@ export * from "./ledger.ts";
 export * from "./sidecar.ts";
 export * from "./anchor.ts";
 export * from "./import.ts";
+export * from "./zip.ts";
+export * from "./export.ts";
