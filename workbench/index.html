@@ -92,10 +92,10 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
 </style>
 <div class="wrap">
 <header class="masthead">
-  <div class="eyebrow">Wave 2 · First working vertical slice</div>
+  <div class="eyebrow">Wave 3 · The .docx claim, measured on all 288</div>
   <h1>scriv workbench</h1>
   <p class="dek">An IDE for writing. Markdown on disk is the source of truth; the editing surface is a real word processor.</p>
-  <div class="stamp"><span>updated 2026-09-01 10:35Z</span><span>bun · TypeScript · ProseMirror</span></div>
+  <div class="stamp"><span>updated 2026-09-01 16:02Z</span><span>bun · TypeScript · ProseMirror</span></div>
 </header>
 
 <section>
@@ -132,10 +132,18 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
     <div class="tile-label">Real .docx corpus</div>
     <div class="tile-value">288<span class="tile-unit">files</span></div>
     <div class="tile-budget">budget · 40 files</div>
-  </div><div class="tile tile-empty">
+  </div><div class="tile tile-ok">
     <div class="tile-label">docx round-trip T0 identity</div>
-    <div class="tile-value"><span class="tile-pending">not yet measured</span></div>
+    <div class="tile-value">100<span class="tile-unit">% byte-identical</span></div>
     <div class="tile-budget">budget · 100 % byte-identical</div>
+  </div><div class="tile tile-ok">
+    <div class="tile-label">docx T1, one-word edit</div>
+    <div class="tile-value">100<span class="tile-unit">% surgical</span></div>
+    <div class="tile-budget">budget · 100 % surgical</div>
+  </div><div class="tile">
+    <div class="tile-label">pandoc T2, same corpus</div>
+    <div class="tile-value">0.318<span class="tile-unit">weighted</span></div>
+    <div class="tile-budget">budget · — weighted</div>
   </div></div>
 </section>
 
@@ -173,14 +181,14 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
   <p class="piece-scope">Offset-recording XML index, fidelity sidecar, alignment-based re-anchoring</p>
   <p class="piece-evidence"><span class="tag">verified</span>288/288 real Word documents import without throwing. Mean text recovery 99.49%; 260/286 files recover ≥99.5% of every &lt;w:t&gt; in the source. The fidelity ledger is populated and honest: 791 degraded entries, 144 informational.</p>
   <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Text inside text boxes and content controls is dropped — the worst file recovers only 64.5%. The ledger names it (327 inline-drawing-detached, 75 content-control-unwrapped) rather than hiding it.</p>
-</article><article class="piece piece-running">
+</article><article class="piece piece-done">
   <header class="piece-head">
     <h3>Round-trip scorer &amp; corpus</h3>
-    <div class="piece-chips"><span class="chip chip-running">running</span></div>
+    <div class="piece-chips"><span class="chip chip-done">done</span></div>
   </header>
   <p class="piece-scope">Real-world .docx corpus, three-tier fidelity score, pandoc baseline</p>
-  <p class="piece-evidence"><span class="tag">verified</span>Corpus collected and validated: 288/288 valid .docx — 235 with numbering, 121 headers/footers, ~33% tables, 12 comments.</p>
-  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>No fidelity tier can run until the export splice engine exists.</p>
+  <p class="piece-evidence"><span class="tag">verified</span>Three tiers over 288 files with a pandoc baseline, plus an anti-strawman control: pandoc scored against its OWN output reaches 0.9743, so it is self-consistent and simply does not preserve the user’s document. Independently re-verified outside the scorer, including that pandoc can read our exported files with the edit intact.</p>
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>T2 is entailed by T0 for scriv and is labelled as such in the report rather than counted as a second result.</p>
 </article><article class="piece piece-done">
   <header class="piece-head">
     <h3>Latency gate</h3>
@@ -221,14 +229,14 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
   <p class="piece-scope">Fuzzy open, search, diff and blame at sentence granularity</p>
   <p class="piece-evidence"><span class="tag">verified</span>Sentence segmentation, alignment and word-level intra-sentence diff landed.</p>
   <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>File tree, fuzzy open and search not started; nothing measured.</p>
-</article><article class="piece piece-queued">
+</article><article class="piece piece-done">
   <header class="piece-head">
     <h3>docx export splice</h3>
-    <div class="piece-chips"><span class="chip chip-queued">queued</span></div>
+    <div class="piece-chips"><span class="chip chip-done">done</span></div>
   </header>
   <p class="piece-scope">Edit the original zip rather than regenerate it</p>
-  
-  
+  <p class="piece-evidence"><span class="tag">verified</span>Full corpus, 288 real Word documents (177 MB): T0 100% byte-identical, T1 286/286 surgical — exactly one paragraph changes, nothing else moves. Pandoc on the same files: T0 0%, T1 0.0024, T2 0.318; it zeroes tables, comments and revisions and scores 0.03 on numbering.</p>
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>The rebuilt paragraph is regenerated whole rather than run-spliced (runSpliced is 0 everywhere), so the finer-grained path that reuses each run’s rPr is written but never exercised. Formatting survives anyway — verified 59/59 — but the cheaper path is untested.</p>
 </article></div>
 </section>
 
@@ -264,12 +272,17 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
     <div class="decision-body">
       <p class="decision-what">A measurement that covers only part of a path may fail a budget but may never certify a pass</p>
       <p class="decision-why">A headless process cannot see the DOM half of a keystroke. Reporting it as 'pass' would manufacture confidence in a number that never measured the thing it names.</p>
+    </div></div><div class="decision">
+    <dt>Scoring honesty</dt>
+    <div class="decision-body">
+      <p class="decision-what">A tier entailed by another tier is labelled, not counted twice</p>
+      <p class="decision-why">Scriv’s T2 is 1.0000 because T0 is 100% — T2 scores the zero-edit round trip that T0 already proved byte-identical. Presenting both as achievements would inflate one fact into two.</p>
     </div></div></dl>
 </section>
 
 <section>
   <h2>Notes</h2>
-  <ul class="notes"><li>The gate is currently RED, deliberately and correctly: importing large Word documents takes p99 3.35s against a 1.2s budget. A 84ms average across the whole corpus had hidden this — the large documents are the bottleneck.</li><li>A status-bar reading that looked like two bugs turned out to be the 220 ms coalescing timer doing its job — the status store deliberately keeps typing off React’s render path. Verified by measurement rather than patched on suspicion.</li><li>Both session interruptions cost roughly a wave each. Builders now commit after every deliverable, which is why nothing was lost the second time.</li><li>The .docx corpus is public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used.</li></ul>
+  <ul class="notes"><li>A check of mine reported three documents losing right-to-left run formatting. Reading the XML showed the opposite: the exporter had dropped a second, completely empty run carrying only that property and no text, which is correct. The comparison was wrong, not the exporter — it compared whole property payloads, which cannot tell a legitimate run merge from a real loss. It now compares property names, and that invariant is enforced by a test.</li><li>The splice design is validated: on real Word documents an unedited round trip is byte-identical, and a one-word edit changes exactly one paragraph. Pandoc, which regenerates, scores 0% on both — while remaining self-consistent at 0.9913 against its own output, so this is not a strawman: it preserves its own conversion faithfully, just not the user's document.</li><li>The gate is currently RED, deliberately and correctly: importing large Word documents takes p99 3.35s against a 1.2s budget. A 84ms average across the whole corpus had hidden this — the large documents are the bottleneck.</li><li>A status-bar reading that looked like two bugs turned out to be the 220 ms coalescing timer doing its job — the status store deliberately keeps typing off React’s render path. Verified by measurement rather than patched on suspicion.</li><li>Both session interruptions cost roughly a wave each. Builders now commit after every deliverable, which is why nothing was lost the second time.</li><li>The .docx corpus is public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used.</li></ul>
 </section>
 
 <footer>Every number on this page is measured or absent. Nothing here is estimated.</footer>

@@ -1,6 +1,6 @@
 {
-  "wave": 2,
-  "waveTitle": "First working vertical slice",
+  "wave": 3,
+  "waveTitle": "The .docx claim, measured on all 288",
   "pieces": [
     {
       "id": "foundation",
@@ -42,10 +42,10 @@
       "id": "score",
       "name": "Round-trip scorer & corpus",
       "scope": "Real-world .docx corpus, three-tier fidelity score, pandoc baseline",
-      "builder": "running",
+      "builder": "done",
       "critic": "pending",
-      "evidence": "Corpus collected and validated: 288/288 valid .docx \u2014 235 with numbering, 121 headers/footers, ~33% tables, 12 comments.",
-      "gap": "No fidelity tier can run until the export splice engine exists."
+      "evidence": "Three tiers over 288 files with a pandoc baseline, plus an anti-strawman control: pandoc scored against its OWN output reaches 0.9743, so it is self-consistent and simply does not preserve the user\u2019s document. Independently re-verified outside the scorer, including that pandoc can read our exported files with the edit intact.",
+      "gap": "T2 is entailed by T0 for scriv and is labelled as such in the report rather than counted as a second result."
     },
     {
       "id": "perf",
@@ -96,10 +96,10 @@
       "id": "docx-out",
       "name": "docx export splice",
       "scope": "Edit the original zip rather than regenerate it",
-      "builder": "queued",
+      "builder": "done",
       "critic": "pending",
-      "evidence": null,
-      "gap": null
+      "evidence": "Full corpus, 288 real Word documents (177 MB): T0 100% byte-identical, T1 286/286 surgical \u2014 exactly one paragraph changes, nothing else moves. Pandoc on the same files: T0 0%, T1 0.0024, T2 0.318; it zeroes tables, comments and revisions and scores 0.03 on numbering.",
+      "gap": "The rebuilt paragraph is regenerated whole rather than run-spliced (runSpliced is 0 everywhere), so the finer-grained path that reuses each run\u2019s rPr is written but never exercised. Formatting survives anyway \u2014 verified 59/59 \u2014 but the cheaper path is untested."
     }
   ],
   "metrics": [
@@ -161,10 +161,24 @@
     },
     {
       "label": "docx round-trip T0 identity",
-      "value": null,
+      "value": 100,
       "unit": "% byte-identical",
       "budget": "100",
-      "state": "unmeasured"
+      "state": "measured"
+    },
+    {
+      "label": "docx T1, one-word edit",
+      "value": 100,
+      "unit": "% surgical",
+      "budget": "100",
+      "state": "measured"
+    },
+    {
+      "label": "pandoc T2, same corpus",
+      "value": 0.318,
+      "unit": "weighted",
+      "budget": "\u2014",
+      "state": "measured"
     }
   ],
   "decisions": [
@@ -197,9 +211,16 @@
       "t": "Perf honesty",
       "d": "A measurement that covers only part of a path may fail a budget but may never certify a pass",
       "why": "A headless process cannot see the DOM half of a keystroke. Reporting it as 'pass' would manufacture confidence in a number that never measured the thing it names."
+    },
+    {
+      "t": "Scoring honesty",
+      "d": "A tier entailed by another tier is labelled, not counted twice",
+      "why": "Scriv\u2019s T2 is 1.0000 because T0 is 100% \u2014 T2 scores the zero-edit round trip that T0 already proved byte-identical. Presenting both as achievements would inflate one fact into two."
     }
   ],
   "notes": [
+    "A check of mine reported three documents losing right-to-left run formatting. Reading the XML showed the opposite: the exporter had dropped a second, completely empty run carrying only that property and no text, which is correct. The comparison was wrong, not the exporter \u2014 it compared whole property payloads, which cannot tell a legitimate run merge from a real loss. It now compares property names, and that invariant is enforced by a test.",
+    "The splice design is validated: on real Word documents an unedited round trip is byte-identical, and a one-word edit changes exactly one paragraph. Pandoc, which regenerates, scores 0% on both \u2014 while remaining self-consistent at 0.9913 against its own output, so this is not a strawman: it preserves its own conversion faithfully, just not the user's document.",
     "The gate is currently RED, deliberately and correctly: importing large Word documents takes p99 3.35s against a 1.2s budget. A 84ms average across the whole corpus had hidden this \u2014 the large documents are the bottleneck.",
     "A status-bar reading that looked like two bugs turned out to be the 220 ms coalescing timer doing its job \u2014 the status store deliberately keeps typing off React\u2019s render path. Verified by measurement rather than patched on suspicion.",
     "Both session interruptions cost roughly a wave each. Builders now commit after every deliverable, which is why nothing was lost the second time.",
