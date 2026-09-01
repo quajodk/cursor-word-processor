@@ -1,0 +1,255 @@
+<title>scriv workbench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#F6F7F9; --surface:#FFFFFF; --ink:#14171C; --ink-soft:#5C6470; --ink-faint:#8A93A0;
+  --rule:#DFE3E9; --accent:#B8352B; --accent-soft:#F5E4E2; --good:#2E7D5A; --good-soft:#E2F0EA;
+  --warn:#9A6A0C; --warn-soft:#F6ECD8; --idle:#7A828E; --idle-soft:#ECEEF2;
+  --shadow:0 1px 2px rgba(20,23,28,.05), 0 8px 24px -16px rgba(20,23,28,.18);
+}
+:root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
+  --paper:#0E1014; --surface:#161920; --ink:#E9ECF1; --ink-soft:#98A1AE; --ink-faint:#6B7482;
+  --rule:#242932; --accent:#EC6C61; --accent-soft:#2E1B1A; --good:#4FB587; --good-soft:#132620;
+  --warn:#D3A03A; --warn-soft:#241D0F; --idle:#7C8593; --idle-soft:#1C2028;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}}
+:root[data-theme="dark"]{
+  --paper:#0E1014; --surface:#161920; --ink:#E9ECF1; --ink-soft:#98A1AE; --ink-faint:#6B7482;
+  --rule:#242932; --accent:#EC6C61; --accent-soft:#2E1B1A; --good:#4FB587; --good-soft:#132620;
+  --warn:#D3A03A; --warn-soft:#241D0F; --idle:#7C8593; --idle-soft:#1C2028;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);
+  font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  font-size:15px;line-height:1.55;margin:0;padding:clamp(20px,4vw,56px) clamp(16px,4vw,40px) 72px;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:clamp(32px,5vw,52px)}
+
+header.masthead{display:flex;flex-direction:column;gap:10px;padding-bottom:20px;border-bottom:2px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{font-family:Spectral,Georgia,serif;font-weight:600;font-size:clamp(30px,6vw,44px);line-height:1.08;
+  margin:0;letter-spacing:-.015em;text-wrap:balance}
+.dek{font-family:Spectral,Georgia,serif;font-style:italic;color:var(--ink-soft);font-size:clamp(15px,2.4vw,18px);margin:0;max-width:62ch}
+.stamp{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11.5px;color:var(--ink-faint);
+  display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:4px}
+
+section{display:flex;flex-direction:column;gap:16px}
+h2{font-family:Spectral,Georgia,serif;font-size:13px;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-soft);margin:0;padding-bottom:8px;border-bottom:1px solid var(--rule)}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:5px;border-left:3px solid var(--good);box-shadow:var(--shadow)}
+.tile-empty{border-left-color:var(--idle)}
+.tile-label{font-size:11.5px;letter-spacing:.05em;color:var(--ink-soft);text-transform:uppercase;font-weight:500}
+.tile-value{font-family:"IBM Plex Mono",monospace;font-size:26px;font-weight:500;line-height:1.1;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.tile-unit{font-size:12px;color:var(--ink-soft);margin-left:6px;font-weight:400}
+.tile-pending{font-family:"IBM Plex Sans",sans-serif;font-size:14px;color:var(--ink-faint);font-style:italic;letter-spacing:0}
+.tile-budget{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-faint);font-variant-numeric:tabular-nums}
+
+.pieces{display:flex;flex-direction:column;gap:10px}
+.piece{background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--idle);
+  border-radius:3px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.piece-done{border-left-color:var(--good)}
+.piece-running{border-left-color:var(--accent)}
+.piece-blocked{border-left-color:var(--warn)}
+.piece-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.piece h3{font-family:Spectral,Georgia,serif;font-size:18px;font-weight:600;margin:0;letter-spacing:-.01em}
+.piece-chips{display:flex;gap:6px}
+.chip{font-family:"IBM Plex Mono",monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;
+  padding:2px 7px;border-radius:2px;background:var(--idle-soft);color:var(--idle);white-space:nowrap}
+.chip-done{background:var(--good-soft);color:var(--good)}
+.chip-running{background:var(--accent-soft);color:var(--accent)}
+.chip-blocked{background:var(--warn-soft);color:var(--warn)}
+.piece-scope{margin:0;color:var(--ink-soft);font-size:14px;max-width:70ch}
+.piece-evidence,.piece-gap{margin:0;font-size:13.5px;color:var(--ink);max-width:74ch}
+.tag{font-family:"IBM Plex Mono",monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--good);margin-right:8px}
+.tag-gap{color:var(--warn)}
+
+.decisions{display:flex;flex-direction:column;gap:0}
+.decision{display:grid;grid-template-columns:1fr;gap:4px;padding:14px 0;border-bottom:1px solid var(--rule)}
+.decision:last-child{border-bottom:none}
+@media(min-width:720px){.decision{grid-template-columns:150px 1fr;gap:6px 24px}}
+.decision dt{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);font-weight:500;padding-top:2px}
+.decision-body{display:flex;flex-direction:column;gap:4px}
+.decision-what{font-family:Spectral,Georgia,serif;font-size:17px;font-weight:600;margin:0;letter-spacing:-.01em}
+.decision-why{margin:0;color:var(--ink-soft);font-size:14px;max-width:68ch}
+
+ul.notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;color:var(--ink-soft);font-size:14px;max-width:74ch}
+ul.notes li::marker{color:var(--accent)}
+footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex Mono",monospace;
+  font-size:11.5px;color:var(--ink-faint)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<div class="wrap">
+<header class="masthead">
+  <div class="eyebrow">Wave 1 · Foundations</div>
+  <h1>scriv workbench</h1>
+  <p class="dek">An IDE for writing. Markdown on disk is the source of truth; the editing surface is a real word processor.</p>
+  <div class="stamp"><span>updated 2026-09-01 00:31Z</span><span>bun · TypeScript · ProseMirror</span></div>
+</header>
+
+<section>
+  <h2>Measured bar</h2>
+  <div class="tiles"><div class="tile tile-empty">
+    <div class="tile-label">Keystroke → state commit</div>
+    <div class="tile-value"><span class="tile-pending">not yet measured</span></div>
+    <div class="tile-budget">budget · 8 ms p99</div>
+  </div><div class="tile tile-empty">
+    <div class="tile-label">Keystroke → paint</div>
+    <div class="tile-value"><span class="tile-pending">not yet measured</span></div>
+    <div class="tile-budget">budget · 16 ms p99</div>
+  </div><div class="tile tile-empty">
+    <div class="tile-label">docx round-trip T0 identity</div>
+    <div class="tile-value"><span class="tile-pending">not yet measured</span></div>
+    <div class="tile-budget">budget · 100 % byte-identical</div>
+  </div><div class="tile tile-empty">
+    <div class="tile-label">docx round-trip T2 semantic</div>
+    <div class="tile-value"><span class="tile-pending">not yet measured</span></div>
+    <div class="tile-budget">budget · 0.98 score</div>
+  </div><div class="tile tile-empty">
+    <div class="tile-label">Real .docx corpus</div>
+    <div class="tile-value"><span class="tile-pending">not yet measured</span></div>
+    <div class="tile-budget">budget · 40 files</div>
+  </div><div class="tile tile-empty">
+    <div class="tile-label">Markdown round-trip</div>
+    <div class="tile-value"><span class="tile-pending">not yet measured</span></div>
+    <div class="tile-budget">budget · 99 % of real corpus</div>
+  </div></div>
+</section>
+
+<section>
+  <h2>Subsystems</h2>
+  <div class="pieces"><article class="piece piece-done">
+  <header class="piece-head">
+    <h3>Document model &amp; block identity</h3>
+    <div class="piece-chips"><span class="chip chip-done">done</span></div>
+  </header>
+  <p class="piece-scope">ProseMirror schema shaped like OOXML; stable anchors that ride transactions</p>
+  <p class="piece-evidence"><span class="tag">verified</span>5/5 identity tests pass: typing preserves anchors, split keeps identity on the first half, paste de-duplicates, delete is clean</p>
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Not yet exercised against a real .docx-derived document.</p>
+</article><article class="piece piece-running">
+  <header class="piece-head">
+    <h3>App shell &amp; host seam</h3>
+    <div class="piece-chips"><span class="chip chip-running">running</span></div>
+  </header>
+  <p class="piece-scope">React chrome, ProseMirror surface, bun server implementing HostApi</p>
+  
+  
+</article><article class="piece piece-running">
+  <header class="piece-head">
+    <h3>Markdown ⇄ model</h3>
+    <div class="piece-chips"><span class="chip chip-running">running</span></div>
+  </header>
+  <p class="piece-scope">CommonMark + GFM + CriticMarkup, round-trip stability</p>
+  
+  
+</article><article class="piece piece-running">
+  <header class="piece-head">
+    <h3>docx import, sidecar &amp; anchors</h3>
+    <div class="piece-chips"><span class="chip chip-running">running</span></div>
+  </header>
+  <p class="piece-scope">Offset-recording XML index, fidelity sidecar, alignment-based re-anchoring</p>
+  
+  
+</article><article class="piece piece-running">
+  <header class="piece-head">
+    <h3>Round-trip scorer &amp; corpus</h3>
+    <div class="piece-chips"><span class="chip chip-running">running</span></div>
+  </header>
+  <p class="piece-scope">Real-world .docx corpus, three-tier fidelity score, pandoc baseline</p>
+  
+  
+</article><article class="piece piece-running">
+  <header class="piece-head">
+    <h3>Latency gate</h3>
+    <div class="piece-chips"><span class="chip chip-running">running</span></div>
+  </header>
+  <p class="piece-scope">Keystroke budget enforced by a test that fails the build</p>
+  
+  
+</article><article class="piece piece-queued">
+  <header class="piece-head">
+    <h3>Smart text ops</h3>
+    <div class="piece-chips"><span class="chip chip-queued">queued</span></div>
+  </header>
+  <p class="piece-scope">Selection-aware surrounds, multi-cursor, motions, transpose, join, kill-line</p>
+  
+  
+</article><article class="piece piece-queued">
+  <header class="piece-head">
+    <h3>Prose IntelliSense</h3>
+    <div class="piece-chips"><span class="chip chip-queued">queued</span></div>
+  </header>
+  <p class="piece-scope">Workspace symbol index, completions, Harper diagnostics over an LSP seam</p>
+  
+  
+</article><article class="piece piece-queued">
+  <header class="piece-head">
+    <h3>AI inline edit</h3>
+    <div class="piece-chips"><span class="chip chip-queued">queued</span></div>
+  </header>
+  <p class="piece-scope">Cmd-K streaming rewrite as accept/reject diff; three-way merge; agent mode</p>
+  
+  
+</article><article class="piece piece-queued">
+  <header class="piece-head">
+    <h3>Workspace &amp; git</h3>
+    <div class="piece-chips"><span class="chip chip-queued">queued</span></div>
+  </header>
+  <p class="piece-scope">Fuzzy open, search, diff and blame at sentence granularity</p>
+  
+  
+</article><article class="piece piece-queued">
+  <header class="piece-head">
+    <h3>docx export splice</h3>
+    <div class="piece-chips"><span class="chip chip-queued">queued</span></div>
+  </header>
+  <p class="piece-scope">Edit the original zip rather than regenerate it</p>
+  
+  
+</article></div>
+</section>
+
+<section>
+  <h2>Decisions on the record</h2>
+  <dl class="decisions"><div class="decision">
+    <dt>Editor engine</dt>
+    <div class="decision-body">
+      <p class="decision-what">ProseMirror, used directly — not Tiptap, not Lexical</p>
+      <p class="decision-why">Pure decorations are load-bearing for AI diffs, diagnostics and blame. Lexical and Quill lack them; Tiptap's auto-schema fights the OOXML mapping.</p>
+    </div></div><div class="decision">
+    <dt>The docx tension</dt>
+    <div class="decision-body">
+      <p class="decision-what">Splice the original zip; never regenerate it</p>
+      <p class="decision-why">Turns 'how much OOXML can we model?' into 'how little must we touch?'. An unedited round-trip is byte-identical, and fidelity degrades only in proportion to what was actually edited.</p>
+    </div></div><div class="decision">
+    <dt>Anchors</dt>
+    <div class="decision-body">
+      <p class="decision-what">Exact in-session, fuzzy only for externally-edited files</p>
+      <p class="decision-why">While the doc is open we observed every change, so identity needs no guessing. Sequence alignment is reserved for files edited by another tool — that split is what makes the problem tractable.</p>
+    </div></div><div class="decision">
+    <dt>Confidence floor</dt>
+    <div class="decision-body">
+      <p class="decision-what">Drop formatting rather than risk misapplying it</p>
+      <p class="decision-why">A dropped style is a visible bug the writer can fix; a misapplied one silently corrupts a document they trusted.</p>
+    </div></div><div class="decision">
+    <dt>Diagnostics</dt>
+    <div class="decision-body">
+      <p class="decision-what">harper.js in a worker, behind an LSP-shaped seam</p>
+      <p class="decision-why">Offline, Apache-2.0, works unchanged in web v1 and Tauri v2. The LSP shape makes adding a second checker cheap.</p>
+    </div></div></dl>
+</section>
+
+<section>
+  <h2>Notes</h2>
+  <ul class="notes"><li>No RESEARCH.md was present on disk; the research brief arrived by message and its load-bearing claims were verified against the npm registry before anything was built on them.</li><li>The .docx corpus is collected from public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used.</li></ul>
+</section>
+
+<footer>Every number on this page is measured or absent. Nothing here is estimated.</footer>
+</div>
