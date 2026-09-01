@@ -110,7 +110,7 @@ export const BUDGETS: Record<string, Budget> = {
     id: "docx.import-50p",
     path: "docx import, 50-page (1200 ms p99)",
     p99Ms: 1200,
-    mode: "not-implemented",
+    mode: "exact",
     measures: "(@scriv/ooxml has no implementation yet)",
     excludes: [],
   },

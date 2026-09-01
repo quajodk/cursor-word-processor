@@ -116,8 +116,12 @@ function inlineFrom(text: string, rand: Rand, opts: { allowLinks?: boolean } = {
 
   const flush = () => {
     if (buf.length === 0) return;
-    out.push(schema.text(buf.join(" ")));
+    const joined = buf.join(" ");
     buf = [];
+    // The loop pushes an empty sentinel to preserve the space after a marked run, so the
+    // join can legitimately be empty. ProseMirror rejects empty text nodes.
+    if (joined.length === 0) return;
+    out.push(schema.text(joined));
   };
 
   for (let i = 0; i < words.length; i++) {

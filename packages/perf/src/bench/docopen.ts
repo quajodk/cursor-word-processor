@@ -52,9 +52,12 @@ export function benchDocOpen(json: unknown, plugins: () => Plugin[]): DocOpenRes
     }
   }
 
+  // warmup is already excluded by the `i >= warmup` guard above; passing it again would
+  // discard a second warmup's worth of real samples (and empty the array when
+  // samples <= warmup, which is how this silently reported "no measurement").
   return {
-    fromJson: summarize(parseMs, warmup),
-    stateCreate: summarize(createMs, warmup),
-    total: summarize(totalMs, warmup),
+    fromJson: summarize(parseMs),
+    stateCreate: summarize(createMs),
+    total: summarize(totalMs),
   };
 }

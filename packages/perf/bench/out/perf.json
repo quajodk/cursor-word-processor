@@ -1,0 +1,272 @@
+{
+  "generatedAt": "2026-09-01T10:32:39.730Z",
+  "machine": {
+    "platform": "darwin 25.5.0",
+    "arch": "arm64",
+    "cpu": "Apple M1 Pro",
+    "cores": 8,
+    "totalMemGb": 16,
+    "runtime": "bun 1.3.14"
+  },
+  "document": {
+    "words": 40040,
+    "blocks": 494,
+    "blockMix": {
+      "paragraph": 349,
+      "heading2": 19,
+      "blockquote": 10,
+      "heading3": 16,
+      "table": 17,
+      "heading4": 9,
+      "heading1": 7,
+      "bullet_list": 36,
+      "code_block": 9,
+      "ordered_list": 19,
+      "horizontal_rule": 3
+    },
+    "corpus": [
+      {
+        "title": "Pride and Prejudice",
+        "words": 127360
+      },
+      {
+        "title": "On the Origin of Species",
+        "words": 208517
+      },
+      {
+        "title": "Walden",
+        "words": 115799
+      },
+      {
+        "title": "The Adventures of Sherlock Holmes",
+        "words": 104506
+      }
+    ]
+  },
+  "plugins": {
+    "source": "baseline",
+    "names": [
+      "aidPlugin",
+      "history"
+    ],
+    "note": "apps/web/src/perf-plugins.ts does not exist. Measured against the baseline stack (aidPlugin + history) only. Every number below is a LOWER BOUND on the real editor."
+  },
+  "keystroke": {
+    "n": 15000,
+    "warmup": 3000,
+    "min": 0.00175,
+    "p50": 0.008375,
+    "p95": 0.241208,
+    "p99": 0.356625,
+    "p999": 0.8305,
+    "max": 1.747333,
+    "mean": 0.02786153673333334,
+    "stddev": 0.08202224101683135,
+    "tailSupport": 151,
+    "relativeMad": 0.35331343283582084
+  },
+  "docOpen": {
+    "total": {
+      "n": 25,
+      "warmup": 0,
+      "min": 0.52075,
+      "p50": 0.619,
+      "p95": 1.988209,
+      "p99": 2.169875,
+      "p999": 2.169875,
+      "max": 2.169875,
+      "mean": 0.72082656,
+      "stddev": 0.4043068261657803,
+      "tailSupport": 1,
+      "relativeMad": 0.06899515347334405
+    },
+    "fromJson": {
+      "n": 25,
+      "warmup": 0,
+      "min": 0.506583,
+      "p50": 0.608167,
+      "p95": 1.960292,
+      "p99": 2.149,
+      "p999": 2.149,
+      "max": 2.149,
+      "mean": 0.70643492,
+      "stddev": 0.4013537405744633,
+      "tailSupport": 1,
+      "relativeMad": 0.05480895872350842
+    },
+    "stateCreate": {
+      "n": 25,
+      "warmup": 0,
+      "min": 0.004625,
+      "p50": 0.009834,
+      "p95": 0.037416,
+      "p99": 0.038291,
+      "p999": 0.038291,
+      "max": 0.038291,
+      "mean": 0.014391639999999999,
+      "stddev": 0.009530374888240233,
+      "tailSupport": 1,
+      "relativeMad": 0.3600772828960747
+    }
+  },
+  "docxImport": {
+    "available": true,
+    "detail": "288 real corpus documents imported; 46 of them are >= 500 body paragraphs (the 50-page band).",
+    "all": {
+      "n": 288,
+      "warmup": 0,
+      "min": 1.978417,
+      "p50": 31.848417,
+      "p95": 292.876292,
+      "p99": 1366.669292,
+      "p999": 1834.516667,
+      "max": 1834.516667,
+      "mean": 89.43928603472224,
+      "stddev": 196.87917703469057,
+      "tailSupport": 3,
+      "relativeMad": 0.6697127521283083
+    },
+    "large": {
+      "n": 46,
+      "warmup": 0,
+      "min": 28.591709,
+      "p50": 183.765209,
+      "p95": 1366.669292,
+      "p99": 1834.516667,
+      "p999": 1834.516667,
+      "max": 1834.516667,
+      "mean": 332.00782884782615,
+      "stddev": 396.8594948385453,
+      "tailSupport": 1,
+      "relativeMad": 0.4309699993321369
+    },
+    "files": 288,
+    "largeFiles": 46,
+    "msPerParagraph": 0.20834322301937153
+  },
+  "checks": [
+    {
+      "id": "keystroke.state-commit",
+      "verdict": "partial",
+      "path": "Keystroke → DOM commit (8 ms p99)",
+      "p99Budget": 8,
+      "mode": "lower-bound",
+      "stats": {
+        "n": 15000,
+        "warmup": 3000,
+        "min": 0.00175,
+        "p50": 0.008375,
+        "p95": 0.241208,
+        "p99": 0.356625,
+        "p999": 0.8305,
+        "max": 1.747333,
+        "mean": 0.02786153673333334,
+        "stddev": 0.08202224101683135,
+        "tailSupport": 151,
+        "relativeMad": 0.35331343283582084
+      },
+      "reasons": [],
+      "measures": "EditorState.apply() for one typed character on a 40k-word doc, including every plugin's state.apply and appendTransaction (aid repair, history), transaction construction, and step position mapping.",
+      "excludes": [
+        "prosemirror-view DOM diffing and the DOM write itself",
+        "style/layout/paint/composite",
+        "browser input event dispatch and IME/composition handling",
+        "decoration recomputation by view plugins (no view exists headlessly)"
+      ]
+    },
+    {
+      "id": "keystroke.to-paint",
+      "verdict": "no-measurement",
+      "path": "Keystroke → paint, end to end (16 ms p99, one frame)",
+      "p99Budget": 16,
+      "mode": "exact",
+      "stats": null,
+      "reasons": [
+        "no samples were collected"
+      ],
+      "measures": "CDP trace: from the renderer's keydown EventDispatch to the compositor frame that carries its result, in a real Chromium with real compositing.",
+      "excludes": [
+        "OS-level input latency before the browser sees the key",
+        "display scan-out after the frame is swapped"
+      ]
+    },
+    {
+      "id": "completion.popup-open",
+      "verdict": "not-implemented",
+      "path": "Completion popup open (40 ms p99)",
+      "p99Budget": 40,
+      "mode": "not-implemented",
+      "stats": null,
+      "reasons": [],
+      "measures": "(@scriv/intellisense has no implementation yet)",
+      "excludes": []
+    },
+    {
+      "id": "diagnostics.refresh",
+      "verdict": "not-implemented",
+      "path": "Diagnostics refresh, debounced (150 ms p99, off main thread)",
+      "p99Budget": 150,
+      "mode": "not-implemented",
+      "stats": null,
+      "reasons": [],
+      "measures": "(@scriv/lsp has no implementation yet)",
+      "excludes": []
+    },
+    {
+      "id": "doc.open-40k",
+      "verdict": "partial",
+      "path": "Open 40k-word doc (400 ms p99)",
+      "p99Budget": 400,
+      "mode": "lower-bound",
+      "stats": {
+        "n": 25,
+        "warmup": 0,
+        "min": 0.52075,
+        "p50": 0.619,
+        "p95": 1.988209,
+        "p99": 2.169875,
+        "p999": 2.169875,
+        "max": 2.169875,
+        "mean": 0.72082656,
+        "stddev": 0.4043068261657803,
+        "tailSupport": 1,
+        "relativeMad": 0.06899515347334405
+      },
+      "reasons": [],
+      "measures": "Node.fromJSON on the 40k-word corpus doc + EditorState.create with the full plugin stack (every plugin's state.init runs).",
+      "excludes": [
+        "reading the .md off disk",
+        "mdast parse and mdast→doc-model conversion (@scriv/md not implemented)",
+        "fidelity sidecar load",
+        "EditorView construction and the initial DOM render"
+      ]
+    },
+    {
+      "id": "docx.import-50p",
+      "verdict": "fail",
+      "path": "docx import, 50-page (1200 ms p99)",
+      "p99Budget": 1200,
+      "mode": "exact",
+      "stats": {
+        "n": 46,
+        "warmup": 0,
+        "min": 28.591709,
+        "p50": 183.765209,
+        "p95": 1366.669292,
+        "p99": 1834.516667,
+        "p999": 1834.516667,
+        "max": 1834.516667,
+        "mean": 332.00782884782615,
+        "stddev": 396.8594948385453,
+        "tailSupport": 1,
+        "relativeMad": 0.4309699993321369
+      },
+      "reasons": [
+        "p99 1834.517 ms exceeds the 1200 ms budget"
+      ],
+      "measures": "(@scriv/ooxml has no implementation yet)",
+      "excludes": []
+    }
+  ],
+  "failed": true
+}
