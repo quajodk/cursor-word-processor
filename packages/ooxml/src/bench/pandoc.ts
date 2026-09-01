@@ -72,6 +72,9 @@ export function pandocToDocx(
 ): PandocRun {
   const t0 = Date.now();
   const name = `out-${variant}`;
+  // pandocToMarkdown creates this directory, but the two are called independently (a
+  // md->docx baseline can run without the docx->md leg), so it must not be assumed.
+  mkdirSync(workDir, { recursive: true });
   writeFileSync(join(workDir, `${name}.md`), markdown);
   const args = ["-f", "markdown", "-t", "docx", `${name}.md`, "-o", `${name}.docx`];
   if (variant === "reference") args.push(`--reference-doc=${referenceDocx}`);

@@ -391,6 +391,20 @@ function summaryText(o: ReturnType<typeof Object> extends never ? never : any): 
   L.push(`T1 clean %             ${col(f(o.t1.percentClean, 2))}${col(b ? f(b.pandocPlain.t1.percentClean, 2) : "-")}${b ? f(b.pandocReference.t1.percentClean, 2) : "-"}`);
   L.push(`T2 weighted            ${col(f(o.t2.weighted))}${col(b ? f(b.pandocPlain.t2.weighted) : "-")}${b ? f(b.pandocReference.t2.weighted) : "-"}`);
   L.push("");
+  // Say plainly what scriv's T2 does and does not prove. T2 scores the ZERO-EDIT round trip,
+  // and T0 already establishes that scriv's zero-edit round trip is byte-identical to the
+  // original. So whenever T0 is 100%, scriv's T2 is 1.0000 BY CONSTRUCTION — it is entailed
+  // by T0, not independent evidence, and reporting the two as separate achievements would be
+  // counting one fact twice. The informative number in the T2 row is pandoc's: it is what a
+  // regenerating converter loses on the same documents. Scriv's fidelity under an actual
+  // edit is measured by T1, which is not entailed by anything.
+  if (o.t0.percentIdentical === 100) {
+    L.push(`note: scriv's T2 of ${f(o.t2.weighted)} is ENTAILED by T0 = 100% (T2 scores the`);
+    L.push(`      zero-edit round trip, which T0 already proved byte-identical). It is not`);
+    L.push(`      independent evidence. The informative T2 figures are pandoc's; scriv's`);
+    L.push(`      fidelity under a real edit is T1.`);
+    L.push("");
+  }
   L.push(`T2 by feature (scriv | pandoc default | pandoc reference):`);
   for (const k of Object.keys(FEATURE_WEIGHTS)) {
     const s = o.t2.byFeature[k];
