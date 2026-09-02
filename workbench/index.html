@@ -92,10 +92,10 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
 </style>
 <div class="wrap">
 <header class="masthead">
-  <div class="eyebrow">Wave 4 · Perf gate green; text ops begin</div>
+  <div class="eyebrow">Wave 4 · Text ops: the editor starts to feel like an instrument</div>
   <h1>scriv workbench</h1>
   <p class="dek">An IDE for writing. Markdown on disk is the source of truth; the editing surface is a real word processor.</p>
-  <div class="stamp"><span>updated 2026-09-02 02:05Z</span><span>bun · TypeScript · ProseMirror</span></div>
+  <div class="stamp"><span>updated 2026-09-02 11:34Z</span><span>bun · TypeScript · ProseMirror</span></div>
 </header>
 
 <section>
@@ -201,14 +201,14 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
   <p class="piece-scope">Keystroke budget enforced by a test that fails the build</p>
   <p class="piece-evidence"><span class="tag">verified</span>Gate is green and enforced. Keystroke → state commit p99 0.36 ms against 8 ms; in-browser keystroke → DOM 2.4 ms; 50-page docx import p99 670 ms against 1200; throughput p99 1.28 ms/paragraph against 1.5.</p>
   <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Keystroke → paint is still unmeasured, so the 16 ms end-to-end budget remains unproven.</p>
-</article><article class="piece piece-running">
+</article><article class="piece piece-done">
   <header class="piece-head">
     <h3>Smart text ops</h3>
-    <div class="piece-chips"><span class="chip chip-running">running</span></div>
+    <div class="piece-chips"><span class="chip chip-done">done</span></div>
   </header>
   <p class="piece-scope">Selection-aware surrounds, multi-cursor, motions, transpose, join, kill-line</p>
-  <p class="piece-evidence"><span class="tag">verified</span>Sentence and word segmentation working across English, German, Hindi and Japanese (15 tests), and selection-aware surrounds wired into the running app (12 tests). Verified live: selecting a word and typing a quote wraps it and keeps it selected; emphasis then nests inside; it saves as “*remains*” and round-trips idempotently.</p>
-  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Only surrounds are done. Multi-cursor, expand/shrink selection, motions, transpose, join and kill-line are not built — and multi-cursor is the hardest of them, since ProseMirror ships no multiple-selection model.</p>
+  <p class="piece-evidence"><span class="tag">verified</span>49 tests. Segmentation across English, German, Hindi and Japanese; selection-aware surrounds; expand/shrink selection; sentence and paragraph motions; Emacs kill ring; transpose, join, duplicate, move, delete-word. Verified live in the app: surrounds wrap and nest, kill-line works, expand-selection turns a caret into a range.</p>
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Multi-cursor is not built, and it is the hardest piece — ProseMirror ships no multiple-selection model, so it needs a custom Selection subclass and a dispatcher that maps every command across ranges. Move-paragraph is covered by unit test but was not reproducible through the browser automation, so it is unverified live.</p>
 </article><article class="piece piece-queued">
   <header class="piece-head">
     <h3>Prose IntelliSense</h3>
@@ -286,12 +286,17 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
     <div class="decision-body">
       <p class="decision-what">A budget that names a size needs an upper bound on the band, and warm-up is reported separately rather than folded in</p>
       <p class="decision-why">“50-page” measured as “≥500 paragraphs” swept in 11,000-paragraph documents and reported a failure three times the real one; a bench with no warm-up puts JIT cost in the p99 tail and blames the code for it.</p>
+    </div></div><div class="decision">
+    <dt>Key bindings</dt>
+    <div class="decision-body">
+      <p class="decision-what">Verified by pressing them in the running app, not by reading a table</p>
+      <p class="decision-why">Mod-Ctrl-ArrowUp looked ideal for expand-selection and is silently eaten by Mission Control on macOS. The keys the OS takes are now listed in the binding table so they are not rediscovered.</p>
     </div></div></dl>
 </section>
 
 <section>
   <h2>Notes</h2>
-  <ul class="notes"><li>The perf gate went from red to green through three changes, only one of which was an optimisation: discarding warm-up (3352→2364 ms), bounding the 50-page band so it stopped including 500-page documents (→1260 ms), and removing per-part hashing that nothing read (→670 ms).</li><li>A check of mine reported three documents losing right-to-left run formatting. Reading the XML showed the opposite: the exporter had dropped a second, completely empty run carrying only that property and no text, which is correct. The comparison was wrong, not the exporter — it compared whole property payloads, which cannot tell a legitimate run merge from a real loss. It now compares property names, and that invariant is enforced by a test.</li><li>The splice design is validated: on real Word documents an unedited round trip is byte-identical, and a one-word edit changes exactly one paragraph. Pandoc, which regenerates, scores 0% on both — while remaining self-consistent at 0.9913 against its own output, so this is not a strawman: it preserves its own conversion faithfully, just not the user's document.</li><li>The gate is currently RED, deliberately and correctly: importing large Word documents takes p99 3.35s against a 1.2s budget. A 84ms average across the whole corpus had hidden this — the large documents are the bottleneck.</li><li>A status-bar reading that looked like two bugs turned out to be the 220 ms coalescing timer doing its job — the status store deliberately keeps typing off React’s render path. Verified by measurement rather than patched on suspicion.</li><li>Both session interruptions cost roughly a wave each. Builders now commit after every deliverable, which is why nothing was lost the second time.</li><li>The .docx corpus is public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used.</li></ul>
+  <ul class="notes"><li>Two bugs in the selection ladder were found by testing rather than reading: it walked back down once a selection spanned two paragraphs, and selecting the whole document used a position that sits between nodes rather than inside text. Both are now asserted by tests.</li><li>The perf gate went from red to green through three changes, only one of which was an optimisation: discarding warm-up (3352→2364 ms), bounding the 50-page band so it stopped including 500-page documents (→1260 ms), and removing per-part hashing that nothing read (→670 ms).</li><li>A check of mine reported three documents losing right-to-left run formatting. Reading the XML showed the opposite: the exporter had dropped a second, completely empty run carrying only that property and no text, which is correct. The comparison was wrong, not the exporter — it compared whole property payloads, which cannot tell a legitimate run merge from a real loss. It now compares property names, and that invariant is enforced by a test.</li><li>The splice design is validated: on real Word documents an unedited round trip is byte-identical, and a one-word edit changes exactly one paragraph. Pandoc, which regenerates, scores 0% on both — while remaining self-consistent at 0.9913 against its own output, so this is not a strawman: it preserves its own conversion faithfully, just not the user's document.</li><li>The gate is currently RED, deliberately and correctly: importing large Word documents takes p99 3.35s against a 1.2s budget. A 84ms average across the whole corpus had hidden this — the large documents are the bottleneck.</li><li>A status-bar reading that looked like two bugs turned out to be the 220 ms coalescing timer doing its job — the status store deliberately keeps typing off React’s render path. Verified by measurement rather than patched on suspicion.</li><li>Both session interruptions cost roughly a wave each. Builders now commit after every deliverable, which is why nothing was lost the second time.</li><li>The .docx corpus is public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used.</li></ul>
 </section>
 
 <footer>Every number on this page is measured or absent. Nothing here is estimated.</footer>

@@ -1,6 +1,6 @@
 {
   "wave": 4,
-  "waveTitle": "Perf gate green; text ops begin",
+  "waveTitle": "Text ops: the editor starts to feel like an instrument",
   "pieces": [
     {
       "id": "foundation",
@@ -60,10 +60,10 @@
       "id": "textops",
       "name": "Smart text ops",
       "scope": "Selection-aware surrounds, multi-cursor, motions, transpose, join, kill-line",
-      "builder": "running",
+      "builder": "done",
       "critic": "pending",
-      "evidence": "Sentence and word segmentation working across English, German, Hindi and Japanese (15 tests), and selection-aware surrounds wired into the running app (12 tests). Verified live: selecting a word and typing a quote wraps it and keeps it selected; emphasis then nests inside; it saves as \u201c*remains*\u201d and round-trips idempotently.",
-      "gap": "Only surrounds are done. Multi-cursor, expand/shrink selection, motions, transpose, join and kill-line are not built \u2014 and multi-cursor is the hardest of them, since ProseMirror ships no multiple-selection model."
+      "evidence": "49 tests. Segmentation across English, German, Hindi and Japanese; selection-aware surrounds; expand/shrink selection; sentence and paragraph motions; Emacs kill ring; transpose, join, duplicate, move, delete-word. Verified live in the app: surrounds wrap and nest, kill-line works, expand-selection turns a caret into a range.",
+      "gap": "Multi-cursor is not built, and it is the hardest piece \u2014 ProseMirror ships no multiple-selection model, so it needs a custom Selection subclass and a dispatcher that maps every command across ranges. Move-paragraph is covered by unit test but was not reproducible through the browser automation, so it is unverified live."
     },
     {
       "id": "intel",
@@ -228,9 +228,15 @@
       "t": "Measuring a budget",
       "d": "A budget that names a size needs an upper bound on the band, and warm-up is reported separately rather than folded in",
       "why": "\u201c50-page\u201d measured as \u201c\u2265500 paragraphs\u201d swept in 11,000-paragraph documents and reported a failure three times the real one; a bench with no warm-up puts JIT cost in the p99 tail and blames the code for it."
+    },
+    {
+      "t": "Key bindings",
+      "d": "Verified by pressing them in the running app, not by reading a table",
+      "why": "Mod-Ctrl-ArrowUp looked ideal for expand-selection and is silently eaten by Mission Control on macOS. The keys the OS takes are now listed in the binding table so they are not rediscovered."
     }
   ],
   "notes": [
+    "Two bugs in the selection ladder were found by testing rather than reading: it walked back down once a selection spanned two paragraphs, and selecting the whole document used a position that sits between nodes rather than inside text. Both are now asserted by tests.",
     "The perf gate went from red to green through three changes, only one of which was an optimisation: discarding warm-up (3352\u21922364 ms), bounding the 50-page band so it stopped including 500-page documents (\u21921260 ms), and removing per-part hashing that nothing read (\u2192670 ms).",
     "A check of mine reported three documents losing right-to-left run formatting. Reading the XML showed the opposite: the exporter had dropped a second, completely empty run carrying only that property and no text, which is correct. The comparison was wrong, not the exporter \u2014 it compared whole property payloads, which cannot tell a legitimate run merge from a real loss. It now compares property names, and that invariant is enforced by a test.",
     "The splice design is validated: on real Word documents an unedited round trip is byte-identical, and a one-word edit changes exactly one paragraph. Pandoc, which regenerates, scores 0% on both \u2014 while remaining self-consistent at 0.9913 against its own output, so this is not a strawman: it preserves its own conversion faithfully, just not the user's document.",
