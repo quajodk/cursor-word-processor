@@ -1,6 +1,6 @@
 {
-  "wave": 3,
-  "waveTitle": "The .docx claim, measured on all 288",
+  "wave": 4,
+  "waveTitle": "Perf gate green; text ops begin",
   "pieces": [
     {
       "id": "foundation",
@@ -53,17 +53,17 @@
       "scope": "Keystroke budget enforced by a test that fails the build",
       "builder": "done",
       "critic": "pending",
-      "evidence": "Gate runs and fails the build correctly (exit 1). Keystroke \u2192 state commit on a 40,040-word document: p99 0.38ms against an 8ms budget, n=15,000, typed from real Gutenberg prose.",
-      "gap": "Keystroke \u2192 paint is still unmeasured, so the 16ms end-to-end budget is unproven. The state-commit figure is reported as a lower bound, not a pass."
+      "evidence": "Gate is green and enforced. Keystroke \u2192 state commit p99 0.36 ms against 8 ms; in-browser keystroke \u2192 DOM 2.4 ms; 50-page docx import p99 670 ms against 1200; throughput p99 1.28 ms/paragraph against 1.5.",
+      "gap": "Keystroke \u2192 paint is still unmeasured, so the 16 ms end-to-end budget remains unproven."
     },
     {
       "id": "textops",
       "name": "Smart text ops",
       "scope": "Selection-aware surrounds, multi-cursor, motions, transpose, join, kill-line",
-      "builder": "queued",
+      "builder": "running",
       "critic": "pending",
-      "evidence": null,
-      "gap": "Only locale data and text helpers landed; no commands yet."
+      "evidence": "Sentence and word segmentation working across English, German, Hindi and Japanese (15 tests), and selection-aware surrounds wired into the running app (12 tests). Verified live: selecting a word and typing a quote wraps it and keeps it selected; emphasis then nests inside; it saves as \u201c*remains*\u201d and round-trips idempotently.",
+      "gap": "Only surrounds are done. Multi-cursor, expand/shrink selection, motions, transpose, join and kill-line are not built \u2014 and multi-cursor is the hardest of them, since ProseMirror ships no multiple-selection model."
     },
     {
       "id": "intel",
@@ -125,8 +125,8 @@
       "state": "measured"
     },
     {
-      "label": "docx import, large docs",
-      "value": 3352,
+      "label": "docx import, 50-page",
+      "value": 670,
       "unit": "ms p99",
       "budget": "1200",
       "state": "measured"
@@ -179,6 +179,13 @@
       "unit": "weighted",
       "budget": "\u2014",
       "state": "measured"
+    },
+    {
+      "label": "docx import throughput",
+      "value": 1.28,
+      "unit": "ms/paragraph",
+      "budget": "1.5",
+      "state": "measured"
     }
   ],
   "decisions": [
@@ -216,9 +223,15 @@
       "t": "Scoring honesty",
       "d": "A tier entailed by another tier is labelled, not counted twice",
       "why": "Scriv\u2019s T2 is 1.0000 because T0 is 100% \u2014 T2 scores the zero-edit round trip that T0 already proved byte-identical. Presenting both as achievements would inflate one fact into two."
+    },
+    {
+      "t": "Measuring a budget",
+      "d": "A budget that names a size needs an upper bound on the band, and warm-up is reported separately rather than folded in",
+      "why": "\u201c50-page\u201d measured as \u201c\u2265500 paragraphs\u201d swept in 11,000-paragraph documents and reported a failure three times the real one; a bench with no warm-up puts JIT cost in the p99 tail and blames the code for it."
     }
   ],
   "notes": [
+    "The perf gate went from red to green through three changes, only one of which was an optimisation: discarding warm-up (3352\u21922364 ms), bounding the 50-page band so it stopped including 500-page documents (\u21921260 ms), and removing per-part hashing that nothing read (\u2192670 ms).",
     "A check of mine reported three documents losing right-to-left run formatting. Reading the XML showed the opposite: the exporter had dropped a second, completely empty run carrying only that property and no text, which is correct. The comparison was wrong, not the exporter \u2014 it compared whole property payloads, which cannot tell a legitimate run merge from a real loss. It now compares property names, and that invariant is enforced by a test.",
     "The splice design is validated: on real Word documents an unedited round trip is byte-identical, and a one-word edit changes exactly one paragraph. Pandoc, which regenerates, scores 0% on both \u2014 while remaining self-consistent at 0.9913 against its own output, so this is not a strawman: it preserves its own conversion faithfully, just not the user's document.",
     "The gate is currently RED, deliberately and correctly: importing large Word documents takes p99 3.35s against a 1.2s budget. A 84ms average across the whole corpus had hidden this \u2014 the large documents are the bottleneck.",
