@@ -65,6 +65,16 @@ export interface Trigger {
   from: number;
   /** Kinds worth offering here. Empty means all. */
   kinds: SymbolKind[];
+  /**
+   * Text to put before and after the accepted label.
+   *
+   * The replacement range starts at the SIGIL, not after it, so accepting rewrites what the
+   * writer typed rather than appending to it. A citation label already carries its `@`, so
+   * its prefix is empty; a wiki link does not carry its brackets, so it supplies both and
+   * comes out closed rather than half-typed.
+   */
+  prefix: string;
+  suffix: string;
   /** True when the user asked explicitly (Ctrl-Space) rather than by typing a sigil. */
   explicit: boolean;
 }

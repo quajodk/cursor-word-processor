@@ -1,5 +1,7 @@
 import { aidPlugin, schema } from "@scriv/doc-model";
 import { expandPlugin, handleSurround, killRingPlugin, textopsKeymap } from "@scriv/textops";
+import { completionPlugin } from "./completion";
+import type { WorkspaceSymbols } from "./workspace-symbols";
 import { baseKeymap, chainCommands, createParagraphNear, exitCode, liftEmptyBlock, newlineInCode, splitBlock } from "prosemirror-commands";
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
@@ -51,7 +53,15 @@ function surroundPlugin(locale: string): Plugin {
   });
 }
 
-export function editorPlugins(locale = typeof navigator !== "undefined" ? navigator.language : "en"): Plugin[] {
+export interface PluginOptions {
+  locale?: string;
+  /** Supplies completions. Omitted in tests and benches, where the popup is not wanted. */
+  symbols?: WorkspaceSymbols;
+  currentPath?: () => string | null;
+}
+
+export function editorPlugins(opts: PluginOptions = {}): Plugin[] {
+  const locale = opts.locale ?? (typeof navigator !== "undefined" ? navigator.language : "en");
   return [
     // Identity first: it appends transactions, and it must see the user's transaction before
     // anything else rewrites positions.
@@ -62,6 +72,9 @@ export function editorPlugins(locale = typeof navigator !== "undefined" ? naviga
     // bound to the same arrow, and after history so undo still sees one step per edit.
     expandPlugin(),
     killRingPlugin(),
+    // Completion before the text-op keymap: while the popup is open, Up/Down/Enter belong to
+    // the list, not to the document.
+    ...(opts.symbols ? [completionPlugin(opts.symbols.index, opts.currentPath ?? (() => null))] : []),
     textopsKeymap(),
     scrivInputRules(),
     history(),
@@ -113,8 +126,8 @@ function placeholderPlugin(text: string): Plugin {
   });
 }
 
-export function createEditorState(doc: PMNode): EditorState {
-  return EditorState.create({ doc, plugins: editorPlugins() });
+export function createEditorState(doc: PMNode, opts: PluginOptions = {}): EditorState {
+  return EditorState.create({ doc, plugins: editorPlugins(opts) });
 }
 
 export function emptyDoc(): PMNode {

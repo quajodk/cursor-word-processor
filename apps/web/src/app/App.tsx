@@ -68,6 +68,18 @@ export function App() {
 
   useEffect(() => watchSystemTheme(), []);
 
+  // Index the workspace for completion. Deliberately fire-and-forget and unawaited: the
+  // editor is usable from the first frame, and completions simply get better as it lands.
+  useEffect(() => {
+    if (!root) return;
+    let cancelled = false;
+    void controller.symbols.scan(root, (p) => {
+      if (cancelled) return;
+      setStatus({ message: p.done ? "" : `indexing ${p.indexed}/${p.total}` }, false);
+    });
+    return () => { cancelled = true; };
+  }, [root, controller]);
+
   useEffect(() => {
     if (!root) return;
     controller.watchExternalChanges(root, (path) => {

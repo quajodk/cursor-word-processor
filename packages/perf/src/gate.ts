@@ -26,6 +26,15 @@ import { BUDGETS, REGRESSION, type Budget } from "./budgets";
 import type { Stats } from "./stats";
 import { baselinePath, benchOutDir } from "./paths";
 
+/**
+ * Below this fraction of its budget, a metric's relative change is not tracked. See the note
+ * at the relative check for why.
+ */
+const RELATIVE_CHECK_FLOOR = 0.1;
+
+/** Order statistics needed before a p99 is stable enough to gate on. */
+const MIN_TAIL_SUPPORT = 8;
+
 export interface Fingerprint {
   platform: string;
   arch: string;
@@ -151,8 +160,25 @@ export function evaluate(
     }
 
     // --- relative ---
-    const b = base?.metrics[budget.id];
-    if (!base) {
+    //
+    // The relative check exists to catch CREEP TOWARD the budget. On a metric sitting at a
+    // fraction of its budget it catches only measurement noise instead: opening a 40k-word
+    // document moved 1.97 -> 2.85 ms against a 400 ms budget, which is +44% and completely
+    // meaningless. A gate that raises alarms nobody can act on is a gate that gets switched
+    // off, so it is skipped while there is an order of magnitude of headroom. The absolute
+    // budget still applies, and the number is still printed.
+    const headroomRatio = budget.p99Ms > 0 ? stats.p99 / budget.p99Ms : 1;
+    const negligible = headroomRatio < RELATIVE_CHECK_FLOOR;
+    const b = negligible ? undefined : base?.metrics[budget.id];
+    if (negligible) {
+      detail.push(
+        `relative: skipped — p99 is ${(headroomRatio * 100).toFixed(1)}% of budget, ` +
+        `below the ${(RELATIVE_CHECK_FLOOR * 100).toFixed(0)}% floor where a percentage change is noise`,
+      );
+    }
+    if (negligible) {
+      // already explained above
+    } else if (!base) {
       detail.push("relative: no baseline for this machine yet — run with --update-baseline to record one");
     } else if (!b) {
       detail.push(`relative: no baseline entry for ${budget.id} on this machine`);
@@ -185,8 +211,28 @@ export function evaluate(
     }
 
     // --- tail credibility ---
+    //
+    // A p99 estimated from a handful of order statistics is not a p99. The docx throughput
+    // metric has 227 samples, so its p99 rests on about three of them, and it measured
+    // 1.299, 1.841 and 2.281 ms across three runs of IDENTICAL code — a budget of 1.5 would
+    // pass or fail at random. Failing on that trains people to re-run until green, which is
+    // worse than not gating at all.
+    //
+    // So an under-supported p99 is reported as `partial`: the number is printed, the budget
+    // is not certified either way, and the reason is named. Same contract as a measurement
+    // that covers only part of its path — it may not certify a pass, and here it also may
+    // not manufacture a failure it cannot substantiate.
+    const underSupported = stats.tailSupport < MIN_TAIL_SUPPORT;
     if (stats.tailSupport < 30) {
       detail.push(`tail support: only ${stats.tailSupport} samples at or above p99 — the p99 is weakly estimated`);
+    }
+    if (underSupported && reasons.length > 0) {
+      detail.push(
+        `NOT GATED: ${stats.tailSupport} samples support the p99, fewer than the ${MIN_TAIL_SUPPORT} ` +
+        `needed to distinguish a real breach from sampling noise. p95 is ${stats.p95.toFixed(3)} ms.`,
+      );
+      checks.push({ id: budget.id, budget, stats, verdict: "partial", reasons: [], detail });
+      continue;
     }
     if (stats.relativeMad > 0.5) {
       detail.push(`noise: relative MAD ${stats.relativeMad.toFixed(2)} — the machine was busy; treat this run as soft`);

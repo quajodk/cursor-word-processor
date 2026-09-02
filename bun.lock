@@ -24,6 +24,7 @@
       "dependencies": {
         "@scriv/doc-model": "workspace:*",
         "@scriv/host-api": "workspace:*",
+        "@scriv/intellisense": "workspace:*",
         "@scriv/md": "workspace:*",
         "@scriv/textops": "workspace:*",
         "prosemirror-commands": "^1.7.1",

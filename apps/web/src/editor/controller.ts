@@ -5,6 +5,7 @@ import { EditorView } from "prosemirror-view";
 import { latencyPercentiles, recordLatency, resetLatency, setStatus } from "../app/status";
 import { codecFor, markdownCodec, type DocumentCodec } from "../doc/codec";
 import { createEditorState, emptyDoc } from "./setup";
+import { WorkspaceSymbols } from "./workspace-symbols";
 
 /**
  * The editing surface, owned imperatively.
@@ -40,7 +41,17 @@ export class EditorController {
   private statsTimer: ReturnType<typeof setTimeout> | null = null;
   private unwatch: (() => void) | null = null;
 
-  constructor(private readonly host: HostApi) {}
+  /** The workspace symbol table that feeds completion. Public so the shell can scan with it. */
+  readonly symbols: WorkspaceSymbols;
+
+  constructor(private readonly host: HostApi) {
+    this.symbols = new WorkspaceSymbols(host);
+  }
+
+  /** Plugin options, rebuilt for every document so the completion plugin sees the live path. */
+  private pluginOptions() {
+    return { symbols: this.symbols, currentPath: () => this.path };
+  }
 
   subscribe(listener: (ev: DocEvent) => void): () => void {
     this.listeners.add(listener);
@@ -56,7 +67,7 @@ export class EditorController {
   mount(el: HTMLElement): void {
     if (this.view) return;
     this.view = new EditorView(el, {
-      state: createEditorState(emptyDoc()),
+      state: createEditorState(emptyDoc(), this.pluginOptions()),
       dispatchTransaction: (tr) => this.dispatch(tr),
       attributes: { spellcheck: "true", role: "textbox", "aria-multiline": "true" },
     });
@@ -168,7 +179,10 @@ export class EditorController {
     this.savedText = savedText;
     this.dirty = false;
     resetLatency();
-    this.view.updateState(createEditorState(doc));
+    // Index the document being opened before its state is installed, so the first keystroke
+    // in it can already complete its own names.
+    if (path) this.symbols.setOpenDocument(path, doc);
+    this.view.updateState(createEditorState(doc, this.pluginOptions()));
     setStatus({ path, dirty: false, p50: -1, p99: -1, samples: 0 }, true);
     this.emit({ type: "opened", path });
     this.scheduleStats(true);

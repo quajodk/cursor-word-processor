@@ -491,3 +491,62 @@ button {
   border: 1px solid var(--panel-rule);
   border-radius: 4px;
 }
+
+/* ---------------------------------------------------------------- completion popup */
+/* Detached from the editor DOM and positioned absolutely: it must never participate in the
+   document's layout, or opening it would reflow the text being written. */
+.scriv-completion {
+  position: fixed;
+  z-index: 40;
+  min-width: 18rem;
+  max-width: 34rem;
+  max-height: 17rem;
+  overflow-y: auto;
+  padding: 4px;
+  background: var(--surface-raised, var(--surface));
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .18), 0 12px 32px -12px rgba(0, 0, 0, .45);
+  font-family: var(--ui-font);
+  font-size: 13px;
+}
+.scriv-completion[hidden] { display: none; }
+
+.scriv-completion-row {
+  display: grid;
+  grid-template-columns: 1.1rem 1fr auto;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: default;
+  white-space: nowrap;
+}
+.scriv-completion-row.is-selected { background: var(--selection, rgba(125, 145, 190, .22)); }
+
+.scriv-completion-kind {
+  font-family: var(--mono-font);
+  font-size: 11px;
+  text-align: center;
+  color: var(--ink-faint);
+}
+.scriv-completion-kind.kind-citation { color: var(--accent); }
+.scriv-completion-kind.kind-heading { color: var(--good, #4FB587); }
+
+.scriv-completion-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink);
+}
+/* The matched characters, so it is visible why a row is in the list at all. */
+.scriv-completion-label mark {
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+}
+.scriv-completion-detail {
+  font-family: var(--mono-font);
+  font-size: 11px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}

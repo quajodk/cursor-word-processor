@@ -19,6 +19,9 @@
     },
     {
       "path": "../../packages/md"
+    },
+    {
+      "path": "../../packages/intellisense"
     }
   ]
 }

@@ -28,10 +28,12 @@ import type { CompletionContext, CompletionItem, ProseSymbol, SymbolKind, Trigge
  * which is the only time the writer has actually asked to be shown a list.
  */
 
-const SIGILS: { sigil: string; kinds: SymbolKind[] }[] = [
-  { sigil: "[[", kinds: ["heading"] },
-  { sigil: "@", kinds: ["citation"] },
-  { sigil: ":", kinds: ["snippet"] },
+const SIGILS: { sigil: string; kinds: SymbolKind[]; prefix: string; suffix: string }[] = [
+  // A heading label carries no brackets, so accepting supplies both and the link comes out
+  // closed. A citation label already carries its `@`, so re-adding one produced `@@key`.
+  { sigil: "[[", kinds: ["heading"], prefix: "[[", suffix: "]]" },
+  { sigil: "@", kinds: ["citation"], prefix: "", suffix: "" },
+  { sigil: ":", kinds: ["snippet"], prefix: "", suffix: "" },
 ];
 
 /**
@@ -44,7 +46,7 @@ export function triggerAt(ctx: CompletionContext, explicit = false): Trigger | n
   const { blockText, offset } = ctx;
   const before = blockText.slice(0, offset);
 
-  for (const { sigil, kinds } of SIGILS) {
+  for (const { sigil, kinds, prefix, suffix } of SIGILS) {
     const at = before.lastIndexOf(sigil);
     if (at < 0) continue;
     const query = before.slice(at + sigil.length);
@@ -53,7 +55,8 @@ export function triggerAt(ctx: CompletionContext, explicit = false): Trigger | n
     if (/\s/.test(query)) continue;
     // `:` is far too common in prose to trigger on its own; require it to start a word.
     if (sigil === ":" && at > 0 && !/\s/.test(before[at - 1] ?? " ")) continue;
-    return { query, from: at + sigil.length, kinds, explicit };
+    // `from` is the sigil itself: accepting replaces what was typed instead of appending.
+    return { query, from: at, kinds, explicit, prefix, suffix };
   }
 
   // A bare word: the current word under the caret.
@@ -61,7 +64,7 @@ export function triggerAt(ctx: CompletionContext, explicit = false): Trigger | n
   while (start > 0 && !/[\s"'“”‘’([{]/u.test(blockText[start - 1] ?? "")) start--;
   if (!explicit) return null;
   const query = blockText.slice(start, offset);
-  return { query, from: start, kinds: [], explicit };
+  return { query, from: start, kinds: [], explicit, prefix: "", suffix: "" };
 }
 
 /** Case-insensitive subsequence match with the ranges that matched, or null. */
