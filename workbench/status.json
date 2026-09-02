@@ -1,6 +1,6 @@
 {
-  "wave": 4,
-  "waveTitle": "Text ops: the editor starts to feel like an instrument",
+  "wave": 5,
+  "waveTitle": "Word documents open in the app",
   "pieces": [
     {
       "id": "foundation",
@@ -98,8 +98,8 @@
       "scope": "Edit the original zip rather than regenerate it",
       "builder": "done",
       "critic": "pending",
-      "evidence": "Full corpus, 288 real Word documents (177 MB): T0 100% byte-identical, T1 286/286 surgical \u2014 exactly one paragraph changes, nothing else moves. Pandoc on the same files: T0 0%, T1 0.0024, T2 0.318; it zeroes tables, comments and revisions and scores 0.03 on numbering.",
-      "gap": "The rebuilt paragraph is regenerated whole rather than run-spliced (runSpliced is 0 everywhere), so the finer-grained path that reuses each run\u2019s rPr is written but never exercised. Formatting survives anyway \u2014 verified 59/59 \u2014 but the cheaper path is untested."
+      "evidence": "Verified through the app itself, not a bench: opened a real 247-paragraph Word document, changed one word, saved. Of 20 zip entries exactly ONE differs \u2014 word/document.xml. Styles, numbering, headers, footers, themes, fonts and media return byte-identical. Of 247 paragraphs exactly one changed. pandoc reads the result.",
+      "gap": "Save writes the .docx in place. The Markdown source of truth and the .scriv sidecar are held in memory but not yet written alongside it, so closing the app loses the fidelity ledger for that document."
     }
   ],
   "metrics": [
@@ -186,6 +186,13 @@
       "unit": "ms/paragraph",
       "budget": "1.5",
       "state": "measured"
+    },
+    {
+      "label": "docx parts touched on save",
+      "value": 1,
+      "unit": "of 20",
+      "budget": "1",
+      "state": "measured"
     }
   ],
   "decisions": [
@@ -233,9 +240,16 @@
       "t": "Key bindings",
       "d": "Verified by pressing them in the running app, not by reading a table",
       "why": "Mod-Ctrl-ArrowUp looked ideal for expand-selection and is silently eaten by Mission Control on macOS. The keys the OS takes are now listed in the binding table so they are not rediscovered."
+    },
+    {
+      "t": "Typecheck graph",
+      "d": "Every package is a referenced project, not just the ones that happened to be listed",
+      "why": "Four packages including the largest were outside the root tsconfig references, so every clean typecheck was checking a subset. Adding them surfaced 114 errors, three of which were real defects."
     }
   ],
   "notes": [
+    "A Word document now opens, edits and saves in the app, touching exactly one of its twenty zip parts. That is the hard requirement, demonstrated through the UI rather than a benchmark.",
+    "packages/ooxml, textops, workspace and perf were never in the typecheck graph. Every \u201ctypecheck clean\u201d reported before this wave was checking five of nine projects and excluding the largest. Now all nine are referenced and clean.",
     "Two bugs in the selection ladder were found by testing rather than reading: it walked back down once a selection spanned two paragraphs, and selecting the whole document used a position that sits between nodes rather than inside text. Both are now asserted by tests.",
     "The perf gate went from red to green through three changes, only one of which was an optimisation: discarding warm-up (3352\u21922364 ms), bounding the 50-page band so it stopped including 500-page documents (\u21921260 ms), and removing per-part hashing that nothing read (\u2192670 ms).",
     "A check of mine reported three documents losing right-to-left run formatting. Reading the XML showed the opposite: the exporter had dropped a second, completely empty run carrying only that property and no text, which is correct. The comparison was wrong, not the exporter \u2014 it compared whole property payloads, which cannot tell a legitimate run merge from a real loss. It now compares property names, and that invariant is enforced by a test.",

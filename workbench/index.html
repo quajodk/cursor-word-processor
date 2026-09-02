@@ -92,10 +92,10 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
 </style>
 <div class="wrap">
 <header class="masthead">
-  <div class="eyebrow">Wave 4 · Text ops: the editor starts to feel like an instrument</div>
+  <div class="eyebrow">Wave 5 · Word documents open in the app</div>
   <h1>scriv workbench</h1>
   <p class="dek">An IDE for writing. Markdown on disk is the source of truth; the editing surface is a real word processor.</p>
-  <div class="stamp"><span>updated 2026-09-02 11:34Z</span><span>bun · TypeScript · ProseMirror</span></div>
+  <div class="stamp"><span>updated 2026-09-02 11:52Z</span><span>bun · TypeScript · ProseMirror</span></div>
 </header>
 
 <section>
@@ -148,6 +148,10 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
     <div class="tile-label">docx import throughput</div>
     <div class="tile-value">1.28<span class="tile-unit">ms/paragraph</span></div>
     <div class="tile-budget">budget · 1.5 ms/paragraph</div>
+  </div><div class="tile tile-ok">
+    <div class="tile-label">docx parts touched on save</div>
+    <div class="tile-value">1<span class="tile-unit">of 20</span></div>
+    <div class="tile-budget">budget · 1 of 20</div>
   </div></div>
 </section>
 
@@ -239,8 +243,8 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
     <div class="piece-chips"><span class="chip chip-done">done</span></div>
   </header>
   <p class="piece-scope">Edit the original zip rather than regenerate it</p>
-  <p class="piece-evidence"><span class="tag">verified</span>Full corpus, 288 real Word documents (177 MB): T0 100% byte-identical, T1 286/286 surgical — exactly one paragraph changes, nothing else moves. Pandoc on the same files: T0 0%, T1 0.0024, T2 0.318; it zeroes tables, comments and revisions and scores 0.03 on numbering.</p>
-  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>The rebuilt paragraph is regenerated whole rather than run-spliced (runSpliced is 0 everywhere), so the finer-grained path that reuses each run’s rPr is written but never exercised. Formatting survives anyway — verified 59/59 — but the cheaper path is untested.</p>
+  <p class="piece-evidence"><span class="tag">verified</span>Verified through the app itself, not a bench: opened a real 247-paragraph Word document, changed one word, saved. Of 20 zip entries exactly ONE differs — word/document.xml. Styles, numbering, headers, footers, themes, fonts and media return byte-identical. Of 247 paragraphs exactly one changed. pandoc reads the result.</p>
+  <p class="piece-gap"><span class="tag tag-gap">biggest gap</span>Save writes the .docx in place. The Markdown source of truth and the .scriv sidecar are held in memory but not yet written alongside it, so closing the app loses the fidelity ledger for that document.</p>
 </article></div>
 </section>
 
@@ -291,12 +295,17 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-family:"IBM Plex M
     <div class="decision-body">
       <p class="decision-what">Verified by pressing them in the running app, not by reading a table</p>
       <p class="decision-why">Mod-Ctrl-ArrowUp looked ideal for expand-selection and is silently eaten by Mission Control on macOS. The keys the OS takes are now listed in the binding table so they are not rediscovered.</p>
+    </div></div><div class="decision">
+    <dt>Typecheck graph</dt>
+    <div class="decision-body">
+      <p class="decision-what">Every package is a referenced project, not just the ones that happened to be listed</p>
+      <p class="decision-why">Four packages including the largest were outside the root tsconfig references, so every clean typecheck was checking a subset. Adding them surfaced 114 errors, three of which were real defects.</p>
     </div></div></dl>
 </section>
 
 <section>
   <h2>Notes</h2>
-  <ul class="notes"><li>Two bugs in the selection ladder were found by testing rather than reading: it walked back down once a selection spanned two paragraphs, and selecting the whole document used a position that sits between nodes rather than inside text. Both are now asserted by tests.</li><li>The perf gate went from red to green through three changes, only one of which was an optimisation: discarding warm-up (3352→2364 ms), bounding the 50-page band so it stopped including 500-page documents (→1260 ms), and removing per-part hashing that nothing read (→670 ms).</li><li>A check of mine reported three documents losing right-to-left run formatting. Reading the XML showed the opposite: the exporter had dropped a second, completely empty run carrying only that property and no text, which is correct. The comparison was wrong, not the exporter — it compared whole property payloads, which cannot tell a legitimate run merge from a real loss. It now compares property names, and that invariant is enforced by a test.</li><li>The splice design is validated: on real Word documents an unedited round trip is byte-identical, and a one-word edit changes exactly one paragraph. Pandoc, which regenerates, scores 0% on both — while remaining self-consistent at 0.9913 against its own output, so this is not a strawman: it preserves its own conversion faithfully, just not the user's document.</li><li>The gate is currently RED, deliberately and correctly: importing large Word documents takes p99 3.35s against a 1.2s budget. A 84ms average across the whole corpus had hidden this — the large documents are the bottleneck.</li><li>A status-bar reading that looked like two bugs turned out to be the 220 ms coalescing timer doing its job — the status store deliberately keeps typing off React’s render path. Verified by measurement rather than patched on suspicion.</li><li>Both session interruptions cost roughly a wave each. Builders now commit after every deliverable, which is why nothing was lost the second time.</li><li>The .docx corpus is public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used.</li></ul>
+  <ul class="notes"><li>A Word document now opens, edits and saves in the app, touching exactly one of its twenty zip parts. That is the hard requirement, demonstrated through the UI rather than a benchmark.</li><li>packages/ooxml, textops, workspace and perf were never in the typecheck graph. Every “typecheck clean” reported before this wave was checking five of nine projects and excluding the largest. Now all nine are referenced and clean.</li><li>Two bugs in the selection ladder were found by testing rather than reading: it walked back down once a selection spanned two paragraphs, and selecting the whole document used a position that sits between nodes rather than inside text. Both are now asserted by tests.</li><li>The perf gate went from red to green through three changes, only one of which was an optimisation: discarding warm-up (3352→2364 ms), bounding the 50-page band so it stopped including 500-page documents (→1260 ms), and removing per-part hashing that nothing read (→670 ms).</li><li>A check of mine reported three documents losing right-to-left run formatting. Reading the XML showed the opposite: the exporter had dropped a second, completely empty run carrying only that property and no text, which is correct. The comparison was wrong, not the exporter — it compared whole property payloads, which cannot tell a legitimate run merge from a real loss. It now compares property names, and that invariant is enforced by a test.</li><li>The splice design is validated: on real Word documents an unedited round trip is byte-identical, and a one-word edit changes exactly one paragraph. Pandoc, which regenerates, scores 0% on both — while remaining self-consistent at 0.9913 against its own output, so this is not a strawman: it preserves its own conversion faithfully, just not the user's document.</li><li>The gate is currently RED, deliberately and correctly: importing large Word documents takes p99 3.35s against a 1.2s budget. A 84ms average across the whole corpus had hidden this — the large documents are the bottleneck.</li><li>A status-bar reading that looked like two bugs turned out to be the 220 ms coalescing timer doing its job — the status store deliberately keeps typing off React’s render path. Verified by measurement rather than patched on suspicion.</li><li>Both session interruptions cost roughly a wave each. Builders now commit after every deliverable, which is why nothing was lost the second time.</li><li>The .docx corpus is public real-world documents. The 59 .docx files in ~/Downloads are personal and are deliberately not used.</li></ul>
 </section>
 
 <footer>Every number on this page is measured or absent. Nothing here is estimated.</footer>
