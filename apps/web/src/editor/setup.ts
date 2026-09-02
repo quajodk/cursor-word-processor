@@ -1,4 +1,5 @@
 import { aidPlugin, schema } from "@scriv/doc-model";
+import { handleSurround } from "@scriv/textops";
 import { baseKeymap, chainCommands, createParagraphNear, exitCode, liftEmptyBlock, newlineInCode, splitBlock } from "prosemirror-commands";
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
@@ -29,12 +30,34 @@ const insertHardBreak: Command = (state, dispatch) => {
   return true;
 };
 
-export function editorPlugins(): Plugin[] {
+/**
+ * Selection-aware surrounds, wired to `handleTextInput`.
+ *
+ * It must sit ahead of the input rules: both look at typed characters, and a surround is the
+ * more specific interpretation. `handleTextInput` runs before ProseMirror's default
+ * insertion, which is exactly the hook a surround needs — it replaces the insertion rather
+ * than repairing it afterwards, so undo sees one step, not two.
+ */
+function surroundPlugin(locale: string): Plugin {
+  return new Plugin({
+    props: {
+      handleTextInput(view, from, to, text) {
+        const tr = handleSurround(view.state, from, to, text, { locale });
+        if (!tr) return false;
+        view.dispatch(tr.scrollIntoView());
+        return true;
+      },
+    },
+  });
+}
+
+export function editorPlugins(locale = typeof navigator !== "undefined" ? navigator.language : "en"): Plugin[] {
   return [
     // Identity first: it appends transactions, and it must see the user's transaction before
     // anything else rewrites positions.
     aidPlugin(),
 
+    surroundPlugin(locale),
     scrivInputRules(),
     history(),
 
