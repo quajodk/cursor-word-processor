@@ -213,8 +213,11 @@ export function registerDefaultCommands(controller: EditorController): () => voi
     editorCommand("format.underline", "Underline", "Mod-u", toggle.underline),
     editorCommand("format.strike", "Strikethrough", "Mod-Shift-x", toggle.strike),
     editorCommand("format.code", "Inline code", "Mod-e", toggle.code),
-    editorCommand("format.superscript", "Superscript", "Mod-.", toggle.superscript),
-    editorCommand("format.subscript", "Subscript", "Mod-,", toggle.subscript),
+    // Mod-. is the quick-fix binding everywhere a programmer has ever used one, and a writer
+    // reaches for a spelling correction far more often than for a superscript. Super- and
+    // subscript move up one modifier; both stay in the palette.
+    editorCommand("format.superscript", "Superscript", "Mod-Shift-.", toggle.superscript),
+    editorCommand("format.subscript", "Subscript", "Mod-Shift-,", toggle.subscript),
     editorCommand("format.clear", "Clear formatting", "Mod-Shift-c", clearFormatting),
     {
       id: "format.link",

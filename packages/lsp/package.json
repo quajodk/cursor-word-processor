@@ -4,5 +4,7 @@
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
-  "dependencies": { "@scriv/intellisense": "workspace:*", "harper.js": "^2.7.0" }
+  "dependencies": {
+    "harper.js": "^2.7.0"
+  }
 }

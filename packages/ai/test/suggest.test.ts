@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { EditorState } from "prosemirror-state";
-import { schema } from "@scriv/doc-model";
-import { acceptSuggestion, hasSuggestion, rejectSuggestion, suggestRewrite, OffsetMap } from "../src/suggest";
+import { OffsetMap, schema } from "@scriv/doc-model";
+import { acceptSuggestion, hasSuggestion, rejectSuggestion, suggestRewrite } from "../src/suggest";
 
 const docOf = (...paras: string[]) =>
   EditorState.create({

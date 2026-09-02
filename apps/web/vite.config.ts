@@ -28,4 +28,14 @@ export default defineConfig({
   server: { port: 4310, strictPort: true },
   resolve: { dedupe: ["react", "react-dom", ...PROSEMIRROR] },
   build: { target: "es2022", sourcemap: true },
+  worker: {
+    /**
+     * ES modules, not the IIFE default.
+     *
+     * The diagnostics worker loads Harper's WebAssembly through a dynamic import, which makes
+     * it a code-splitting build, and Rollup cannot emit those as IIFE. Setting it here also
+     * keeps the dev server and the production build on the same format.
+     */
+    format: "es",
+  },
 });

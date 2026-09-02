@@ -2,6 +2,7 @@ import { aidPlugin, schema } from "@scriv/doc-model";
 import { expandPlugin, handleSurround, killRingPlugin, textopsKeymap } from "@scriv/textops";
 import { completionPlugin } from "./completion";
 import { inlineEditPlugin } from "./inline-edit";
+import { applyFirstFix, diagnosticsPlugin } from "./diagnostics";
 import type { WorkspaceSymbols } from "./workspace-symbols";
 import { baseKeymap, chainCommands, createParagraphNear, exitCode, liftEmptyBlock, newlineInCode, splitBlock } from "prosemirror-commands";
 import { dropCursor } from "prosemirror-dropcursor";
@@ -56,6 +57,9 @@ function surroundPlugin(locale: string): Plugin {
 
 export interface PluginOptions {
   locale?: string;
+  /** Document language for the checker. Omitted in tests, where no worker exists. */
+  language?: () => string;
+  onDiagnostics?: (elapsedMs: number, count: number) => void;
   /** Supplies completions. Omitted in tests and benches, where the popup is not wanted. */
   symbols?: WorkspaceSymbols;
   currentPath?: () => string | null;
@@ -76,6 +80,11 @@ export function editorPlugins(opts: PluginOptions = {}): Plugin[] {
     // Before the text ops: while a suggestion is under review, Cmd-Enter and Escape belong
     // to the review, not to the document.
     inlineEditPlugin(),
+    // Diagnostics only when a language is supplied: bun's test runner has no Worker, and a
+    // plugin that constructs one unconditionally would make the doc-model tests need a DOM.
+    ...(opts.language
+      ? [diagnosticsPlugin({ language: opts.language, onTiming: opts.onDiagnostics })]
+      : []),
     // Completion before the text-op keymap: while the popup is open, Up/Down/Enter belong to
     // the list, not to the document.
     ...(opts.symbols ? [completionPlugin(opts.symbols.index, opts.currentPath ?? (() => null))] : []),
@@ -97,6 +106,8 @@ export function editorPlugins(opts: PluginOptions = {}): Plugin[] {
 
       // One Backspace undoes an input rule that has just fired; the second deletes, via
       // baseKeymap. Without this, typing `1. ` and changing your mind traps you in a list.
+      // Quick-fix at the caret. Keyboard-first: a fix must never require the mouse.
+      "Mod-.": (_s, _d, view) => (view ? applyFirstFix(view) : false),
       Backspace: undoInputRule,
     }),
     keymap(baseKeymap),

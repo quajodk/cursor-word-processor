@@ -26,6 +26,7 @@
         "@scriv/doc-model": "workspace:*",
         "@scriv/host-api": "workspace:*",
         "@scriv/intellisense": "workspace:*",
+        "@scriv/lsp": "workspace:*",
         "@scriv/md": "workspace:*",
         "@scriv/textops": "workspace:*",
         "prosemirror-commands": "^1.7.1",
@@ -89,7 +90,6 @@
       "name": "@scriv/lsp",
       "version": "0.1.0",
       "dependencies": {
-        "@scriv/intellisense": "workspace:*",
         "harper.js": "^2.7.0",
       },
     },

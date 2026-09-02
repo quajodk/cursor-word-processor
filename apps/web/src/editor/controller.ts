@@ -51,7 +51,23 @@ export class EditorController {
 
   /** Plugin options, rebuilt for every document so the completion plugin sees the live path. */
   private pluginOptions() {
-    return { symbols: this.symbols, currentPath: () => this.path };
+    return {
+      symbols: this.symbols,
+      currentPath: () => this.path,
+      // Harper is an English checker and declines anything else rather than producing a wall
+      // of false spelling errors, so the document's own language is what it is told.
+      language: () => this.documentLanguage(),
+      onDiagnostics: (elapsedMs: number, count: number) =>
+        setStatus({ message: count > 0 ? `${count} suggestions · ${elapsedMs.toFixed(0)} ms` : "" }, false),
+    };
+  }
+
+  /** Frontmatter `lang:` when present, else the browser's locale. */
+  private documentLanguage(): string {
+    const meta = this.meta as { frontmatter?: { data?: Record<string, unknown> } } | null;
+    const declared = meta?.frontmatter?.data?.lang ?? meta?.frontmatter?.data?.language;
+    if (typeof declared === "string" && declared.length > 0) return declared;
+    return typeof navigator !== "undefined" ? navigator.language : "en";
   }
 
   /** The live view, so the shell can drive Cmd-K against it. */

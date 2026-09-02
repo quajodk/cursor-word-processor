@@ -27,7 +27,8 @@
     "react-dom": "^19.2.0",
     "@scriv/textops": "workspace:*",
     "@scriv/intellisense": "workspace:*",
-    "@scriv/ai": "workspace:*"
+    "@scriv/ai": "workspace:*",
+    "@scriv/lsp": "workspace:*"
   },
   "devDependencies": {
     "vite": "^7.1.7",

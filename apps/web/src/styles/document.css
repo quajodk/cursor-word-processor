@@ -554,3 +554,23 @@ del.scriv-del {
 }
 ins.scriv-ins-ai { background: color-mix(in srgb, var(--link, #6d8fd4) 18%, transparent); }
 ins.scriv-ins-ai { box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--link, #6d8fd4) 55%, transparent); }
+
+/* ---------------------------------------------------------------- diagnostics */
+/* Underlines rather than backgrounds: a squiggle must be visible without competing with the
+   text it marks, and a writer scanning a page should be able to ignore it. Severity changes
+   the colour and the weight of the line, never the colour of the prose. */
+.scriv-diag {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
+}
+.scriv-diag-error { text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; }
+.scriv-diag-warning { text-decoration-color: var(--warn, #B8862C); text-decoration-thickness: 1.5px; }
+.scriv-diag-info { text-decoration-color: var(--ink-faint); text-decoration-thickness: 1px; }
+/* Hints are suggestions of taste, not errors. Dotted and faint, so they stay ignorable. */
+.scriv-diag-hint {
+  text-decoration-style: dotted;
+  text-decoration-color: color-mix(in srgb, var(--ink-faint) 60%, transparent);
+  text-decoration-thickness: 1px;
+}
