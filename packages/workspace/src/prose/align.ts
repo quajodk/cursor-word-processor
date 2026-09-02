@@ -82,7 +82,7 @@ function sim(ctx: Ctx, i: number, j: number): number {
 }
 
 /** Longest increasing subsequence over the `n` field of position pairs sorted by `o`. */
-function lis(pairs: { o: number; n: number }[]): { o: number; n: number }[] {
+function lis<T extends { n: number }>(pairs: T[]): T[] {
   if (pairs.length === 0) return [];
   const tailsIdx: number[] = [];
   const prev = new Int32Array(pairs.length).fill(-1);
@@ -99,7 +99,7 @@ function lis(pairs: { o: number; n: number }[]): { o: number; n: number }[] {
     if (lo === tailsIdx.length) tailsIdx.push(i);
     else tailsIdx[lo] = i;
   }
-  const out: { o: number; n: number }[] = [];
+  const out: T[] = [];
   let k = tailsIdx[tailsIdx.length - 1]!;
   while (k !== -1) {
     out.push(pairs[k]!);
@@ -402,8 +402,17 @@ export function alignSentences(a: Sentence[], b: Sentence[], options: AlignOptio
  */
 function reclassifyMoves(pairs: AlignedPair[]): void {
   if (pairs.length === 0) return;
-  const seq = pairs.map((p, i) => ({ o: p.old[0]!, n: i }));
-  const keep = new Set(lis(seq.slice().sort((x, y) => x.n - y.n)).map((p) => p.n));
+  // Read the pairs in OLD-document order and take the longest run whose new positions are
+  // also increasing: those kept their relative order, everything else moved.
+  //
+  // The previous version used each pair's index in the `pairs` array as the value, which is
+  // increasing by construction — so the subsequence always contained every pair and nothing
+  // was ever reported as moved. `pairs` is not in document order to begin with, because it is
+  // filled across four stages (exact matches, splits, merges, then relocations).
+  const seq = pairs
+    .map((p, i) => ({ o: p.old[0] ?? 0, n: p.new[0] ?? 0, i }))
+    .sort((x, y) => x.o - y.o);
+  const keep = new Set(lis(seq).map((p) => p.i));
   for (let i = 0; i < pairs.length; i++) pairs[i]!.moved = !keep.has(i);
 }
 

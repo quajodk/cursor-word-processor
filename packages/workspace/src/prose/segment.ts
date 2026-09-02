@@ -161,7 +161,12 @@ export function segmentSentences(
     if (prev !== undefined) {
       const prevText = text.slice(prev.start, prev.end);
       const isBlank = text.slice(r.start, r.end).trim() === "";
-      if (isBlank || endsWithAbbreviation(prevText, abbrevs)) {
+      // ICU also breaks at a bare newline. Inside a block that is a SOFT WRAP, not a sentence
+      // end — and treating it as one is the bug that makes reflowing a paragraph look like an
+      // edit, which is the exact failure this whole diff exists to avoid. A break whose
+      // preceding text does not end in a terminator was positional, so it is re-joined.
+      const softWrap = !endsWithTerminator(prevText);
+      if (isBlank || softWrap || endsWithAbbreviation(prevText, abbrevs)) {
         prev.end = r.end;
         continue;
       }
@@ -178,6 +183,19 @@ export function segmentSentences(
     out.push({ text: trimmed, start: r.start + lead, end: r.start + lead + trimmed.length });
   }
   return out;
+}
+
+/**
+ * Does this text end where a sentence can end?
+ *
+ * Covers Latin punctuation, the CJK full stop and the Devanagari danda, plus any closing
+ * quotes or brackets that follow — the corpus contains Hindi, Japanese and Polish documents,
+ * and a rule that only knows about "." would re-join every sentence in them into one.
+ */
+const TERMINATOR = /[.!?\u2026\u3002\uFF01\uFF1F\u0964\u0965][\s"'\u201d\u2019\u00bb)\]}]*$/u;
+
+function endsWithTerminator(text: string): boolean {
+  return TERMINATOR.test(text.trimEnd());
 }
 
 function computeLineStarts(text: string): number[] {
