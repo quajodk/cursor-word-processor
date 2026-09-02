@@ -1,6 +1,6 @@
 {
   "wave": 8,
-  "waveTitle": "AI edits become reviewable",
+  "waveTitle": "Cmd-K wired end to end",
   "pieces": [
     {
       "id": "foundation",
@@ -78,10 +78,10 @@
       "id": "ai",
       "name": "AI inline edit",
       "scope": "Cmd-K streaming rewrite as accept/reject diff; three-way merge; agent mode",
-      "builder": "running",
+      "builder": "done",
       "critic": "pending",
-      "evidence": "The reconcile engine is built and proven: 19 tests. Applying the diff reconstructs the revision character-for-character on 174/174 edits over real documents. Suggestions render as the schema\u2019s own tracked-change marks, so accept yields exactly the proposed text and reject restores the original exactly.",
-      "gap": "Cmd-K is not wired into the app and no provider key is set in this environment, so the streaming path and the three-way merge with concurrent typing are unverified. The engine is proven; the feature is not yet usable."
+      "evidence": "Cmd-K works in the app: opens on a selection, and with no key configured reports which environment variable to set while everything else keeps working. Suggestion rendering verified without a key via CriticMarkup, which parses to the same marks. 29 package tests; 135 across the repo.",
+      "gap": "No provider key is set here, so a live streaming call and the conflict detection under real concurrent typing are unverified. Agent mode across the workspace is not built."
     },
     {
       "id": "git",
@@ -263,6 +263,7 @@
     }
   ],
   "notes": [
+    "Cmd-K collided with \u201cinsert link\u201d, which is the conventional binding in a word processor and also the conventional AI-rewrite binding in an IDE. The rewrite won it; the link moved to Cmd-Shift-K. Submitting then did nothing, because the code read the live selection after focus had moved to the prompt field.",
     "The prose diff started at 5/174 on reconstructing real edits and reached 174/174 through three fixes, each a case where the tidier behaviour was the wrong one \u2014 most tellingly, word spans that absorbed their own spacing produced a cleaner diff that did not reproduce what the model actually returned.",
     "The completion popup found three bugs by being used rather than read: accepting a citation produced \u201c@@key\u201d because the replacement range started after the sigil, the popup ran off the window edge, and the detail line printed an absolute filesystem path.",
     "Entity detection without a stop-word list took three attempts against real documents. The top \u201centities\u201d in a 40-document sample were initially Fix, Add, The and This \u2014 a capital is explained by position, and in reference documentation a closing bracket or dash explains one as completely as a full stop does.",
