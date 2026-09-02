@@ -4,5 +4,13 @@
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
-  "dependencies": { "@scriv/doc-model": "workspace:*", "@scriv/md": "workspace:*", "diff-match-patch": "^1.0.5" }
+  "dependencies": {
+    "@scriv/doc-model": "workspace:*",
+    "@scriv/md": "workspace:*",
+    "diff-match-patch": "^1.0.5",
+    "@scriv/textops": "workspace:*",
+    "prosemirror-model": "^1.25.11",
+    "prosemirror-state": "^1.4.4",
+    "prosemirror-view": "^1.42.3"
+  }
 }

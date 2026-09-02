@@ -17,6 +17,9 @@
       "path": "packages/intellisense"
     },
     {
+      "path": "packages/ai"
+    },
+    {
       "path": "packages/textops"
     },
     {
