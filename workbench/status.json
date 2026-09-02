@@ -1,6 +1,6 @@
 {
-  "wave": 9,
-  "waveTitle": "Diagnostics complete the IntelliSense requirement",
+  "wave": 10,
+  "waveTitle": "Git that a writer can read",
   "pieces": [
     {
       "id": "foundation",
@@ -87,10 +87,10 @@
       "id": "git",
       "name": "Workspace & git",
       "scope": "Fuzzy open, search, diff and blame at sentence granularity",
-      "builder": "queued",
+      "builder": "done",
       "critic": "pending",
-      "evidence": "Sentence segmentation, alignment and word-level intra-sentence diff landed.",
-      "gap": "File tree, fuzzy open and search not started; nothing measured."
+      "evidence": "Sentence-granularity diff and blame, 13 tests. Reflowing a paragraph produces ZERO changes. A reordered sentence reports as 1 move, 0 deletions, 0 insertions \u2014 the shape a line diff cannot produce. Blame reports a sentence spanning two authors as mixed, listing both, rather than guessing.",
+      "gap": "No UI yet: the diff and blame models are proven by test but nothing renders them in the app, so a writer cannot see any of it. File tree, fuzzy open and search exist in the app but were built directly there rather than in this package."
     },
     {
       "id": "docx-out",
@@ -272,9 +272,15 @@
       "t": "Diagnostics",
       "d": "Squiggles are decorations, and the checker declines languages it cannot handle",
       "why": "A squiggle in the document would be savable, undoable and exportable to Word. And running an English checker over Hindi produces a wall of false errors, which is worse than no diagnostics at all."
+    },
+    {
+      "t": "Prose git",
+      "d": "A newline inside a block is a soft wrap, not a sentence boundary",
+      "why": "Treating it as one made reflowing a paragraph produce a diff \u2014 defeating the entire purpose \u2014 and hid every mixed-authorship sentence from blame, since each fragment sat on its own line."
     }
   ],
   "notes": [
+    "Move detection had never fired: the longest-increasing-subsequence used each pair\u2019s index in the array as its value, which is increasing by construction, so every pair was always kept and nothing was ever reported as moved.",
     "Moving a shared helper into doc-model broke an import in a test file. The file then failed to LOAD, which silently removed ten tests from the aggregate while the run still exited zero \u2014 caught only by noticing the total had fallen when it should have risen.",
     "Cmd-K collided with \u201cinsert link\u201d, which is the conventional binding in a word processor and also the conventional AI-rewrite binding in an IDE. The rewrite won it; the link moved to Cmd-Shift-K. Submitting then did nothing, because the code read the live selection after focus had moved to the prompt field.",
     "The prose diff started at 5/174 on reconstructing real edits and reached 174/174 through three fixes, each a case where the tidier behaviour was the wrong one \u2014 most tellingly, word spans that absorbed their own spacing produced a cleaner diff that did not reproduce what the model actually returned.",
