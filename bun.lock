@@ -75,6 +75,8 @@
       "dependencies": {
         "@scriv/doc-model": "workspace:*",
         "@scriv/md": "workspace:*",
+        "@scriv/textops": "workspace:*",
+        "prosemirror-model": "^1.25.11",
       },
     },
     "packages/lsp": {

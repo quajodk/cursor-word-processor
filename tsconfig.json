@@ -1,14 +1,35 @@
 {
   "files": [],
   "references": [
-    { "path": "packages/doc-model" },
-    { "path": "packages/host-api" },
-    { "path": "packages/md" },
-    { "path": "packages/ooxml" },
-    { "path": "packages/textops" },
-    { "path": "packages/workspace" },
-    { "path": "packages/perf" },
-    { "path": "apps/server" },
-    { "path": "apps/web" }
+    {
+      "path": "packages/doc-model"
+    },
+    {
+      "path": "packages/host-api"
+    },
+    {
+      "path": "packages/md"
+    },
+    {
+      "path": "packages/ooxml"
+    },
+    {
+      "path": "packages/intellisense"
+    },
+    {
+      "path": "packages/textops"
+    },
+    {
+      "path": "packages/workspace"
+    },
+    {
+      "path": "packages/perf"
+    },
+    {
+      "path": "apps/server"
+    },
+    {
+      "path": "apps/web"
+    }
   ]
 }

@@ -96,6 +96,22 @@ project/
 never text. That asymmetry is deliberate: the irreplaceable thing is plain and portable, the
 recoverable thing is the cache.
 
+### Two modes, and which one you are in
+
+The layout above describes a **scriv project**: Markdown is the truth and a `.docx` is an
+import of it.
+
+Opening a `.docx` **directly** is a different mode, and pretending otherwise would be a lie
+about where the truth lives. There, the Word file IS the document: save splices it in place,
+and the sidecar is held in memory for the session. No `.md` is written, because silently
+creating files next to somebody's document is not a thing an editor should do — and none is
+needed, since re-opening the `.docx` reconstructs the sidecar and the ledger from the file
+itself.
+
+`Word: Adopt into project` converts one to the other: it writes `report.md`, moves the
+original under `.scriv/origin/`, and persists the sidecar — after which §4's layout holds and
+Markdown is the truth. It is a deliberate act, not a side effect of opening a file.
+
 ## 5. Latency budget (enforced, not aspirational)
 
 | Path | Budget (p99) | Test |
