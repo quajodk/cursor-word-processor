@@ -1,6 +1,6 @@
 {
-  "wave": 8,
-  "waveTitle": "Cmd-K wired end to end",
+  "wave": 9,
+  "waveTitle": "Diagnostics complete the IntelliSense requirement",
   "pieces": [
     {
       "id": "foundation",
@@ -71,8 +71,8 @@
       "scope": "Workspace symbol index, completions, Harper diagnostics over an LSP seam",
       "builder": "done",
       "critic": "pending",
-      "evidence": "Working in the app against a real workspace: typing \"@sand\" offers a citation key from refs.bib \u2014 a different file \u2014 with matched characters highlighted; \"[[Instr\" offers a heading from notes/method.md and closes the link. Workspace scan indexes Markdown and BibTeX in the background. 19 package tests, 116 across the repo.",
-      "gap": "Harper diagnostics are still not wired, so there are no squiggles \u2014 half of the IntelliSense requirement is missing."
+      "evidence": "Both halves now work in the app. Completion offers citations and headings from other files; Harper underlines real problems and Cmd-. corrects them from the keyboard. Measured live: 3 suggestions in 47 ms against a 150 ms budget, dropping to 2 after a fix. 26 package tests, 142 across the repo.",
+      "gap": "Only Harper is wired. Vale-style house-style rules and a project dictionary are not built, and diagnostics are English-only by design \u2014 the checker declines other languages rather than guessing."
     },
     {
       "id": "ai",
@@ -193,6 +193,13 @@
       "unit": "of 20",
       "budget": "1",
       "state": "measured"
+    },
+    {
+      "label": "Diagnostics refresh",
+      "value": 47,
+      "unit": "ms",
+      "budget": "150",
+      "state": "measured"
     }
   ],
   "decisions": [
@@ -260,9 +267,15 @@
       "t": "AI suggestions",
       "d": "Rendered with the schema\u2019s existing tracked-change marks, not a parallel mechanism",
       "why": "Accepting an AI rewrite and accepting a colleague\u2019s tracked change become one code path, an AI suggestion exports to Word as a real revision, and undo and position mapping already understand it."
+    },
+    {
+      "t": "Diagnostics",
+      "d": "Squiggles are decorations, and the checker declines languages it cannot handle",
+      "why": "A squiggle in the document would be savable, undoable and exportable to Word. And running an English checker over Hindi produces a wall of false errors, which is worse than no diagnostics at all."
     }
   ],
   "notes": [
+    "Moving a shared helper into doc-model broke an import in a test file. The file then failed to LOAD, which silently removed ten tests from the aggregate while the run still exited zero \u2014 caught only by noticing the total had fallen when it should have risen.",
     "Cmd-K collided with \u201cinsert link\u201d, which is the conventional binding in a word processor and also the conventional AI-rewrite binding in an IDE. The rewrite won it; the link moved to Cmd-Shift-K. Submitting then did nothing, because the code read the live selection after focus had moved to the prompt field.",
     "The prose diff started at 5/174 on reconstructing real edits and reached 174/174 through three fixes, each a case where the tidier behaviour was the wrong one \u2014 most tellingly, word spans that absorbed their own spacing produced a cleaner diff that did not reproduce what the model actually returned.",
     "The completion popup found three bugs by being used rather than read: accepting a citation produced \u201c@@key\u201d because the replacement range started after the sigil, the popup ran off the window edge, and the detail line printed an absolute filesystem path.",
