@@ -38,13 +38,13 @@ import {
   XmlIndex, W_NS, R_NS, XML_NS,
   w, attrNS, wVal, wChildVal, wToggle,
   type XmlNode,
-} from "./xmlindex.ts";
-import { Ledger, type LedgerEntry } from "./ledger.ts";
-import { spliceZip, ZipError } from "./zip.ts";
+} from "./xmlindex";
+import { Ledger, type LedgerEntry } from "./ledger";
+import { spliceZip, ZipError } from "./zip";
 import type {
   BlockRecord, ByteRange, FidelitySidecar, PropBlob,
-} from "./sidecar.ts";
-import type { DocxOrigin } from "./import.ts";
+} from "./sidecar";
+import type { DocxOrigin } from "./import";
 
 /* ------------------------------------------------------------------ public surface */
 

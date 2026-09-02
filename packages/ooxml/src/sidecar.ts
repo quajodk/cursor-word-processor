@@ -21,8 +21,8 @@
  *    document's variety rather than its length, and makes git diffs of the sidecar readable.
  */
 
-import type { LedgerEntry } from "./ledger.ts";
-import type { Anchor } from "./anchor.ts";
+import type { LedgerEntry } from "./ledger";
+import type { Anchor } from "./anchor";
 
 /** Bump on any incompatible change. `parseSidecar` refuses versions it does not understand. */
 export const SIDECAR_VERSION = 1;

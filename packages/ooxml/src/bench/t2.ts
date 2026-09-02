@@ -25,8 +25,8 @@
  */
 
 import { strFromU8, type Unzipped } from "fflate";
-import { normalizeTree, canon } from "./normalize.ts";
-import { W, parseXml, child, children, descendants, attr, allText, type XNode } from "./xml.ts";
+import { normalizeTree, canon } from "./normalize";
+import { W, parseXml, child, children, descendants, attr, allText, type XNode } from "./xml";
 
 /* ------------------------------------------------------------------ weights */
 

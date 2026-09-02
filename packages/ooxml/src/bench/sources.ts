@@ -14,7 +14,7 @@
  * is defined by MANIFEST.json (checked in), not by this list.
  */
 
-import type { Candidate } from "./corpus.ts";
+import type { Candidate } from "./corpus";
 
 export const CANDIDATES: Candidate[] = [
   /* ---------- EU / Horizon Europe: long, heavily-styled templates with

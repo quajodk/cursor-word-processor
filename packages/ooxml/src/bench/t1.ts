@@ -15,8 +15,8 @@
  * length). Matching by index would report nonsense the moment a tool inserts a paragraph.
  */
 
-import { XmlIndex, W_NS, type XmlNode } from "../xmlindex.ts";
-import { lcsLength } from "./t2.ts";
+import { XmlIndex, W_NS, type XmlNode } from "../xmlindex";
+import { lcsLength } from "./t2";
 
 export interface T1Result {
   originParagraphs: number;

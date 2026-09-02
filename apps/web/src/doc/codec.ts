@@ -1,6 +1,7 @@
 import type { Node as PMNode } from "prosemirror-model";
 import { markdownCodec } from "./markdown";
 import { plainTextCodec } from "./plain";
+import { docxCodec } from "./docx";
 
 /**
  * The text ⇄ document seam.
@@ -27,6 +28,12 @@ export interface DocumentCodec {
   id: string;
   label: string;
   /**
+   * True when the file is bytes rather than text and must be read and written through the
+   * binary methods below. A .docx is a zip: decoding it as UTF-8 to satisfy a text-shaped
+   * interface would corrupt it, so the seam admits both shapes rather than pretending.
+   */
+  binary?: boolean;
+  /**
    * True when the codec maps document *structure* (headings, lists, tables) to schema nodes.
    * False means it only carries text, and `serialize` refuses a structured document rather than
    * silently flattening one.
@@ -34,6 +41,9 @@ export interface DocumentCodec {
   structural: boolean;
   parse(text: string): CodecResult;
   serialize(doc: PMNode, meta: unknown): string;
+  /** Required when `binary` is true; never called otherwise. */
+  parseBinary?(bytes: Uint8Array): CodecResult;
+  serializeBinary?(doc: PMNode, meta: unknown): Uint8Array;
 }
 
 /** Thrown when the active codec cannot represent something the document contains. */
@@ -45,13 +55,15 @@ export class CodecError extends Error {
 }
 
 const MARKDOWN_EXTENSIONS = new Set(["md", "markdown", "mdown", "mkd", "mdx", "qmd", "rmd"]);
+const DOCX_EXTENSIONS = new Set(["docx", "docm"]);
 
 export function codecFor(path: string | null): DocumentCodec {
   if (!path) return markdownCodec;
   const dot = path.lastIndexOf(".");
   if (dot < 0) return plainTextCodec;
   const extension = path.slice(dot + 1).toLowerCase();
+  if (DOCX_EXTENSIONS.has(extension)) return docxCodec;
   return MARKDOWN_EXTENSIONS.has(extension) ? markdownCodec : plainTextCodec;
 }
 
-export { markdownCodec, plainTextCodec };
+export { markdownCodec, plainTextCodec, docxCodec };

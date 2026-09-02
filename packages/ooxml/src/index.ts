@@ -5,11 +5,11 @@
  * docs/DOCX-FIDELITY.md for why any of this is shaped the way it is.
  */
 
-export * from "./xmlindex.ts";
-export * from "./hash.ts";
-export * from "./ledger.ts";
-export * from "./sidecar.ts";
-export * from "./anchor.ts";
-export * from "./import.ts";
-export * from "./zip.ts";
-export * from "./export.ts";
+export * from "./xmlindex";
+export * from "./hash";
+export * from "./ledger";
+export * from "./sidecar";
+export * from "./anchor";
+export * from "./import";
+export * from "./zip";
+export * from "./export";

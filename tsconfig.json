@@ -4,6 +4,10 @@
     { "path": "packages/doc-model" },
     { "path": "packages/host-api" },
     { "path": "packages/md" },
+    { "path": "packages/ooxml" },
+    { "path": "packages/textops" },
+    { "path": "packages/workspace" },
+    { "path": "packages/perf" },
     { "path": "apps/server" },
     { "path": "apps/web" }
   ]

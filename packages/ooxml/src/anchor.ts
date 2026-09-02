@@ -31,9 +31,9 @@
  * style is a formatting bug the user can see; a misapplied one corrupts a document they trusted.
  */
 
-import { fnv1a64, hamming64, popcount32, sha256Hex, u64FromHex, u64Hex, type U64 } from "./hash.ts";
-import { Ledger, type LedgerEntry } from "./ledger.ts";
-import type { BlockKind } from "./sidecar.ts";
+import { fnv1a64, hamming64, popcount32, sha256Hex, u64FromHex, u64Hex, type U64 } from "./hash";
+import { Ledger, type LedgerEntry } from "./ledger";
+import type { BlockKind } from "./sidecar";
 
 /* ------------------------------------------------------------------ the anchor */
 
@@ -775,7 +775,7 @@ export function reanchor(
   let moved = 0;
   if (o.recoverMoves) {
     const freeBlocks: number[] = [];
-    for (let b = 0; b < n; b++) if (anchorFor[b] < 0 && prepared[b]!.tokens.length >= 3) freeBlocks.push(b);
+    for (let b = 0; b < n; b++) if (anchorFor[b]! < 0 && prepared[b]!.tokens.length >= 3) freeBlocks.push(b);
     if (freeBlocks.length > 0) {
       const freeAnchors: number[] = [];
       for (let a = 0; a < m; a++) if (!anchorUsed[a] && anchors[a]!.tokenCount >= 3) freeAnchors.push(a);
@@ -808,7 +808,7 @@ export function reanchor(
   // Ambiguity: how much better was the chosen anchor than the best alternative in the band?
   const margin = new Float64Array(n).fill(1);
   for (let b = 0; b < n; b++) {
-    const a = anchorFor[b];
+    const a = anchorFor[b]!;
     if (a < 0) continue;
     let second = 0;
     const from = Math.max(0, a - 24), to = Math.min(m - 1, a + 24);
@@ -825,7 +825,7 @@ export function reanchor(
 
   for (let b = 0; b < n; b++) {
     const asg = assignments[b]!;
-    const a = anchorFor[b];
+    const a = anchorFor[b]!;
     if (a < 0) {
       asg.op = "insert";
       ledger.add({
@@ -839,8 +839,8 @@ export function reanchor(
     asg.op = opOf[b]!;
 
     // Neighbour support: did the blocks either side align to the anchors either side?
-    const prevOk = b > 0 && anchorFor[b - 1] >= 0 && anchorFor[b - 1]! <= a;
-    const nextOk = b + 1 < n && anchorFor[b + 1] >= 0 && anchorFor[b + 1]! >= a;
+    const prevOk = b > 0 && anchorFor[b - 1]! >= 0 && anchorFor[b - 1]! <= a;
+    const nextOk = b + 1 < n && anchorFor[b + 1]! >= 0 && anchorFor[b + 1]! >= a;
     const support = ((prevOk ? 1 : 0) + (nextOk ? 1 : 0)) / 2;
 
     // Ambiguity penalty, relieved by context. This is the whole reason to align rather than

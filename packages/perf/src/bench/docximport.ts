@@ -50,7 +50,7 @@ export async function benchDocxImport(): Promise<DocxImportResult> {
   }
   let importDocx: (b: Uint8Array) => { doc: { descendants: (f: (n: any) => boolean) => void } };
   try {
-    ({ importDocx } = (await import("@scriv/ooxml/src/import")) as never);
+    ({ importDocx } = (await import("@scriv/ooxml")) as never);
   } catch {
     try {
       ({ importDocx } = (await import(join(repoRoot(), "packages/ooxml/src/import.ts"))) as never);

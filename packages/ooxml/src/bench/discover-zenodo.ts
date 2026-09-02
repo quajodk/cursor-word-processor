@@ -120,3 +120,5 @@ for (const { q, note, want } of QUERIES) {
 
 console.log(rows.join("\n"));
 console.error(`# total ${rows.length} candidates`);
+
+export {};

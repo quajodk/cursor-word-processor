@@ -20,15 +20,15 @@ import { readFileSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { unzipSync } from "fflate";
 
-import { importDocx } from "../import.ts";
-import { exportDocx } from "../export.ts";
-import { summarize, type LedgerEntry } from "../ledger.ts";
-import { CORPUS_DIR, OUT_DIR, REPORT_JSON, REPORT_TXT, WORK_DIR, ensureDir, listCorpusFiles } from "./paths.ts";
-import { scoreT1, type T1Result } from "./t1.ts";
-import { scoreT2, FEATURE_WEIGHTS, type T2Result } from "./t2.ts";
-import { NORMALIZATION_RULES, REJECTED_RULES } from "./normalize.ts";
-import { editOneWord } from "./edit.ts";
-import { pandocToDocx, pandocToMarkdown, pandocVersion } from "./pandoc.ts";
+import { importDocx } from "../import";
+import { exportDocx } from "../export";
+import { summarize, type LedgerEntry } from "../ledger";
+import { CORPUS_DIR, OUT_DIR, REPORT_JSON, REPORT_TXT, WORK_DIR, ensureDir, listCorpusFiles } from "./paths";
+import { scoreT1, type T1Result } from "./t1";
+import { scoreT2, FEATURE_WEIGHTS, type T2Result } from "./t2";
+import { NORMALIZATION_RULES, REJECTED_RULES } from "./normalize";
+import { editOneWord } from "./edit";
+import { pandocToDocx, pandocToMarkdown, pandocVersion } from "./pandoc";
 
 /* ------------------------------------------------------------------ arguments */
 
@@ -107,7 +107,7 @@ function runScriv(bytes: Uint8Array, originEntries: Record<string, Uint8Array>):
 
     /* T2 — semantic, on the zero-edit export: the tier asks what survives a round trip, not
        what survives an edit. */
-    const t2 = scoreT2(originEntries, unzipSync(zero.bytes));
+    const t2 = scoreT2(originEntries as never, unzipSync(zero.bytes));
 
     const summary = summarize(zero.ledger as LedgerEntry[]);
     void t1Bytes;
@@ -167,7 +167,7 @@ function runPandoc(
       bytes: originBytes.length,
       outBytes: plainOut.docx.length,
     },
-    t2: scoreT2(originEntries, entries),
+    t2: scoreT2(originEntries as never, entries as never),
     ms: Date.now() - t0,
   };
 

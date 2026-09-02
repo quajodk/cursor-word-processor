@@ -29,7 +29,7 @@ const json = argv.includes("--json");
 const fp = fingerprint();
 if (!json) {
   console.log(`\nscriv perf gate`);
-  console.log(`  machine   ${fp.platform ?? "?"} ${fp.arch ?? ""} · ${fp.cpus ?? "?"} cpu · bun ${fp.bun ?? "?"}`);
+  console.log(`  machine   ${fp.platform} ${fp.arch} · ${fp.cpu} · ${fp.cores} cores · ${fp.runtime}`);
 }
 
 // ---- build the document under test -------------------------------------------------
@@ -75,8 +75,10 @@ if (!json && docx.available) {
 }
 
 // Subsystems that do not exist yet report themselves rather than being invented here.
+// A slot never carries a measurement — that is the point of it. It reports that the
+// subsystem does not exist yet, and `evaluate` renders it as not-implemented rather than
+// inventing a number to fill the row.
 const slots = probeSlots();
-for (const s of slots) if (s.stats) measurements[s.id] = s.stats;
 
 // ---- evaluate -----------------------------------------------------------------------
 const baseline = await loadBaseline();

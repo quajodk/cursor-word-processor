@@ -25,17 +25,17 @@ import {
   XmlIndex, W_NS, R_NS, XML_NS, PKG_REL_NS,
   w, wAll, attrNS, wVal, wChildVal, wToggle, deepText,
   type XmlNode,
-} from "./xmlindex.ts";
-import { sha256Hex, shortHash } from "./hash.ts";
-import { Ledger, type LedgerEntry } from "./ledger.ts";
-import { anchorOf, prepareBlocks, type Anchor, type BlockSignalInput } from "./anchor.ts";
+} from "./xmlindex";
+import { sha256Hex, shortHash } from "./hash";
+import { Ledger, type LedgerEntry } from "./ledger";
+import { anchorOf, prepareBlocks, type Anchor, type BlockSignalInput } from "./anchor";
 import {
   SIDECAR_KIND, SIDECAR_VERSION, emptyPropStore, PROP_KINDS,
   type BlockKind, type BlockRecord, type BodyItem, type ByteRange, type CommentThread,
   type DocumentFrame, type DrawingRecord, type FidelitySidecar, type NumberingRecord,
   type PartRef, type PropBlob, type PropStore, type RevisionRecord, type RunContentKind,
   type RunRecord, type RunWrapper, type TableCellRecord, type TableRecord, type TableRowRecord,
-} from "./sidecar.ts";
+} from "./sidecar";
 
 export interface OriginEntry {
   name: string;

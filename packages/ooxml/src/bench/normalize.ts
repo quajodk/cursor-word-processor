@@ -16,7 +16,7 @@
  * kind of scorer flatters its author — see REJECTED_RULES.
  */
 
-import { W, XML_NS, type XNode } from "./xml.ts";
+import { W, XML_NS, type XNode } from "./xml";
 
 export interface Rule {
   id: string;

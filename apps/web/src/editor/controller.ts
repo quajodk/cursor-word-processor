@@ -176,8 +176,17 @@ export class EditorController {
   }
 
   async open(path: string): Promise<void> {
-    const text = await this.host.fs.read(path);
     const codec = codecFor(path);
+    if (codec.binary && codec.parseBinary) {
+      // A .docx is a zip. Decoding it as UTF-8 to fit a text-shaped interface would corrupt
+      // it, and the original bytes are not incidental here — export splices them rather than
+      // regenerating, so they are carried in `meta` for as long as the document is open.
+      const bytes = await this.host.fs.readBinary(path);
+      const { doc, meta } = codec.parseBinary(bytes);
+      this.setDocument(path, doc, meta, "", codec);
+      return;
+    }
+    const text = await this.host.fs.read(path);
     const { doc, meta } = codec.parse(text);
     this.setDocument(path, doc, meta, text, codec);
   }
@@ -185,6 +194,14 @@ export class EditorController {
   async save(): Promise<string> {
     if (!this.view) throw new Error("no editor");
     if (!this.path) throw new Error("this document has no path yet — use “File: Save As”");
+    if (this.codec.binary && this.codec.serializeBinary) {
+      const bytes = this.codec.serializeBinary(this.view.state.doc, this.meta);
+      await this.host.fs.writeBinary(this.path, bytes);
+      this.dirty = false;
+      setStatus({ dirty: false }, true);
+      this.emit({ type: "dirty", dirty: false });
+      return this.path;
+    }
     const text = this.codec.serialize(this.view.state.doc, this.meta);
     await this.host.fs.write(this.path, text);
     this.savedText = text;

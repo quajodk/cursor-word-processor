@@ -18,9 +18,9 @@ import {
   reinventory,
   type Candidate,
   type FetchOutcome,
-} from "./corpus.ts";
-import { CANDIDATES } from "./sources.ts";
-import { CORPUS_DIR } from "./paths.ts";
+} from "./corpus";
+import { CANDIDATES } from "./sources";
+import { CORPUS_DIR } from "./paths";
 
 const args = process.argv.slice(2);
 

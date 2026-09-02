@@ -17,7 +17,7 @@
 
 import { createHash } from "node:crypto";
 import { unzipSync, strFromU8 } from "fflate";
-import { CORPUS_DIR, MANIFEST_PATH, ensureDir, listCorpusFiles } from "./paths.ts";
+import { CORPUS_DIR, MANIFEST_PATH, ensureDir, listCorpusFiles } from "./paths";
 
 export interface FeatureInventory {
   paragraphs: number;

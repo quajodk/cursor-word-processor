@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { unzipSync } from "fflate";
-import { XmlIndex, W_NS, deepText } from "../src/xmlindex.ts";
-import { corpusFiles, readCorpus, sample, nonAsciiCandidates, type CorpusFile } from "./corpus.ts";
+import { XmlIndex, W_NS, deepText } from "../src/xmlindex";
+import { corpusFiles, readCorpus, sample, nonAsciiCandidates, type CorpusFile } from "./corpus";
 
 const dec = new TextDecoder("utf-8");
 

@@ -49,6 +49,7 @@ export type LedgerCode =
   | "comment-reanchored"         // a comment moved to a surviving block, with a penalty
   // ---- export (reserved for the splice engine; defined here so both share one vocabulary)
   | "splice-regenerated"         // a paragraph had to be rebuilt rather than copied
+  | "run-property-dropped"       // a rebuild did not carry a run property through
   | "splice-synthesized"         // a brand-new paragraph was synthesized
   | "splice-props-dropped";      // properties were not reapplied because confidence was low
 

@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { importDocx } from "../src/import.ts";
-import { parseSidecar, serializeSidecar, SIDECAR_VERSION } from "../src/sidecar.ts";
-import { summarize } from "../src/ledger.ts";
-import { corpusFiles, readCorpus, sample } from "./corpus.ts";
+import { importDocx } from "../src/import";
+import { parseSidecar, serializeSidecar, SIDECAR_VERSION } from "../src/sidecar";
+import { summarize } from "../src/ledger";
+import { corpusFiles, readCorpus, sample } from "./corpus";
 
 const dec = new TextDecoder("utf-8");
 
