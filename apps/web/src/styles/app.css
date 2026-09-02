@@ -550,3 +550,58 @@ button {
   color: var(--ink-faint);
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------------------------------------------------------------- inline edit bar */
+.scriv-inline-edit {
+  position: absolute;
+  left: 50%;
+  bottom: 3rem;
+  transform: translateX(-50%);
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: min(36rem, calc(100vw - 4rem));
+  padding: 8px 12px;
+  background: var(--surface-raised, var(--surface));
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.2), 0 16px 40px -16px rgba(0,0,0,.5);
+  font-family: var(--ui-font);
+  font-size: 13px;
+}
+.scriv-inline-edit.is-conflict { border-color: var(--warn, #D3A03A); }
+.scriv-inline-edit.is-error { border-color: var(--accent); }
+
+.scriv-inline-edit-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--ink);
+  font: inherit;
+  padding: 4px 2px;
+}
+.scriv-inline-edit-status { color: var(--ink-soft); white-space: nowrap; }
+.scriv-inline-edit-warn { color: var(--warn, #D3A03A); flex: 1; }
+
+.scriv-inline-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.scriv-inline-edit-btn:hover { border-color: var(--ink-faint); }
+.scriv-inline-edit-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.scriv-inline-edit-btn.is-quiet { color: var(--ink-soft); }
+.scriv-inline-edit-btn kbd {
+  font-family: var(--mono-font);
+  font-size: 11px;
+  color: var(--ink-faint);
+}

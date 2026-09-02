@@ -6,6 +6,7 @@ import { latencyPercentiles, recordLatency, resetLatency, setStatus } from "../a
 import { codecFor, markdownCodec, type DocumentCodec } from "../doc/codec";
 import { createEditorState, emptyDoc } from "./setup";
 import { WorkspaceSymbols } from "./workspace-symbols";
+import { inlineEditKey } from "./inline-edit";
 
 /**
  * The editing surface, owned imperatively.
@@ -51,6 +52,17 @@ export class EditorController {
   /** Plugin options, rebuilt for every document so the completion plugin sees the live path. */
   private pluginOptions() {
     return { symbols: this.symbols, currentPath: () => this.path };
+  }
+
+  /** The live view, so the shell can drive Cmd-K against it. */
+  get editorView() {
+    return this.view;
+  }
+
+  /** True while a rewrite is being prompted, streamed or reviewed. */
+  get inlineEditPhase(): string {
+    const st = this.view ? inlineEditKey.getState(this.view.state) : null;
+    return st?.phase ?? "idle";
   }
 
   subscribe(listener: (ev: DocEvent) => void): () => void {

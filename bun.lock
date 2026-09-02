@@ -22,6 +22,7 @@
       "name": "@scriv/web",
       "version": "0.1.0",
       "dependencies": {
+        "@scriv/ai": "workspace:*",
         "@scriv/doc-model": "workspace:*",
         "@scriv/host-api": "workspace:*",
         "@scriv/intellisense": "workspace:*",

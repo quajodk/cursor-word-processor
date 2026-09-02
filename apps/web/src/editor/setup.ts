@@ -1,6 +1,7 @@
 import { aidPlugin, schema } from "@scriv/doc-model";
 import { expandPlugin, handleSurround, killRingPlugin, textopsKeymap } from "@scriv/textops";
 import { completionPlugin } from "./completion";
+import { inlineEditPlugin } from "./inline-edit";
 import type { WorkspaceSymbols } from "./workspace-symbols";
 import { baseKeymap, chainCommands, createParagraphNear, exitCode, liftEmptyBlock, newlineInCode, splitBlock } from "prosemirror-commands";
 import { dropCursor } from "prosemirror-dropcursor";
@@ -72,6 +73,9 @@ export function editorPlugins(opts: PluginOptions = {}): Plugin[] {
     // bound to the same arrow, and after history so undo still sees one step per edit.
     expandPlugin(),
     killRingPlugin(),
+    // Before the text ops: while a suggestion is under review, Cmd-Enter and Escape belong
+    // to the review, not to the document.
+    inlineEditPlugin(),
     // Completion before the text-op keymap: while the popup is open, Up/Down/Enter belong to
     // the list, not to the document.
     ...(opts.symbols ? [completionPlugin(opts.symbols.index, opts.currentPath ?? (() => null))] : []),

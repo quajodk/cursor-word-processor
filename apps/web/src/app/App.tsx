@@ -4,6 +4,7 @@ import { installKeyboard, setContextProvider, type CommandContext, type CommandU
 import { EditorController } from "../editor/controller";
 import { baseName, dirName, host, relativeTo } from "../host";
 import { EditorPane } from "./EditorPane";
+import { InlineEditBar } from "./InlineEditBar";
 import { FileTree, type TreeHandle } from "./FileTree";
 import { Palette, type PaletteMode } from "./Palette";
 import { getPrefs, setPrefs, subscribePrefs, watchSystemTheme } from "./prefs";
@@ -67,6 +68,8 @@ export function App() {
   }, [notify]);
 
   useEffect(() => watchSystemTheme(), []);
+
+
 
   // Index the workspace for completion. Deliberately fire-and-forget and unawaited: the
   // editor is usable from the first frame, and completions simply get better as it lands.
@@ -256,6 +259,7 @@ export function App() {
       </aside>
 
       <main className="main">
+        <InlineEditBar view={controller.editorView ?? null} host={host} />
         <EditorPane
           controller={controller}
           headLeft={headLeft}

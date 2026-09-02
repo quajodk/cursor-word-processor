@@ -218,9 +218,13 @@ export function registerDefaultCommands(controller: EditorController): () => voi
     editorCommand("format.clear", "Clear formatting", "Mod-Shift-c", clearFormatting),
     {
       id: "format.link",
+      // Mod-k is the conventional link binding in a word processor AND the conventional
+      // AI-rewrite binding in an IDE. This is an IDE for writing, and the rewrite is the
+      // feature people reach for by reflex, so it wins Mod-k and the link moves one key over.
+      // Both remain in the palette, which is where a binding conflict should be settled.
       title: "Add or edit link…",
       category: "Format",
-      keybinding: "Mod-k",
+      keybinding: "Mod-Shift-k",
       when: inEditor,
       run: async (ctx) => {
         const href = await ctx.ui.prompt("Link target", "https://");
