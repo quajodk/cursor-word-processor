@@ -1,5 +1,5 @@
 import { aidPlugin, schema } from "@scriv/doc-model";
-import { handleSurround } from "@scriv/textops";
+import { expandPlugin, handleSurround, killRingPlugin, textopsKeymap } from "@scriv/textops";
 import { baseKeymap, chainCommands, createParagraphNear, exitCode, liftEmptyBlock, newlineInCode, splitBlock } from "prosemirror-commands";
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
@@ -58,6 +58,11 @@ export function editorPlugins(locale = typeof navigator !== "undefined" ? naviga
     aidPlugin(),
 
     surroundPlugin(locale),
+    // Text ops before the base keymap so a sentence motion wins over the character motion
+    // bound to the same arrow, and after history so undo still sees one step per edit.
+    expandPlugin(),
+    killRingPlugin(),
+    textopsKeymap(),
     scrivInputRules(),
     history(),
 
