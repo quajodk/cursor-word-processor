@@ -114,6 +114,21 @@ export const BUDGETS: Record<string, Budget> = {
     measures: "(@scriv/ooxml has no implementation yet)",
     excludes: [],
   },
+  "docx.import-throughput": {
+    id: "docx.import-throughput",
+    path: "docx import throughput (1.5 ms per body paragraph)",
+    p99Ms: 1.5,
+    mode: "exact",
+    measures:
+      "Milliseconds per body paragraph, over every corpus document with more than 50 " +
+      "paragraphs. Size-independent, so documents far larger than the 50-page band are " +
+      "still held to something rather than escaping the gate for being unusual.",
+    excludes: [
+      "reading the file from disk",
+      "the cost of a cold process (reported separately as docx.import cold)",
+    ],
+  },
+
 };
 
 /**

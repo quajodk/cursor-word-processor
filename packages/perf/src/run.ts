@@ -66,6 +66,13 @@ measurements["doc.open-40k"] = open.total;
 const docx = await benchDocxImport();
 if (docx.available && docx.large) measurements["docx.import-50p"] = docx.large;
 else if (docx.available && docx.all) measurements["docx.import-50p"] = docx.all;
+if (docx.available && docx.perParagraph) measurements["docx.import-throughput"] = docx.perParagraph;
+if (!json && docx.available) {
+  console.log(`  docx      ${docx.detail}`);
+  if (docx.cold) console.log(`            cold (first import in a fresh process): p50 ${docx.cold.p50.toFixed(0)} ms, p99 ${docx.cold.p99.toFixed(0)} ms`);
+  if (docx.huge) console.log(`            above the band: n=${docx.huge.n}, p50 ${docx.huge.p50.toFixed(0)} ms, p99 ${docx.huge.p99.toFixed(0)} ms`);
+  console.log("");
+}
 
 // Subsystems that do not exist yet report themselves rather than being invented here.
 const slots = probeSlots();

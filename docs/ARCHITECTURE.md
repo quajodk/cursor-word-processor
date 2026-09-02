@@ -105,10 +105,22 @@ recoverable thing is the cache.
 | Completion popup open | **40 ms** | `perf/completion.bench` |
 | Diagnostics refresh (debounced) | **150 ms**, off main thread | worker round-trip |
 | Open 40k-word doc | **400 ms** | cold-load bench |
-| docx import (50-page) | **1200 ms** | corpus bench |
+| docx import, 50-page | **1200 ms** | corpus bench, 400–900 body paragraphs |
+| docx import throughput | **1.5 ms / paragraph** | corpus bench, every document > 50 paragraphs |
 
 Anything on the keystroke path that allocates per character, re-parses the document, or
 touches React is a bug. Diagnostics, indexing and AI never run on the main thread.
+
+Two rules about how these are measured, learned by getting both wrong:
+
+**A budget names a size, so the band needs an upper bound too.** "50-page" was first measured
+as "≥ 500 paragraphs", which swept in 8,000- and 11,000-paragraph documents and reported a
+failure three times worse than the budget describes. Documents above the band are not thereby
+excused — they are held to the throughput budget, which is size-independent.
+
+**Warm-up is discarded, and cold cost is reported separately rather than folded in.** A bench
+without warm-up puts the process's JIT cost in the p99 tail and blames the code for it. Cold
+cost is real, so it is measured in its own right, not averaged into the steady state.
 
 ## 6. House rules (audited before anything ships)
 

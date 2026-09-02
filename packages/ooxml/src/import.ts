@@ -54,7 +54,14 @@ export interface DocxOrigin {
 }
 
 export interface ImportOptions {
-  /** Hash every zip part. Costs ~1ms per 100KB; the export verifier wants them. Default true. */
+  /**
+   * Hash every zip part individually. Default FALSE.
+   *
+   * Nothing in the library reads these: origin integrity is already covered by
+   * `origin.docxSha256` over the whole package, and the splice engine addresses parts by
+   * name, not by digest. They were pure write-only cost — on a media-heavy document, a fifth
+   * of the entire import — so they are now opt-in for whoever actually wants them.
+   */
   hashParts?: boolean;
   /** Supply block ids deterministically (tests). Default: `newAid()` from doc-model. */
   mintAid?: (ordinal: number) => string;
@@ -899,7 +906,7 @@ export function importDocx(bytes: Uint8Array, options: ImportOptions = {}): Impo
   const parts: PartRef[] = partNames.map((name) => ({
     name,
     bytes: entries[name]!.length,
-    sha256: options.hashParts === false ? "" : sha256Hex(entries[name]!),
+    sha256: options.hashParts === true ? sha256Hex(entries[name]!) : "",
   }));
 
   const frame: DocumentFrame = {
