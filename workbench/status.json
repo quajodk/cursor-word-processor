@@ -1,6 +1,6 @@
 {
-  "wave": 11,
-  "waveTitle": "Multiple cursors; every v1 feature now present",
+  "wave": 12,
+  "waveTitle": "Audited, and the audit was right",
   "pieces": [
     {
       "id": "foundation",
@@ -16,7 +16,7 @@
       "name": "App shell & host seam",
       "scope": "React chrome, ProseMirror surface, bun server implementing HostApi",
       "builder": "done",
-      "critic": "pending",
+      "critic": "done",
       "evidence": "The app runs. Real .md opened from disk, edited and saved back correctly \u2014 frontmatter, GFM table, ordered list, bold, em-dash, CJK and \u00b1 all survived. Live status bar reads 2.7 ms p99 keystroke latency in a real browser, including ProseMirror\u2019s DOM write, against an 8 ms budget.",
       "gap": "Only the Markdown path is wired. Opening a .docx in the app is not possible yet, so the document-polish comparison against Google Docs cannot be run."
     },
@@ -25,9 +25,9 @@
       "name": "Markdown \u21c4 model",
       "scope": "CommonMark + GFM + CriticMarkup, round-trip stability",
       "builder": "done",
-      "critic": "pending",
-      "evidence": "96.19% idempotent across 1,442 real corpus files (README/docs from major open-source repos), zero parse or serialize errors. 36 tests, 282k assertions.",
-      "gap": "The 3.8% that fails is concentrated in nested-list indentation, blockquote nesting and repeated-asterisk emphasis \u2014 all real, all characterized."
+      "critic": "done",
+      "evidence": "Link hrefs lost across 1,437 real documents: 4, all CommonMark spec cases with backslash escapes inside URLs. Images are inline nodes, so a linked badge keeps its href and a mid-sentence image no longer splits its paragraph.",
+      "gap": "A no-op save still rewrites 64% of lines across the corpus \u2014 mostly escaping of \u201c_\u201d and \u201c*\u201d, which cannot be narrowed without risking a change to what reparses as emphasis."
     },
     {
       "id": "docx-in",
@@ -97,7 +97,7 @@
       "name": "docx export splice",
       "scope": "Edit the original zip rather than regenerate it",
       "builder": "done",
-      "critic": "pending",
+      "critic": "done",
       "evidence": "The comparison task\u2019s terminology rename, run on a real 801 KB consultation document with comment threads \u2014 1,161 paragraphs, 8,200 words. The term changed in 44 places; 1 of 20 zip parts changed; 33 of 1,186 paragraphs differ. comments.xml, styles.xml, numbering.xml and settings.xml all come back BYTE-IDENTICAL, and pandoc reads the result.",
       "gap": "The Markdown source of truth and the .scriv sidecar are still held only in memory when a .docx is opened directly, so closing the app loses that document\u2019s fidelity ledger."
     }
@@ -207,6 +207,13 @@
       "unit": "of 20",
       "budget": "1",
       "state": "measured"
+    },
+    {
+      "label": "Link targets lost, 1437 files",
+      "value": 4,
+      "unit": "hrefs",
+      "budget": "0",
+      "state": "measured"
     }
   ],
   "decisions": [
@@ -289,9 +296,16 @@
       "t": "Multi-cursor",
       "d": "The primary cursor stays a real selection; extra cursors are plugin state drawn as decorations",
       "why": "A Selection subclass holding N ranges is the \u201cproper\u201d answer and breaks everything downstream \u2014 the view draws one native selection, and baseKeymap, input rules and mark logic all read the primary range."
+    },
+    {
+      "t": "Images",
+      "d": "Inline, not block",
+      "why": "Markdown\u2019s linked badge is a link wrapping an image and OOXML\u2019s drawing sits inside a run. Modelling images as blocks forced every in-paragraph image to split it, and the enclosing link mark had nowhere to live \u2014 so saving a file deleted the hyperlink."
     }
   ],
   "notes": [
+    "An independent audit found two of four house rules violated, a security defect, and the headline fidelity metric ungated. It was right on all three. The worst: saving an unedited Markdown file was DELETING hyperlinks from CI badges \u2014 silent data loss in the layer this project calls the source of truth. I had seen the symptom myself, filed it as a pre-existing limitation, and moved on.",
+    "Two gates could not fail. Formatting preservation was printed but never asserted \u2014 the auditor broke the exporter and 23 documents lost their formatting with the suite still green. And no test file was in the typecheck graph at all, so a deliberate type error in a test passed cleanly.",
     "The blind comparison cannot be run here: it needs the same task performed in Cursor, Google Docs and Obsidian by an operator. Our leg of it is done and the artefact exists \u2014 a revised .docx from a real consultation document, with every part except the body text byte-identical.",
     "Every \u201cselect all occurrences\u201d was off by one: converting a text offset back to a position by binary search can land BEFORE a paragraph rather than at its first character, so an occurrence at the start of a block failed to match the primary selection and was added twice. Writing a third copy of a mapping two packages already shared was the mistake.",
     "Every git call with an omitted trailing argument was failing: JSON.stringify turns an undefined array element into null, so the server\u2019s \u201c=== undefined\u201d check never matched. That affected the whole dispatch table, not just the call that happened to expose it.",
