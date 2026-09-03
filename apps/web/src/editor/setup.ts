@@ -1,5 +1,5 @@
 import { aidPlugin, schema } from "@scriv/doc-model";
-import { expandPlugin, handleSurround, killRingPlugin, textopsKeymap } from "@scriv/textops";
+import { expandPlugin, handleSurround, killRingPlugin, multiCursorPlugin, textopsKeymap } from "@scriv/textops";
 import { completionPlugin } from "./completion";
 import { inlineEditPlugin } from "./inline-edit";
 import { applyFirstFix, diagnosticsPlugin } from "./diagnostics";
@@ -77,6 +77,9 @@ export function editorPlugins(opts: PluginOptions = {}): Plugin[] {
     // bound to the same arrow, and after history so undo still sees one step per edit.
     expandPlugin(),
     killRingPlugin(),
+    // Before the text-op keymap so a multi-cursor edit intercepts typing, and before the
+    // base keymap so Escape collapses cursors rather than reaching the document.
+    multiCursorPlugin(),
     // Before the text ops: while a suggestion is under review, Cmd-Enter and Escape belong
     // to the review, not to the document.
     inlineEditPlugin(),

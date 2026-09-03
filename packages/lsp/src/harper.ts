@@ -1,4 +1,4 @@
-import { LocalLinter, type Lint, type Linter } from "harper.js";
+import { Dialect, type Lint, type Linter } from "harper.js";
 import type { Diagnostic, DiagnoseRequest, DiagnosticProvider, Fix, Severity } from "./types";
 
 /**
@@ -36,22 +36,51 @@ const SEVERITY: Record<string, Severity> = {
   Miscellaneous: "info",
 };
 
+/**
+ * Region subtag to Harper dialect.
+ *
+ * Defaulting everyone to American English marks "harbour", "colour" and "realise" as
+ * misspellings for most of the English-speaking world — the loudest possible false positive,
+ * and one that teaches a writer to ignore the squiggles entirely. The document's own locale
+ * decides; plain "en" keeps Harper's own default rather than guessing a region.
+ */
+const DIALECTS: Record<string, Dialect> = {
+  GB: Dialect.British, UK: Dialect.British, IE: Dialect.British,
+  AU: Dialect.Australian, NZ: Dialect.Australian,
+  CA: Dialect.Canadian,
+  IN: Dialect.Indian,
+  US: Dialect.American,
+};
+
+function dialectFor(language: string | undefined): Dialect | undefined {
+  if (!language) return undefined;
+  const region = language.toUpperCase().split(/[-_]/)[1];
+  return region ? DIALECTS[region] : undefined;
+}
+
 export class HarperProvider implements DiagnosticProvider {
   readonly id = "harper";
-  private linter: Linter | null = null;
-  private ready: Promise<void> | null = null;
+  /** One linter per dialect: switching dialects means a different rule set, not a flag. */
+  private readonly linters = new Map<string, Promise<Linter>>();
 
-  constructor(private readonly makeLinter: () => Linter) {}
+  constructor(private readonly makeLinter: (dialect?: Dialect) => Linter) {}
 
-  async setup(): Promise<void> {
-    if (!this.ready) {
-      this.ready = (async () => {
-        const linter = this.makeLinter();
+  async setup(dialect?: Dialect): Promise<void> {
+    await this.linterFor(dialect);
+  }
+
+  private linterFor(dialect?: Dialect): Promise<Linter> {
+    const key = String(dialect ?? "default");
+    let existing = this.linters.get(key);
+    if (!existing) {
+      existing = (async () => {
+        const linter = this.makeLinter(dialect);
         await linter.setup();
-        this.linter = linter;
+        return linter;
       })();
+      this.linters.set(key, existing);
     }
-    return this.ready;
+    return existing;
   }
 
   async diagnose(req: DiagnoseRequest): Promise<Diagnostic[]> {
@@ -59,10 +88,7 @@ export class HarperProvider implements DiagnosticProvider {
     // false spelling errors, which is worse than no diagnostics at all, so it declines.
     if (req.language && !/^en\b/i.test(req.language)) return [];
 
-    await this.setup();
-    const linter = this.linter;
-    if (!linter) return [];
-
+    const linter = await this.linterFor(dialectFor(req.language));
     const lints = await linter.lint(req.text);
     return lints.map((l) => toDiagnostic(l, this.id));
   }

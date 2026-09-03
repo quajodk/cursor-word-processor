@@ -6,6 +6,7 @@ import {
   killLine, killToSentenceEnd, yank, yankPop, transposeChars, transposeWords,
   joinForward, duplicateBlock, moveBlock, deleteWord,
 } from "./edit";
+import { addCursorVertical, addNextOccurrence, clearCursors, selectAllOccurrences } from "./multicursor";
 
 /**
  * The binding table, as DATA.
@@ -34,6 +35,13 @@ export const BINDINGS: Binding[] = [
   { key: "Shift-Mod-Ctrl-ArrowRight", id: "selection.expand", label: "Expand selection", command: expandSelection },
   { key: "Shift-Mod-Ctrl-ArrowLeft", id: "selection.shrink", label: "Shrink selection", command: shrinkSelection },
 
+  // --- multiple cursors ---
+  { key: "Mod-d", id: "cursor.addNext", label: "Add cursor at next occurrence", command: addNextOccurrence },
+  { key: "Mod-Shift-l", id: "cursor.addAll", label: "Select all occurrences", command: selectAllOccurrences },
+  { key: "Mod-Alt-ArrowDown", id: "cursor.addBelow", label: "Add cursor below", command: addCursorVertical(1) },
+  { key: "Mod-Alt-ArrowUp", id: "cursor.addAbove", label: "Add cursor above", command: addCursorVertical(-1) },
+  { key: "Escape", id: "cursor.clear", label: "Collapse to one cursor", command: clearCursors },
+
   // --- motions ---
   { key: "Mod-Alt-ArrowRight", id: "motion.sentenceForward", label: "Next sentence", command: moveSentence(1) },
   { key: "Mod-Alt-ArrowLeft", id: "motion.sentenceBack", label: "Previous sentence", command: moveSentence(-1) },
@@ -41,8 +49,10 @@ export const BINDINGS: Binding[] = [
   { key: "Shift-Mod-Alt-ArrowLeft", id: "motion.sentenceBackExtend", label: "Extend to previous sentence", command: moveSentence(-1, true) },
   { key: "Ctrl-ArrowDown", id: "motion.paragraphForward", label: "Next paragraph", command: moveParagraph(1) },
   { key: "Ctrl-ArrowUp", id: "motion.paragraphBack", label: "Previous paragraph", command: moveParagraph(-1) },
-  { key: "Mod-Alt-ArrowUp", id: "motion.sentenceStart", label: "Start of sentence", command: toSentenceEdge("start") },
-  { key: "Mod-Alt-ArrowDown", id: "motion.sentenceEnd", label: "End of sentence", command: toSentenceEdge("end") },
+  // Sentence edges moved off Mod-Alt-Arrow when multi-cursor took the vertical pair:
+  // adding a cursor above or below is the far more frequent action.
+  { key: "Mod-Alt-BracketLeft", id: "motion.sentenceStart", label: "Start of sentence", command: toSentenceEdge("start") },
+  { key: "Mod-Alt-BracketRight", id: "motion.sentenceEnd", label: "End of sentence", command: toSentenceEdge("end") },
   { key: "Home", id: "motion.smartHome", label: "Start of line", command: smartHome() },
   { key: "Shift-Home", id: "motion.smartHomeExtend", label: "Select to start of line", command: smartHome(true) },
 

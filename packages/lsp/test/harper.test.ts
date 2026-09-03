@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { LocalLinter } from "harper.js";
+import { LocalLinter, type Dialect } from "harper.js";
 import { binaryInlined } from "harper.js/binaryInlined";
 import { HarperProvider } from "../src/harper";
 
@@ -8,7 +8,8 @@ import { HarperProvider } from "../src/harper";
  * so there is nothing here to stub — and stubbing it would test only that our mapping code
  * agrees with our own assumptions about output we invented.
  */
-const provider = new HarperProvider(() => new LocalLinter({ binary: binaryInlined }));
+const provider = new HarperProvider((dialect?: Dialect) =>
+  new LocalLinter(dialect === undefined ? { binary: binaryInlined } : { binary: binaryInlined, dialect }));
 const diagnose = (text: string, language = "en") => provider.diagnose({ version: 1, text, language });
 
 describe("harper diagnostics", () => {
@@ -50,6 +51,16 @@ describe("harper diagnostics", () => {
     expect(d.length).toBeGreaterThan(0);
     for (const x of d) expect(["error", "warning", "info", "hint"]).toContain(x.severity);
     expect(d.some((x) => x.severity === "warning")).toBe(true);
+  }, 60_000);
+
+  test("British spellings are not misspellings in British English", () => {
+    // Defaulting everyone to American English marks "harbour" and "realise" as errors for
+    // most of the English-speaking world -- the loudest possible false positive.
+    return (async () => {
+      const text = "The boat left the harbour before we could realise it.";
+      const british = await diagnose(text, "en-GB");
+      expect(british.filter((d) => d.code === "Spelling").map((d) => text.slice(d.from, d.to))).toEqual([]);
+    })();
   }, 60_000);
 
   test("stays within the 150 ms diagnostics budget on a realistic paragraph", async () => {

@@ -6,6 +6,11 @@ export {
   killLine, killToSentenceEnd, yank, yankPop, transposeChars, transposeWords,
   joinForward, duplicateBlock, moveBlock, deleteWord, killRingPlugin, killRingKey, type KillRing,
 } from "./edit";
+export {
+  multiCursorPlugin, multiCursorKey, allRanges, cursorCount, forEachCursor,
+  addNextOccurrence, selectAllOccurrences, addCursorVertical, clearCursors,
+  type MultiCursorState, type CursorRange,
+} from "./multicursor";
 export { textopsKeymap, BINDINGS, KNOWN_CONFLICTS, type Binding } from "./keymap";
 export {
   blockString, blockAt, blockAtPos, offsetOf, posOf, siblingBlock,

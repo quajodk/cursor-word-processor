@@ -16,7 +16,8 @@ import type { DiagnoseRequest, DiagnoseResponse } from "./types";
  * you cannot trust.
  */
 
-const provider = new HarperProvider(() => new LocalLinter({ binary: binaryInlined }));
+const provider = new HarperProvider((dialect) =>
+  new LocalLinter(dialect === undefined ? { binary: binaryInlined } : { binary: binaryInlined, dialect }));
 
 /** Only the newest request matters; anything older is answered but marked stale by version. */
 let latest = 0;
