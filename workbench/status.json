@@ -98,8 +98,8 @@
       "scope": "Edit the original zip rather than regenerate it",
       "builder": "done",
       "critic": "pending",
-      "evidence": "Verified through the app itself, not a bench: opened a real 247-paragraph Word document, changed one word, saved. Of 20 zip entries exactly ONE differs \u2014 word/document.xml. Styles, numbering, headers, footers, themes, fonts and media return byte-identical. Of 247 paragraphs exactly one changed. pandoc reads the result.",
-      "gap": "Save writes the .docx in place. The Markdown source of truth and the .scriv sidecar are held in memory but not yet written alongside it, so closing the app loses the fidelity ledger for that document."
+      "evidence": "The comparison task\u2019s terminology rename, run on a real 801 KB consultation document with comment threads \u2014 1,161 paragraphs, 8,200 words. The term changed in 44 places; 1 of 20 zip parts changed; 33 of 1,186 paragraphs differ. comments.xml, styles.xml, numbering.xml and settings.xml all come back BYTE-IDENTICAL, and pandoc reads the result.",
+      "gap": "The Markdown source of truth and the .scriv sidecar are still held only in memory when a .docx is opened directly, so closing the app loses that document\u2019s fidelity ledger."
     }
   ],
   "metrics": [
@@ -200,6 +200,13 @@
       "unit": "ms",
       "budget": "150",
       "state": "measured"
+    },
+    {
+      "label": "docx parts changed, real revision",
+      "value": 1,
+      "unit": "of 20",
+      "budget": "1",
+      "state": "measured"
     }
   ],
   "decisions": [
@@ -285,6 +292,7 @@
     }
   ],
   "notes": [
+    "The blind comparison cannot be run here: it needs the same task performed in Cursor, Google Docs and Obsidian by an operator. Our leg of it is done and the artefact exists \u2014 a revised .docx from a real consultation document, with every part except the body text byte-identical.",
     "Every \u201cselect all occurrences\u201d was off by one: converting a text offset back to a position by binary search can land BEFORE a paragraph rather than at its first character, so an occurrence at the start of a block failed to match the primary selection and was added twice. Writing a third copy of a mapping two packages already shared was the mistake.",
     "Every git call with an omitted trailing argument was failing: JSON.stringify turns an undefined array element into null, so the server\u2019s \u201c=== undefined\u201d check never matched. That affected the whole dispatch table, not just the call that happened to expose it.",
     "Move detection had never fired: the longest-increasing-subsequence used each pair\u2019s index in the array as its value, which is increasing by construction, so every pair was always kept and nothing was ever reported as moved.",
