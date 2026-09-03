@@ -2,12 +2,15 @@
   "name": "scriv",
   "private": true,
   "type": "module",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "bun run --filter '*' dev",
     "web": "bun run --cwd apps/web dev",
     "server": "bun run --cwd apps/server dev",
-    "typecheck": "tsc -b --pretty false",
+    "typecheck": "tsc -b --pretty false && tsc -p tsconfig.tests.json --pretty false",
     "test": "bun test",
     "perf": "bun run --cwd packages/perf bench",
     "roundtrip": "bun run --cwd packages/ooxml score"

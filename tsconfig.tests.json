@@ -1,0 +1,16 @@
+{
+  "//": "Tests, benches and scripts are typechecked here rather than in each package's own project. Every package tsconfig is `rootDir: src` with an outDir, so test files cannot join those builds without breaking emit — and the consequence was that NO test file was typechecked at all. A deliberate type error in a test passed `bun run typecheck` cleanly.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "types": ["bun"]
+  },
+  "include": [
+    "packages/*/test/**/*.ts",
+    "packages/*/scripts/**/*.ts",
+    "packages/*/src/bench/**/*.ts",
+    "workbench/*.ts"
+  ]
+}

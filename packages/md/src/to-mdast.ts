@@ -90,14 +90,11 @@ function convertBlock(node: PMNode, ctx: SCtx): RootContent[] {
     case "table":
       return [convertTable(node, ctx) as RootContent];
     case "figure": {
-      const img = node.firstChild;
-      if (!img) return [];
-      return [
-        {
-          type: "paragraph",
-          children: [{ type: "image", url: img.attrs.src, alt: img.attrs.alt ?? null, title: img.attrs.title ?? null }],
-        } as RootContent,
-      ];
+      // A figure now wraps a paragraph; its caption has no Markdown equivalent, so the
+      // paragraph is emitted and the caption is dropped with the loss recorded by the caller.
+      const inner = node.firstChild;
+      if (!inner) return [];
+      return convertBlock(inner, ctx);
     }
     default:
       return [];
@@ -148,6 +145,8 @@ interface Leaf {
   isBreak: boolean;
   text: string;
   commentAnchor?: string;
+  /** Set for an inline image; `text` is then empty. */
+  image?: { src: string; alt: string | null; title: string | null };
 }
 
 function convertInline(block: PMNode, ctx: SCtx): PhrasingContent[] {
@@ -159,6 +158,14 @@ function convertInline(block: PMNode, ctx: SCtx): PhrasingContent[] {
       leaves.push({ marks: containerMarks, isBreak: false, text: child.text ?? "", commentAnchor: commentMark?.attrs.anchorId });
     } else if (child.type.name === "hard_break") {
       leaves.push({ marks: containerMarks, isBreak: true, text: "", commentAnchor: commentMark?.attrs.anchorId });
+    } else if (child.type.name === "image") {
+      // An inline image is a leaf like any other, so the mark grouping below wraps it in
+      // whatever link it sits inside — which is what preserves `[![badge](img)](url)`.
+      leaves.push({
+        marks: containerMarks, isBreak: false, text: "",
+        commentAnchor: commentMark?.attrs.anchorId,
+        image: { src: child.attrs.src, alt: child.attrs.alt ?? null, title: child.attrs.title ?? null },
+      });
     }
   });
   return group(leaves, 0, ctx);
@@ -192,6 +199,9 @@ function group(leaves: Leaf[], depth: number, ctx: SCtx): PhrasingContent[] {
 }
 
 function leafNode(leaf: Leaf): PhrasingContent {
+  if (leaf.image) {
+    return { type: "image", url: leaf.image.src, alt: leaf.image.alt, title: leaf.image.title } as PhrasingContent;
+  }
   return leaf.isBreak ? ({ type: "break" } as PhrasingContent) : ({ type: "text", value: leaf.text } as PhrasingContent);
 }
 

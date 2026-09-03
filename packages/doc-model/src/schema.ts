@@ -93,9 +93,13 @@ const nodes: Record<string, NodeSpec> = {
     toDOM: () => ["hr"],
   },
 
+  /**
+   * A block-level image with a caption. Standalone images do NOT use this — they are an
+   * inline `image` alone in a paragraph, which is what Markdown and OOXML both are.
+   */
   figure: {
     group: "block",
-    content: "image caption?",
+    content: "paragraph caption?",
     attrs: blockAttrs(),
     toDOM: (n) => ["figure", { "data-aid": n.attrs.aid }, 0],
     parseDOM: [{ tag: "figure" }],
@@ -105,8 +109,18 @@ const nodes: Record<string, NodeSpec> = {
     toDOM: () => ["figcaption", 0],
     parseDOM: [{ tag: "figcaption" }],
   },
+  /**
+   * Images are INLINE.
+   *
+   * They were block-level, and it destroyed data. Markdown's `[![badge](img)](url)` is a link
+   * wrapping an image; OOXML's inline drawing sits inside a run. Modelling that as a block
+   * forced every image inside a paragraph to split it — and the link mark, being inline, had
+   * nowhere to live and was dropped. A CI badge lost its href on a save the writer never
+   * asked for, on 46 files of the project's own corpus.
+   */
   image: {
-    inline: false,
+    inline: true,
+    group: "inline",
     attrs: {
       src: { default: "" },
       alt: { default: null as string | null },

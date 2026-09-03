@@ -365,9 +365,12 @@ function convertInline(rawChildren: PhrasingContent[], ctx: Ctx, extraMarks: Mar
         for (const p of convertInline(child.children, ctx, [...marksHere(), schema.marks.link!.create({ href: child.url, title: child.title ?? null })])) emit(p);
         break;
       case "image": {
-        const img = schema.nodes.image!.create({ src: child.url, alt: child.alt ?? null, title: child.title ?? null });
-        out.push({ kind: "figure", node: schema.nodes.figure!.create({ aid: nextAid(ctx) }, img) });
-        pendingComment = null; // a comment cannot attach across a block split
+        // Inline, carrying whatever marks are in scope — which is how a linked badge keeps
+        // its href. It used to become a block-level figure, splitting the paragraph around
+        // it and dropping the enclosing link mark entirely.
+        emit(inlinePiece(schema.nodes.image!.create({
+          src: child.url, alt: child.alt ?? null, title: child.title ?? null,
+        }).mark(marksHere())));
         break;
       }
       case "html": {

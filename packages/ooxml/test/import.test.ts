@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import type { PropBlob } from "../src/sidecar";
 import { importDocx } from "../src/import";
 import { parseSidecar, serializeSidecar, SIDECAR_VERSION } from "../src/sidecar";
 import { summarize } from "../src/ledger";
@@ -80,7 +81,7 @@ describe("importDocx over the real corpus", () => {
         }
       }
       for (const bucket of Object.values(r.sidecar.props)) {
-        for (const blob of Object.values(bucket)) {
+        for (const blob of Object.values(bucket) as PropBlob[]) {
           expect(dec.decode(xml.subarray(blob.range[0], blob.range[1]))).toBe(blob.xml);
         }
       }
@@ -94,7 +95,7 @@ describe("importDocx over the real corpus", () => {
       const r = importDocx(readCorpus(f), { hashParts: false });
       const seen = new Map<string, string>();
       for (const bucket of Object.values(r.sidecar.props)) {
-        for (const blob of Object.values(bucket)) {
+        for (const blob of Object.values(bucket) as PropBlob[]) {
           const prior = seen.get(blob.xml);
           if (prior) expect(prior).toBe(blob.ref);
           seen.set(blob.xml, blob.ref);

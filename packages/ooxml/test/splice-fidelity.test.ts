@@ -97,5 +97,14 @@ describe("splice engine against real Word documents", () => {
     expect(surgical).toBe(n);
     // A loss is tolerable; a loss the ledger does not report is not.
     expect(unreported).toEqual([]);
+
+    // And formatting preservation is ASSERTED, not merely printed.
+    //
+    // An audit changed one line of the exporter so it silently discarded stored run
+    // properties. Preservation fell from 59/59 to 36/59 -- twenty-three real Word documents
+    // losing bold, italics and fonts on a one-word edit -- and this test still passed,
+    // because the number was only ever logged. A metric nobody asserts is a metric nobody
+    // is defending.
+    expect(formattingKept).toBe(n);
   }, 120_000);
 });

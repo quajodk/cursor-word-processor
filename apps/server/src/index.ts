@@ -105,6 +105,30 @@ function corsHeaders(req: Request): Record<string, string> {
   };
 }
 
+/**
+ * Is this request from a page we are willing to act for?
+ *
+ * CORS is NOT a defence here. It withholds the *response* from a hostile origin, but the
+ * handler has already run by then — and a POST with `content-type: text/plain` is a
+ * CORS-simple request, so there is no preflight to block it. A page on the public internet
+ * could therefore call `fs.write`, `fs.remove` or `fs.rename` against this workspace and
+ * never need to read the reply. Writing the file IS the attack.
+ *
+ * So the Origin is checked before dispatch, not after. A request with no Origin at all is
+ * allowed: that is curl, a test, or the Tauri shell, none of which is a browser being driven
+ * by somebody else's page.
+ */
+function originAllowed(req: Request): boolean {
+  const origin = req.headers.get("origin");
+  if (!origin) return true;
+  try {
+    const host = new URL(origin).hostname;
+    return host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host === "::1";
+  } catch {
+    return false;
+  }
+}
+
 function json(req: Request, body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -143,6 +167,10 @@ const server = Bun.serve<SocketData, never>({
 
     if (url.pathname === "/api/health") {
       return json(req, { ok: true, root: workspace.root, ai: { available: ai.available(), provider: ai.providerName() } });
+    }
+
+    if (req.method === "POST" && !originAllowed(req)) {
+      return json(req, { ok: false, error: { message: "cross-origin request refused", code: "EFORBIDDENORIGIN" } }, 403);
     }
 
     try {

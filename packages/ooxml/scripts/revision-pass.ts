@@ -27,7 +27,7 @@ let renamed = 0;
 const rewrite = (node: PMNode): PMNode => {
   if (node.isText) {
     const before = node.text ?? "";
-    const after = before.replace(TERM, (m) => { renamed++; return m[0] === m[0].toUpperCase() ? "Research Code" : "research code"; });
+    const after = before.replace(TERM, (m) => { renamed++; return m.charAt(0) === m.charAt(0).toUpperCase() ? "Research Code" : "research code"; });
     return after === before ? node : (node.type.schema.text(after, node.marks) as PMNode);
   }
   if (node.childCount === 0) return node;
