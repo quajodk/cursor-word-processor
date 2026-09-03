@@ -1,6 +1,6 @@
 {
   "wave": 10,
-  "waveTitle": "Git that a writer can read",
+  "waveTitle": "Prose git, visible",
   "pieces": [
     {
       "id": "foundation",
@@ -89,8 +89,8 @@
       "scope": "Fuzzy open, search, diff and blame at sentence granularity",
       "builder": "done",
       "critic": "pending",
-      "evidence": "Sentence-granularity diff and blame, 13 tests. Reflowing a paragraph produces ZERO changes. A reordered sentence reports as 1 move, 0 deletions, 0 insertions \u2014 the shape a line diff cannot produce. Blame reports a sentence spanning two authors as mixed, listing both, rather than guessing.",
-      "gap": "No UI yet: the diff and blame models are proven by test but nothing renders them in the app, so a writer cannot see any of it. File tree, fuzzy open and search exist in the app but were built directly there rather than in this package."
+      "evidence": "The changes pane renders sentence diff and blame; Cmd-Shift-G toggles it. Against a real repo with a reorder, a reword and a reflow made together, git says \u201c4 insertions, 2 deletions\u201d while ours says \u201c1 reworded \u00b7 1 removed \u00b7 1 split\u201d, labels each change with its section, and shows the reword at word level. The reflow contributes nothing.",
+      "gap": "A sentence that is BOTH moved and reworded is not recognised as a move \u2014 pure reorderings are, but combining the two makes the aligner fall back to removed-plus-split. Blame renders but has not been exercised against a repo with multiple authors."
     },
     {
       "id": "docx-out",
@@ -280,6 +280,7 @@
     }
   ],
   "notes": [
+    "Every git call with an omitted trailing argument was failing: JSON.stringify turns an undefined array element into null, so the server\u2019s \u201c=== undefined\u201d check never matched. That affected the whole dispatch table, not just the call that happened to expose it.",
     "Move detection had never fired: the longest-increasing-subsequence used each pair\u2019s index in the array as its value, which is increasing by construction, so every pair was always kept and nothing was ever reported as moved.",
     "Moving a shared helper into doc-model broke an import in a test file. The file then failed to LOAD, which silently removed ten tests from the aggregate while the run still exited zero \u2014 caught only by noticing the total had fallen when it should have risen.",
     "Cmd-K collided with \u201cinsert link\u201d, which is the conventional binding in a word processor and also the conventional AI-rewrite binding in an IDE. The rewrite won it; the link moved to Cmd-Shift-K. Submitting then did nothing, because the code read the live selection after focus had moved to the prompt field.",
