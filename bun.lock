@@ -29,6 +29,7 @@
         "@scriv/lsp": "workspace:*",
         "@scriv/md": "workspace:*",
         "@scriv/textops": "workspace:*",
+        "@scriv/workspace": "workspace:*",
         "prosemirror-commands": "^1.7.1",
         "prosemirror-dropcursor": "^1.8.2",
         "prosemirror-gapcursor": "^1.3.2",

@@ -75,6 +75,22 @@ export class EditorController {
     return this.view;
   }
 
+  /**
+   * The document as it would be saved right now, without saving it.
+   *
+   * The changes pane diffs against HEAD, and it must follow UNSAVED edits — a writer wants to
+   * see what they have changed, not what they last committed to disk. Returns null for a
+   * binary document, where "the text" is not a meaningful question.
+   */
+  currentText(): string | null {
+    if (!this.view || this.codec.binary) return null;
+    try {
+      return this.codec.serialize(this.view.state.doc, this.meta);
+    } catch {
+      return null;
+    }
+  }
+
   /** True while a rewrite is being prompted, streamed or reviewed. */
   get inlineEditPhase(): string {
     const st = this.view ? inlineEditKey.getState(this.view.state) : null;

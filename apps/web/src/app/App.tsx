@@ -5,6 +5,7 @@ import { EditorController } from "../editor/controller";
 import { baseName, dirName, host, relativeTo } from "../host";
 import { EditorPane } from "./EditorPane";
 import { InlineEditBar } from "./InlineEditBar";
+import { DiffPane } from "./DiffPane";
 import { FileTree, type TreeHandle } from "./FileTree";
 import { Palette, type PaletteMode } from "./Palette";
 import { getPrefs, setPrefs, subscribePrefs, watchSystemTheme } from "./prefs";
@@ -32,6 +33,7 @@ export function App() {
   const [openPath, setOpenPath] = useState<string | null>(null);
   const [palette, setPalette] = useState<PaletteMode | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [showDiff, setShowDiff] = useState(false);
 
   const controller = useMemo(() => new EditorController(host), []);
   const treeRef = useRef<TreeHandle>(null);
@@ -68,6 +70,17 @@ export function App() {
   }, [notify]);
 
   useEffect(() => watchSystemTheme(), []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === "g" && e.shiftKey && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setShowDiff((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
 
 
@@ -267,6 +280,15 @@ export function App() {
           paragraph={prefs.paragraph}
           alignment={prefs.alignment}
         />
+        {showDiff && (
+          <DiffPane
+            host={host}
+            root={root}
+            path={openPath}
+            currentText={() => controller.currentText()}
+            onClose={() => setShowDiff(false)}
+          />
+        )}
       </main>
 
       <StatusBar />

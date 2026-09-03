@@ -52,9 +52,12 @@ const methods: Record<string, Handler> = {
 
   "git.isRepo": async ([root]) => await git.isRepo(str(root)),
   "git.status": async ([root]) => await git.status(str(root)),
-  "git.show": async ([root, path, rev]) => await git.show(str(root), str(path), rev === undefined ? undefined : str(rev)),
+  // `== null` rather than `=== undefined`: JSON.stringify turns an `undefined` element of an
+  // array into `null`, so an omitted trailing argument arrives here as null and never matched
+  // the stricter check. Every optional argument across this table has the same hazard.
+  "git.show": async ([root, path, rev]) => await git.show(str(root), str(path), rev == null ? undefined : str(rev)),
   "git.blame": async ([root, path]) => await git.blame(str(root), str(path)),
-  "git.log": async ([root, path, limit]) => await git.log(str(root), str(path), limit === undefined ? undefined : Number(limit)),
+  "git.log": async ([root, path, limit]) => await git.log(str(root), str(path), limit == null ? undefined : Number(limit)),
 
   "search.text": async ([root, query, opts]) => await search.text(str(root), str(query), opts as never),
   "search.files": async ([root, opts]) => await search.files(str(root), opts as never),

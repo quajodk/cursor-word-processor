@@ -28,7 +28,8 @@
     "@scriv/textops": "workspace:*",
     "@scriv/intellisense": "workspace:*",
     "@scriv/ai": "workspace:*",
-    "@scriv/lsp": "workspace:*"
+    "@scriv/lsp": "workspace:*",
+    "@scriv/workspace": "workspace:*"
   },
   "devDependencies": {
     "vite": "^7.1.7",
