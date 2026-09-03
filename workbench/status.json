@@ -1,6 +1,6 @@
 {
-  "wave": 10,
-  "waveTitle": "Prose git, visible",
+  "wave": 11,
+  "waveTitle": "Multiple cursors; every v1 feature now present",
   "pieces": [
     {
       "id": "foundation",
@@ -62,8 +62,8 @@
       "scope": "Selection-aware surrounds, multi-cursor, motions, transpose, join, kill-line",
       "builder": "done",
       "critic": "pending",
-      "evidence": "49 tests. Segmentation across English, German, Hindi and Japanese; selection-aware surrounds; expand/shrink selection; sentence and paragraph motions; Emacs kill ring; transpose, join, duplicate, move, delete-word. Verified live in the app: surrounds wrap and nest, kill-line works, expand-selection turns a caret into a range.",
-      "gap": "Multi-cursor is not built, and it is the hardest piece \u2014 ProseMirror ships no multiple-selection model, so it needs a custom Selection subclass and a dispatcher that maps every command across ranges. Move-paragraph is covered by unit test but was not reproducible through the browser automation, so it is unverified live."
+      "evidence": "Multi-cursor works in the app: Cmd-D three times over a term gives three cursors and typing replaces all three at once \u2014 the \u201crename a term consistently\u201d step of the comparison task, in one action, at 1.9 ms. 60 package tests.",
+      "gap": "IME composition is not multiplexed: a composed character lands only at the primary cursor. Column selection is not built."
     },
     {
       "id": "intel",
@@ -72,7 +72,7 @@
       "builder": "done",
       "critic": "pending",
       "evidence": "Both halves now work in the app. Completion offers citations and headings from other files; Harper underlines real problems and Cmd-. corrects them from the keyboard. Measured live: 3 suggestions in 47 ms against a 150 ms budget, dropping to 2 after a fix. 26 package tests, 142 across the repo.",
-      "gap": "Only Harper is wired. Vale-style house-style rules and a project dictionary are not built, and diagnostics are English-only by design \u2014 the checker declines other languages rather than guessing."
+      "gap": "Only Harper is wired; Vale-style house-style rules and a project dictionary are not built. Diagnostics remain English-only by design."
     },
     {
       "id": "ai",
@@ -277,9 +277,15 @@
       "t": "Prose git",
       "d": "A newline inside a block is a soft wrap, not a sentence boundary",
       "why": "Treating it as one made reflowing a paragraph produce a diff \u2014 defeating the entire purpose \u2014 and hid every mixed-authorship sentence from blame, since each fragment sat on its own line."
+    },
+    {
+      "t": "Multi-cursor",
+      "d": "The primary cursor stays a real selection; extra cursors are plugin state drawn as decorations",
+      "why": "A Selection subclass holding N ranges is the \u201cproper\u201d answer and breaks everything downstream \u2014 the view draws one native selection, and baseKeymap, input rules and mark logic all read the primary range."
     }
   ],
   "notes": [
+    "Every \u201cselect all occurrences\u201d was off by one: converting a text offset back to a position by binary search can land BEFORE a paragraph rather than at its first character, so an occurrence at the start of a block failed to match the primary selection and was added twice. Writing a third copy of a mapping two packages already shared was the mistake.",
     "Every git call with an omitted trailing argument was failing: JSON.stringify turns an undefined array element into null, so the server\u2019s \u201c=== undefined\u201d check never matched. That affected the whole dispatch table, not just the call that happened to expose it.",
     "Move detection had never fired: the longest-increasing-subsequence used each pair\u2019s index in the array as its value, which is increasing by construction, so every pair was always kept and nothing was ever reported as moved.",
     "Moving a shared helper into doc-model broke an import in a test file. The file then failed to LOAD, which silently removed ten tests from the aggregate while the run still exited zero \u2014 caught only by noticing the total had fallen when it should have risen.",
