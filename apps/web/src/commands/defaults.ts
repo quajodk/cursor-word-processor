@@ -19,6 +19,9 @@ import {
 } from "../editor/commands";
 import type { EditorController } from "../editor/controller";
 import { specimenDoc } from "../editor/specimen";
+import { BINDINGS } from "@scriv/textops";
+import { accept as acceptInlineEdit, inlineEditKey, reject as rejectInlineEdit } from "../editor/inline-edit";
+import { applyFirstFix } from "../editor/diagnostics";
 import { registerCommands, type Command, type CommandContext } from "./registry";
 
 /**
@@ -55,8 +58,35 @@ function editorCommand(
   };
 }
 
+/**
+ * Every text operation, taken from the binding table itself.
+ *
+ * `BINDINGS` is exported from @scriv/textops "as data so the command palette can render it",
+ * and until now nothing imported it — so all thirty text operations had a key but no palette
+ * entry. Two of them (paragraph motion on Ctrl-Up/Down) collide with Mission Control and App
+ * Exposé on a stock Mac, which made them unreachable by any means at all. Deriving the
+ * palette from the table means a new binding cannot be added without also becoming
+ * discoverable, which is what "keyboard-first" has to mean beyond "has a shortcut".
+ */
+function textOpCommands(): Command[] {
+  return BINDINGS.map((b) => ({
+    id: b.id,
+    title: b.label,
+    category: categoryFor(b.id),
+    keybinding: b.key,
+    when: inEditor,
+    run: (ctx: CommandContext) => { run(ctx.view, b.command); },
+  }));
+}
+
+function categoryFor(id: string): string {
+  const prefix = id.split(".")[0] ?? "";
+  return { cursor: "Cursor", selection: "Selection", motion: "Motion", edit: "Edit" }[prefix] ?? "Edit";
+}
+
 export function registerDefaultCommands(controller: EditorController): () => void {
   return registerCommands([
+    ...textOpCommands(),
     // ---------------------------------------------------------------- file
     {
       id: "file.quickOpen",
@@ -177,7 +207,8 @@ export function registerDefaultCommands(controller: EditorController): () => voi
       id: "view.cycleTheme",
       title: "Cycle theme (light / dark / system)",
       category: "View",
-      keybinding: "Mod-Alt-d",
+      // Cmd-Alt-D toggles the Dock on macOS and never reaches the page.
+      keybinding: "Mod-Alt-t",
       run: (ctx) => ctx.ui.cycleTheme(),
     },
     {
@@ -287,6 +318,51 @@ export function registerDefaultCommands(controller: EditorController): () => voi
         }
         controller.setDocument(null, schema.nodes.doc!.create(null, [schema.nodes.paragraph!.create()]), null, "");
       },
+    },
+
+    // ---------------------------------------------------------------- assist
+    // These had bindings but no palette entry, so they were undiscoverable and — for anyone
+    // whose OS eats the chord — unreachable.
+    {
+      id: "ai.rewrite",
+      title: "Rewrite selection with AI…",
+      category: "Assist",
+      keybinding: "Mod-k",
+      when: (ctx) => ctx.view !== null && !ctx.view.state.selection.empty,
+      run: (ctx) => {
+        const view = ctx.view;
+        if (!view) return;
+        const { from, to } = view.state.selection;
+        view.dispatch(view.state.tr.setMeta(inlineEditKey, {
+          kind: "prompt", from, to,
+          original: view.state.doc.textBetween(from, to, "\n"),
+          revId: `ai-${Date.now().toString(36)}`,
+        }));
+      },
+    },
+    {
+      id: "ai.accept",
+      title: "Accept AI suggestion",
+      category: "Assist",
+      keybinding: "Mod-Enter",
+      when: (ctx) => ctx.view !== null,
+      run: (ctx) => { if (ctx.view) acceptInlineEdit(ctx.view); },
+    },
+    {
+      id: "ai.reject",
+      title: "Reject AI suggestion",
+      category: "Assist",
+      keybinding: "Mod-Backspace",
+      when: (ctx) => ctx.view !== null,
+      run: (ctx) => { if (ctx.view) rejectInlineEdit(ctx.view); },
+    },
+    {
+      id: "diagnostics.quickFix",
+      title: "Apply suggestion at cursor",
+      category: "Assist",
+      keybinding: "Mod-.",
+      when: inEditor,
+      run: (ctx) => { if (ctx.view) applyFirstFix(ctx.view); },
     },
 
     // ---------------------------------------------------------------- host

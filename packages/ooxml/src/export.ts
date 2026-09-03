@@ -755,7 +755,11 @@ export function exportDocx(
       cur.node.forEach((child) => { if (child.type.name === "image" && child.attrs.drawingRef) modelRefs.push(child.attrs.drawingRef); });
       copy(start, end);
       stats.copied++;
-      if (cur.node.type.name !== "figure" || modelRefs.join() !== originRefs.slice(0, modelRefs.length).join()) {
+      // `kind` is the ORIGIN's shape (a drawing-only Word paragraph); the model node is a
+      // paragraph holding an inline image, or an empty paragraph when the drawing was a chart
+      // or shape with no picture to show.
+      const stillDrawingOnly = cur.node.type.name === "paragraph" || cur.node.type.name === "figure";
+      if (!stillDrawingOnly || modelRefs.join() !== originRefs.slice(0, modelRefs.length).join()) {
         ledger.add({
           code: "splice-props-dropped", severity: "dropped", stage: "export", aid: rec.aid,
           detail: "a figure's drawing changed in the editor; drawings are not synthesizable and the original was kept",

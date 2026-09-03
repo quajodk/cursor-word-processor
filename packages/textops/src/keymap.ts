@@ -47,8 +47,11 @@ export const BINDINGS: Binding[] = [
   { key: "Mod-Alt-ArrowLeft", id: "motion.sentenceBack", label: "Previous sentence", command: moveSentence(-1) },
   { key: "Shift-Mod-Alt-ArrowRight", id: "motion.sentenceForwardExtend", label: "Extend to next sentence", command: moveSentence(1, true) },
   { key: "Shift-Mod-Alt-ArrowLeft", id: "motion.sentenceBackExtend", label: "Extend to previous sentence", command: moveSentence(-1, true) },
-  { key: "Ctrl-ArrowDown", id: "motion.paragraphForward", label: "Next paragraph", command: moveParagraph(1) },
-  { key: "Ctrl-ArrowUp", id: "motion.paragraphBack", label: "Previous paragraph", command: moveParagraph(-1) },
+  // Ctrl-Up and Ctrl-Down are Mission Control and App Exposé on a stock Mac — the same
+  // Keyboard settings group as Ctrl-Left/Right, which this file already listed as unusable.
+  // Binding the vertical pair anyway made both motions dead on arrival.
+  { key: "Alt-ArrowDown", id: "motion.paragraphForward", label: "Next paragraph", command: moveParagraph(1) },
+  { key: "Alt-ArrowUp", id: "motion.paragraphBack", label: "Previous paragraph", command: moveParagraph(-1) },
   // Sentence edges moved off Mod-Alt-Arrow when multi-cursor took the vertical pair:
   // adding a cursor above or below is the far more frequent action.
   { key: "Mod-Alt-BracketLeft", id: "motion.sentenceStart", label: "Start of sentence", command: toSentenceEdge("start") },
@@ -65,8 +68,8 @@ export const BINDINGS: Binding[] = [
   { key: "Alt-t", id: "edit.transposeWords", label: "Transpose words", command: transposeWords },
   { key: "Mod-Shift-j", id: "edit.join", label: "Join with next paragraph", command: joinForward },
   { key: "Mod-Shift-d", id: "edit.duplicate", label: "Duplicate paragraph", command: duplicateBlock },
-  { key: "Alt-ArrowUp", id: "edit.moveUp", label: "Move paragraph up", command: moveBlock(-1) },
-  { key: "Alt-ArrowDown", id: "edit.moveDown", label: "Move paragraph down", command: moveBlock(1) },
+  { key: "Alt-Shift-ArrowUp", id: "edit.moveUp", label: "Move paragraph up", command: moveBlock(-1) },
+  { key: "Alt-Shift-ArrowDown", id: "edit.moveDown", label: "Move paragraph down", command: moveBlock(1) },
   { key: "Alt-Backspace", id: "edit.deleteWordBack", label: "Delete word backward", command: deleteWord(-1) },
   { key: "Alt-Delete", id: "edit.deleteWordForward", label: "Delete word forward", command: deleteWord(1) },
 ];
@@ -91,7 +94,13 @@ export const KNOWN_CONFLICTS: Record<string, string> = {
  * app, not by reading a table: `Mod-Ctrl-ArrowUp` looked ideal for expand-selection and is
  * silently swallowed by Mission Control on macOS. Anything added here needs the same check.
  */
-export const UNUSABLE_ON_MACOS = ["Mod-Ctrl-ArrowUp", "Mod-Ctrl-ArrowDown", "Ctrl-ArrowLeft", "Ctrl-ArrowRight"];
+export const UNUSABLE_ON_MACOS = [
+  "Mod-Ctrl-ArrowUp", "Mod-Ctrl-ArrowDown",
+  // The whole Ctrl-Arrow family belongs to Mission Control / Spaces / App Exposé.
+  "Ctrl-ArrowLeft", "Ctrl-ArrowRight", "Ctrl-ArrowUp", "Ctrl-ArrowDown",
+  // Cmd-Alt-D toggles the Dock.
+  "Mod-Alt-d",
+];
 
 export function textopsKeymap(): Plugin {
   const map: Record<string, Command> = {};

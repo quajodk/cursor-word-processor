@@ -133,6 +133,49 @@ function parseRels(bytes: Uint8Array | undefined): Record<string, RelRecord> {
   return out;
 }
 
+/**
+ * How big an image may be before it stays a reference rather than becoming a data URI.
+ * Two megabytes covers essentially every image in the corpus while keeping a document with
+ * dozens of photographs from turning into a hundred-megabyte string.
+ */
+const MAX_INLINE_MEDIA = 2 * 1024 * 1024;
+
+const MEDIA_TYPES: Record<string, string> = {
+  png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif",
+  bmp: "image/bmp", tif: "image/tiff", tiff: "image/tiff", svg: "image/svg+xml",
+  webp: "image/webp", emf: "image/emf", wmf: "image/wmf",
+};
+
+/**
+ * A renderable `src` for an image inside the package.
+ *
+ * The part name (`word/media/image1.png`) is meaningless to a browser — every imported image
+ * rendered broken, which against Google Docs on "does this look like a document" is the whole
+ * comparison. The bytes are right there in the zip, so they become a data URI. EMF and WMF are
+ * Windows metafile formats no browser renders; they keep the reference and are ledgered rather
+ * than being silently emitted as a src that cannot load.
+ */
+function mediaSrc(part: string, entries: Record<string, Uint8Array>, ledger: Ledger, aid: string): string {
+  if (part === "" || /^https?:/i.test(part)) return part;
+  const bytes = entries[part];
+  const ext = part.slice(part.lastIndexOf(".") + 1).toLowerCase();
+  const mime = MEDIA_TYPES[ext];
+  if (!bytes || !mime || ext === "emf" || ext === "wmf" || bytes.length > MAX_INLINE_MEDIA) {
+    ledger.add({
+      code: "media-not-inlined", severity: "info", stage: "import", aid,
+      detail: !bytes ? `image part missing from the package: ${part}`
+        : !mime || ext === "emf" || ext === "wmf" ? `no browser renders ${ext.toUpperCase()}; kept as a reference`
+        : `image is ${(bytes.length / 1024 / 1024).toFixed(1)} MB, above the inline limit`,
+    });
+    return part;
+  }
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return `data:${mime};base64,${btoa(binary)}`;
+}
+
 /** Resolve a relationship target to a zip part name, e.g. `media/image1.png` -> `word/media/...`. */
 function resolveTarget(documentPart: string, target: string): string {
   if (/^[a-z]+:/i.test(target)) return target;      // external URL
@@ -601,12 +644,33 @@ export function importDocx(bytes: Uint8Array, options: ImportOptions = {}): Impo
     let kind: BlockKind;
     let node: PMNode;
     if (build.drawingOnly) {
+      // The sidecar kind describes the ORIGIN block — a Word paragraph whose only content is
+      // a drawing — while the node below is a plain paragraph holding an inline image. They
+      // are deliberately different: the exporter keys its verbatim-copy path on the origin
+      // shape, and collapsing the two made it rebuild every drawing block instead of copying
+      // it, which took T0 from 60/60 byte-identical to 54/60.
       kind = "figure";
       const ref = build.drawings[0]!;
       const d = drawings[ref]!;
-      const src = d.targets[0] ?? "";
-      const img = schema.nodes.image!.create({ src, alt: d.alt, title: null, drawingRef: ref });
-      node = schema.nodes.figure!.create({ aid, styleId, pPrRef }, [img]);
+      const part = d.targets[0] ?? "";
+      const src = part === "" ? "" : mediaSrc(part, entries, ledger, aid);
+      // A drawing with no picture relationship is a chart, a shape or a text box — there is
+      // no image to show. Emitting an image node with an empty src put a broken-image icon in
+      // the document for every one of them. The paragraph stays (so the anchor, its
+      // properties and its place in the flow survive for export) and the loss is recorded.
+      const children = src === ""
+        ? []
+        : [schema.nodes.image!.create({ src, alt: d.alt, title: null, drawingRef: ref })];
+      if (children.length === 0) {
+        ledger.add({
+          code: "media-not-inlined", severity: "degraded", stage: "import", aid,
+          detail: "drawing has no picture relationship (chart, shape or text box): nothing to display",
+        });
+      }
+      // A paragraph holding one inline image, NOT a figure wrapping a block image. `figure`
+      // takes block content, and images are inline: the previous shape produced a document
+      // that violated its own schema, which `create` does not validate and so nothing caught.
+      node = schema.nodes.paragraph!.create({ aid, styleId, pPrRef }, children);
     } else {
       if (build.drawings.length > 0) {
         ledger.add({
