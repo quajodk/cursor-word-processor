@@ -1,6 +1,6 @@
 {
-  "wave": 12,
-  "waveTitle": "Working through the audit",
+  "wave": 13,
+  "waveTitle": "Diagnostics made incremental; the perf gate made real",
   "pieces": [
     {
       "id": "foundation",
@@ -53,8 +53,8 @@
       "scope": "Keystroke budget enforced by a test that fails the build",
       "builder": "done",
       "critic": "pending",
-      "evidence": "Gate is green and enforced. Keystroke \u2192 state commit p99 0.36 ms against 8 ms; in-browser keystroke \u2192 DOM 2.4 ms; 50-page docx import p99 670 ms against 1200; throughput p99 1.28 ms/paragraph against 1.5.",
-      "gap": "Keystroke \u2192 paint is still unmeasured, so the 16 ms end-to-end budget remains unproven."
+      "evidence": "Runs the app's real 17-plugin stack. Completion and diagnostics are now measured and gated instead of reported as 'subsystem not built yet'. Baseline recorded for this machine.",
+      "gap": "Keystroke \u2192 paint (16 ms) still has no samples: packages/perf/src/browser/e2e.ts is imported by nothing. 'Off main thread' is asserted structurally, not observed."
     },
     {
       "id": "textops",
@@ -71,8 +71,8 @@
       "scope": "Workspace symbol index, completions, Harper diagnostics over an LSP seam",
       "builder": "done",
       "critic": "pending",
-      "evidence": "Both halves now work in the app. Completion offers citations and headings from other files; Harper underlines real problems and Cmd-. corrects them from the keyboard. Measured live: 3 suggestions in 47 ms against a 150 ms budget, dropping to 2 after a fix. 26 package tests, 142 across the repo.",
-      "gap": "Only Harper is wired; Vale-style house-style rules and a project dictionary are not built. Diagnostics remain English-only by design."
+      "evidence": "Completion gated at 0.78 ms p99 against 3,775 symbols from 93 workspace documents. Diagnostics gated at 40 ms p99 (budget 150) \u2014 incremental, cancellable, one block re-checked per edit. 11 new tests hold the incremental linter to the whole-document result on real corpus prose.",
+      "gap": "Harper reads `Node.js` as a sentence end, so `js` is a misspelling and the next word 'does not start with a capital'. That cascade is most of what remains on technical documents. A user dictionary and per-rule ignores are the answer and are not built."
     },
     {
       "id": "ai",
@@ -105,10 +105,11 @@
   "metrics": [
     {
       "label": "Keystroke \u2192 state commit",
-      "value": 0.38,
+      "value": 0.33,
       "unit": "ms p99",
       "budget": "8",
-      "state": "measured"
+      "state": "measured",
+      "note": "Now measured against the app's own 17-plugin stack via apps/web/src/perf-plugins.ts. Every earlier keystroke number on this page was measured against aidPlugin + history \u2014 two plugins out of seventeen."
     },
     {
       "label": "Keystroke \u2192 DOM, in browser",
@@ -119,7 +120,7 @@
     },
     {
       "label": "Open 40k-word doc",
-      "value": 2.67,
+      "value": 0.73,
       "unit": "ms p99",
       "budget": "400",
       "state": "measured"
@@ -196,10 +197,11 @@
     },
     {
       "label": "Diagnostics refresh",
-      "value": 47,
-      "unit": "ms",
+      "value": 40.35,
+      "unit": "ms p99",
       "budget": "150",
-      "state": "measured"
+      "state": "measured",
+      "note": "Was 7,846 ms when the whole document was re-linted on every keystroke. Now one block is re-checked per edit (p50 and p99 both 1 block) and the other 1,236 come from a content-keyed cache. In the running app on a 17k-word document: 27 ms, then 12 ms."
     },
     {
       "label": "docx parts changed, real revision",
@@ -221,6 +223,38 @@
       "unit": "nodes, 80 docs",
       "budget": "\u2014",
       "state": "measured"
+    },
+    {
+      "label": "Completion popup open",
+      "value": 0.78,
+      "unit": "ms p99",
+      "budget": "40",
+      "state": "measured",
+      "note": "Against 3,775 symbols from 93 real workspace documents. Runs inside state.apply on every keystroke whether or not the popup opens, so it is also gated at a 2 ms p50."
+    },
+    {
+      "label": "Diagnostics blocks re-checked per edit",
+      "value": 1,
+      "unit": "of 1,237",
+      "budget": "1",
+      "state": "measured",
+      "note": "p50 and p99 alike. This is the design claim of the incremental linter, asserted rather than assumed."
+    },
+    {
+      "label": "Squiggles drawn inside code",
+      "value": 0,
+      "unit": "was 1,469",
+      "budget": "0",
+      "state": "measured",
+      "note": "On a 17,083-word Node.js API document the checker drew 2,986 marks and 1,469 sat inside code blocks. `beforeExit` is not a misspelling. Code is masked to spaces before the checker sees it \u2014 same length, so every offset still maps. That document: 2,986 \u2192 548 marks."
+    },
+    {
+      "label": "Cold scan, 40k words",
+      "value": 4984,
+      "unit": "ms p50",
+      "budget": "\u2014",
+      "state": "measured",
+      "note": "The first pass over a whole document, reported and deliberately not gated: \u00a75 budgets the refresh a writer feels while typing, not the open. Results stream in from the top as they are computed rather than the page staying blank."
     }
   ],
   "decisions": [
@@ -316,6 +350,9 @@
     }
   ],
   "notes": [
+    "OffsetMap was wrong and a new test caught it. It emitted a separator for every BLOCK; textBetween emits one only before a TEXTBLOCK. A bullet list with four items is nine blocks and four textblocks \u2014 so in any document containing a list the map drifted by one position per extra wrapper, and every diagnostic, every AI hunk and every extra cursor after the first list landed on the wrong word. Nothing threw. The agreement is now checked character by character over 25 real documents.",
+    "The incremental linter was expected to match a whole-document lint exactly. On real prose it does not \u2014 4 diagnostics in 200 \u2014 and the difference runs the other way: Harper does not treat a bare newline as a sentence end, so the joined document merged two speakers' dialogue into one '52-word sentence' warning while hiding a lowercase sentence start, a misspelling and a repeated word inside the paragraphs it had glued together. The test now asserts that every difference is a block-boundary artefact, checked causally by re-linting the glued reading.",
+    "The completion bench's first workspace was 400 files taken in glob order. It got handed 374 three-line CommonMark spec fixtures and produced 13 symbols between them \u2014 a workspace number that was really the single-document number, which is the exact failure the workspace was added to avoid.",
     "Making images render broke the splice engine \u2014 T0 fell from 60/60 byte-identical to 54/60 \u2014 and the assertion added an hour earlier caught it. The exporter keys its verbatim-copy path on the sidecar\u2019s recorded block kind, which the import had stopped recording. That is what a gate is for.",
     "An independent audit found two of four house rules violated, a security defect, and the headline fidelity metric ungated. It was right on all three. The worst: saving an unedited Markdown file was DELETING hyperlinks from CI badges \u2014 silent data loss in the layer this project calls the source of truth. I had seen the symptom myself, filed it as a pre-existing limitation, and moved on.",
     "Two gates could not fail. Formatting preservation was printed but never asserted \u2014 the auditor broke the exporter and 23 documents lost their formatting with the suite still green. And no test file was in the typecheck graph at all, so a deliberate type error in a test passed cleanly.",
