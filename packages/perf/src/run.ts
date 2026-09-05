@@ -16,7 +16,8 @@ import { generateDoc, loadSentences } from "./gendoc";
 import { resolvePlugins } from "./plugins";
 import { benchKeystroke } from "./bench/keystroke";
 import { benchDocOpen } from "./bench/docopen";
-import { probeSlots } from "./bench/slots";
+import { benchDiagnostics } from "./bench/diagnostics";
+import { benchCompletion } from "./bench/completion";
 import { benchDocxImport } from "./bench/docximport";
 import { evaluate, loadBaseline, saveBaseline, fingerprint } from "./gate";
 import { fmtMs } from "./stats";
@@ -34,7 +35,7 @@ if (!json) {
 
 // ---- build the document under test -------------------------------------------------
 const gen = await generateDoc();
-const pluginSet = await resolvePlugins();
+const pluginSet = await resolvePlugins(gen.doc);
 // The typing stream is real corpus prose, so character frequency and word lengths match
 // what a writer actually types rather than a synthetic alphabet.
 const { sentences } = await loadSentences();
@@ -74,11 +75,24 @@ if (!json && docx.available) {
   console.log("");
 }
 
-// Subsystems that do not exist yet report themselves rather than being invented here.
-// A slot never carries a measurement — that is the point of it. It reports that the
-// subsystem does not exist yet, and `evaluate` renders it as not-implemented rather than
-// inventing a number to fill the row.
-const slots = probeSlots();
+// Completion runs inside state.apply on every keystroke, so it is measured against the real
+// symbol table of the document above rather than a token index.
+const completion = benchCompletion(gen.doc);
+measurements["completion.popup-open"] = completion.worst;
+if (!json) {
+  console.log(`  complete  ${completion.detail}`);
+  console.log("");
+}
+
+// Diagnostics: the real Harper WebAssembly over the real document. Slow enough to be worth
+// saying out loud that this is where the run spends its time.
+const diagnostics = await benchDiagnostics(gen.doc);
+measurements["diagnostics.refresh"] = diagnostics.refresh;
+if (!json) {
+  console.log(`  diagnose  ${diagnostics.detail}`);
+  console.log(`            cold (whole document, empty cache): p50 ${diagnostics.cold.p50.toFixed(0)} ms — reported, never gated`);
+  console.log("");
+}
 
 // ---- evaluate -----------------------------------------------------------------------
 const baseline = await loadBaseline();
@@ -113,6 +127,14 @@ const payload = {
   keystroke: ks.all,
   docOpen: { total: open.total, fromJson: open.fromJson, stateCreate: open.stateCreate },
   docxImport: docx,
+  completion: {
+    worst: completion.worst, sigil: completion.sigil, typing: completion.typing,
+    symbols: completion.symbols, offered: completion.offered, indexBuildMs: completion.indexBuildMs,
+  },
+  diagnostics: {
+    refresh: diagnostics.refresh, cold: diagnostics.cold, bySeverity: diagnostics.bySeverity,
+    total: diagnostics.total, blocks: diagnostics.blocks, lintedPerRefresh: diagnostics.lintedPerRefresh,
+  },
   checks: checks.map((c) => ({
     id: c.id, verdict: c.verdict, path: c.budget.path, p99Budget: c.budget.p99Ms,
     mode: c.budget.mode, stats: c.stats ?? null, reasons: c.reasons,

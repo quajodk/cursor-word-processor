@@ -2,6 +2,7 @@ import type { HostApi } from "@scriv/host-api";
 import type { Node as PMNode } from "prosemirror-model";
 import type { Transaction } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
+import { getPrefs } from "../app/prefs";
 import { latencyPercentiles, recordLatency, resetLatency, setStatus } from "../app/status";
 import { codecFor, markdownCodec, type DocumentCodec } from "../doc/codec";
 import { createEditorState, emptyDoc } from "./setup";
@@ -57,8 +58,18 @@ export class EditorController {
       // Harper is an English checker and declines anything else rather than producing a wall
       // of false spelling errors, so the document's own language is what it is told.
       language: () => this.documentLanguage(),
-      onDiagnostics: (elapsedMs: number, count: number) =>
-        setStatus({ message: count > 0 ? `${count} suggestions · ${elapsedMs.toFixed(0)} ms` : "" }, false),
+      // What is underlined, as against what is known. Below the floor a diagnostic still
+      // exists, is still counted here, and still has a quick fix at the caret.
+      diagnosticFloor: () => getPrefs().diagnosticFloor,
+      onDiagnostics: ({ elapsedMs, shown, muted, scanning }: { elapsedMs: number; shown: number; muted: number; scanning: boolean }) => {
+        // "Checking..." rather than a count, while the first pass is still running: a count
+        // that climbs from 40 to 900 as the scan proceeds reads as the document getting
+        // worse, when it is only the checker catching up.
+        if (scanning) return setStatus({ message: "Checking the document..." }, false);
+        if (shown === 0 && muted === 0) return setStatus({ message: "" }, false);
+        const quiet = muted > 0 ? ` · ${muted} muted` : "";
+        setStatus({ message: `${shown} suggestion${shown === 1 ? "" : "s"}${quiet} · ${elapsedMs.toFixed(0)} ms` }, false);
+      },
     };
   }
 

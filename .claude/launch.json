@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "scriv-web",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "web"],
+      "port": 4310
+    },
+    {
+      "name": "scriv-server",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "server"],
+      "port": 4300
+    }
+  ]
+}

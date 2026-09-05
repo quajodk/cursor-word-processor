@@ -76,18 +76,41 @@ export const BUDGETS: Record<string, Budget> = {
     id: "completion.popup-open",
     path: "Completion popup open (40 ms p99)",
     p99Ms: 40,
-    mode: "not-implemented",
-    measures: "(@scriv/intellisense has no implementation yet)",
-    excludes: [],
+    // A p50 too, because this runs inside `state.apply` on every keystroke whether or not
+    // the popup opens. A p99 of 40 ms with a p50 of 5 ms would be a typing regression that
+    // the p99 alone would wave through.
+    p50Ms: 2,
+    mode: "lower-bound",
+    measures:
+      "blockAt + triggerAt + WorkspaceIndex.symbols() + complete() against the symbol table " +
+      "of the real 40k-word corpus document, over two mixes: sigil-triggered requests and " +
+      "ordinary prose typing. The gate takes the worse of the two.",
+    excludes: [
+      "building and positioning the popup element, and coordsAtPos (needs a layout)",
+      "paint of the item list",
+    ],
   },
 
   "diagnostics.refresh": {
     id: "diagnostics.refresh",
     path: "Diagnostics refresh, debounced (150 ms p99, off main thread)",
     p99Ms: 150,
-    mode: "not-implemented",
-    measures: "(@scriv/lsp has no implementation yet)",
-    excludes: [],
+    mode: "lower-bound",
+    measures:
+      "One character typed into the 40k-word document, then proseText (the checker's view " +
+      "of it, with code masked) + the real " +
+      "IncrementalLinter over real Harper WebAssembly + OffsetMap + DecorationSet.create. " +
+      "Steady state, with the cache warm as it is a moment after the document opens.",
+    excludes: [
+      "postMessage in both directions and the structured clone of the diagnostic array",
+      "the 300 ms debounce, which is a deliberate wait rather than work",
+      "style/layout/paint of the squiggles",
+      "the cold first pass over a whole document, reported separately and never gated",
+      "OFF MAIN THREAD is not verified here. The checker runs in a Worker by construction " +
+        "(apps/web/src/editor/diagnostics.worker.ts), but a structural fact is not an " +
+        "observation: proving no long task lands on the main thread during a refresh needs " +
+        "a PerformanceObserver in the browser harness, and that is not written.",
+    ],
   },
 
   "doc.open-40k": {
@@ -100,7 +123,7 @@ export const BUDGETS: Record<string, Budget> = {
       "stack (every plugin's state.init runs).",
     excludes: [
       "reading the .md off disk",
-      "mdast parse and mdast→doc-model conversion (@scriv/md not implemented)",
+      "mdast parse and mdast→doc-model conversion (@scriv/md, measured nowhere yet)",
       "fidelity sidecar load",
       "EditorView construction and the initial DOM render",
     ],

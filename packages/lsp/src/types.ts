@@ -47,6 +47,21 @@ export interface DiagnoseResponse {
   diagnostics: Diagnostic[];
   /** Milliseconds spent inside the checker, for the latency budget. */
   elapsedMs: number;
+  /**
+   * A result for part of the document, sent while the rest is still being checked.
+   *
+   * A long document takes seconds on its first pass. Withholding everything until the end
+   * means the writer stares at unmarked text for that whole time; sending what is known so
+   * far means the squiggles fill in from the top. A partial NEVER carries fewer diagnostics
+   * than a previous partial of the same version, so the display only ever grows.
+   */
+  partial?: boolean;
+  /** Segments run through the checker this pass. Zero on a fully cached refresh. */
+  linted?: number;
+  /** Segments answered from cache. */
+  cached?: number;
+  /** Segments not yet reached. Non-zero only on a partial. */
+  pending?: number;
   error?: string;
 }
 

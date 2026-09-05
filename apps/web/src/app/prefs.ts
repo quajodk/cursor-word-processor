@@ -10,6 +10,19 @@ export type Theme = "light" | "dark" | "system";
 export type ParagraphStyle = "book" | "spaced";
 export type Alignment = "ragged" | "justify";
 export type SidebarPane = "files" | "search";
+/**
+ * The quietest diagnostic drawn in the text.
+ *
+ * "warning" by default, and the default is the whole point. Harper stands 1,741 diagnostics
+ * on a 40k-word document, 660 of them style hints — "consider a shorter sentence", "this
+ * word is a regionalism". Underlining all of them turns the page into a rash and trains the
+ * writer to ignore every mark on it, including the misspellings. Word and Google Docs both
+ * put style suggestions behind a separate mode for the same reason.
+ *
+ * Nothing is discarded: hints are still computed, still counted in the status bar, and
+ * ⌥⌘I draws them. They just do not interrupt drafting by default.
+ */
+export type DiagnosticFloor = "hint" | "info" | "warning" | "error";
 
 export interface Prefs {
   theme: Theme;
@@ -17,6 +30,7 @@ export interface Prefs {
   alignment: Alignment;
   sidebar: boolean;
   pane: SidebarPane;
+  diagnosticFloor: DiagnosticFloor;
 }
 
 const KEY = "scriv.prefs";
@@ -28,6 +42,7 @@ const fallback: Prefs = {
   alignment: "ragged",
   sidebar: true,
   pane: "files",
+  diagnosticFloor: "warning",
 };
 
 let state: Prefs = load();

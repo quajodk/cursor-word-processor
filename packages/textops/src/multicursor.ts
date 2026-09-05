@@ -244,7 +244,9 @@ export const clearCursors: Command = (state, dispatch) => {
 
 function findOccurrence(state: EditorState, needle: string, after: number, taken: Set<string>): CursorRange | null {
   const text = state.doc.textBetween(0, state.doc.content.size, "\n", " ");
-  const map = new OffsetMap(state.doc, 0, state.doc.content.size);
+  // The same `leafText` must reach both, or the map answers for a different string than the
+  // one that was searched.
+  const map = new OffsetMap(state.doc, 0, state.doc.content.size, { leafText: " " });
   let idx = text.indexOf(needle, offsetForPos(state, after));
   while (idx >= 0) {
     const from = map.pos(idx);

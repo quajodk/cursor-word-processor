@@ -17,7 +17,10 @@
     "prosemirror-state": "^1.4.4",
     "prosemirror-tables": "^1.8.5",
     "prosemirror-transform": "^1.10.4",
-    "@scriv/ooxml": "workspace:*"
+    "@scriv/ooxml": "workspace:*",
+    "@scriv/lsp": "workspace:*",
+    "@scriv/intellisense": "workspace:*",
+    "@scriv/md": "workspace:*"
   },
   "devDependencies": {
     "playwright": "^1.62.1",

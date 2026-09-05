@@ -1,4 +1,5 @@
-import { Dialect, type Lint, type Linter } from "harper.js";
+import { Dialect, LocalLinter, type Lint, type Linter } from "harper.js";
+import { binaryInlined } from "harper.js/binaryInlined";
 import type { Diagnostic, DiagnoseRequest, DiagnosticProvider, Fix, Severity } from "./types";
 
 /**
@@ -56,6 +57,19 @@ function dialectFor(language: string | undefined): Dialect | undefined {
   if (!language) return undefined;
   const region = language.toUpperCase().split(/[-_]/)[1];
   return region ? DIALECTS[region] : undefined;
+}
+
+/**
+ * The provider the app ships, built the one way it is meant to be built.
+ *
+ * The `LocalLinter` construction was written out three times — the worker, the tests, and
+ * now the bench — and each copy independently decides whether to inline the binary. A copy
+ * that fetched instead would pass its own tests and break local-first in production, so
+ * there is one constructor and everything calls it.
+ */
+export function createHarperProvider(): HarperProvider {
+  return new HarperProvider((dialect) =>
+    new LocalLinter(dialect === undefined ? { binary: binaryInlined } : { binary: binaryInlined, dialect }));
 }
 
 export class HarperProvider implements DiagnosticProvider {

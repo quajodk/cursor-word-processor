@@ -2,7 +2,7 @@ import { aidPlugin, schema } from "@scriv/doc-model";
 import { expandPlugin, handleSurround, killRingPlugin, multiCursorPlugin, textopsKeymap } from "@scriv/textops";
 import { completionPlugin } from "./completion";
 import { inlineEditPlugin } from "./inline-edit";
-import { applyFirstFix, diagnosticsPlugin } from "./diagnostics";
+import { applyFirstFix, diagnosticsPlugin, type DiagnosticsOptions } from "./diagnostics";
 import type { WorkspaceSymbols } from "./workspace-symbols";
 import { baseKeymap, chainCommands, createParagraphNear, exitCode, liftEmptyBlock, newlineInCode, splitBlock } from "prosemirror-commands";
 import { dropCursor } from "prosemirror-dropcursor";
@@ -59,9 +59,16 @@ export interface PluginOptions {
   locale?: string;
   /** Document language for the checker. Omitted in tests, where no worker exists. */
   language?: () => string;
-  onDiagnostics?: (elapsedMs: number, count: number) => void;
-  /** Supplies completions. Omitted in tests and benches, where the popup is not wanted. */
-  symbols?: WorkspaceSymbols;
+  onDiagnostics?: DiagnosticsOptions["onTiming"];
+  /** Quietest severity to underline. See prefs.DiagnosticFloor for why there is a floor. */
+  diagnosticFloor?: DiagnosticsOptions["floor"];
+  /**
+   * Supplies completions. Omitted in tests, where the popup is not wanted.
+   *
+   * Structural rather than the `WorkspaceSymbols` class: the plugin needs only the index,
+   * and the perf harness has an index without a `HostApi` to build the scanner around.
+   */
+  symbols?: Pick<WorkspaceSymbols, "index">;
   currentPath?: () => string | null;
 }
 
@@ -86,7 +93,7 @@ export function editorPlugins(opts: PluginOptions = {}): Plugin[] {
     // Diagnostics only when a language is supplied: bun's test runner has no Worker, and a
     // plugin that constructs one unconditionally would make the doc-model tests need a DOM.
     ...(opts.language
-      ? [diagnosticsPlugin({ language: opts.language, onTiming: opts.onDiagnostics })]
+      ? [diagnosticsPlugin({ language: opts.language, floor: opts.diagnosticFloor, onTiming: opts.onDiagnostics })]
       : []),
     // Completion before the text-op keymap: while the popup is open, Up/Down/Enter belong to
     // the list, not to the document.

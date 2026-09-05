@@ -17,6 +17,7 @@
  */
 
 import type { Plugin } from "prosemirror-state";
+import type { Node as PMNode } from "prosemirror-model";
 import { aidPlugin } from "@scriv/doc-model";
 import { history } from "prosemirror-history";
 import { existsSync } from "node:fs";
@@ -57,16 +58,19 @@ export function baselinePlugins(): PluginSet {
  * be able to make the perf gate silently vanish, but it must not crash it either — it
  * degrades to the floor measurement and says so.
  */
-export async function resolvePlugins(): Promise<PluginSet> {
+export async function resolvePlugins(doc?: PMNode): Promise<PluginSet> {
   const candidate = join(repoRoot(), "apps", "web", "src", "perf-plugins.ts");
   if (!existsSync(candidate)) return baselinePlugins();
   try {
-    const mod = (await import(candidate)) as { scrivPlugins?: () => Plugin[] };
+    const mod = (await import(candidate)) as { scrivPlugins?: (doc?: PMNode) => Plugin[] };
     if (typeof mod.scrivPlugins !== "function") {
       const b = baselinePlugins();
       return { ...b, note: `${candidate} exists but exports no scrivPlugins(). ${b.note}` };
     }
-    const plugins = mod.scrivPlugins();
+    // The document is passed so the app can seed anything whose cost depends on document
+    // size — the completion symbol table above all. A stack wired against an empty index
+    // measures the cheapest possible completion and reports it as the editor's.
+    const plugins = mod.scrivPlugins(doc);
     if (!Array.isArray(plugins) || plugins.length === 0) {
       const b = baselinePlugins();
       return { ...b, note: `${candidate} scrivPlugins() returned nothing usable. ${b.note}` };
@@ -75,6 +79,12 @@ export async function resolvePlugins(): Promise<PluginSet> {
       plugins,
       source: "apps/web",
       names: plugins.map((p, i) => (p.spec.key as { key?: string } | undefined)?.key ?? `plugin[${i}]`),
+      // Named even on the success path. `diagnosticsPlugin` builds a `Worker` in `view()`,
+      // which a headless process has none of, so the app's own stack omits it here. Saying
+      // "source: apps/web" without saying that would overstate the coverage.
+      note:
+        "diagnosticsPlugin is absent: it constructs a Worker in view(), and this process has " +
+        "no view. Its cost is measured separately as diagnostics.refresh.",
     };
   } catch (err) {
     const b = baselinePlugins();

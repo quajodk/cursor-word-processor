@@ -16,3 +16,8 @@ corpus/md/*
 !corpus/md/MANIFEST.json
 corpus/text/*
 !corpus/text/MANIFEST.json
+
+# Written by every `bun run perf`. A benchmark result is an observation of one machine
+# at one moment, not a fact about the repository; tracking it made every perf run dirty the
+# tree and turned a real regression into a merge conflict.
+packages/perf/bench/out/perf.json

@@ -72,6 +72,9 @@
         "prosemirror-tables": "^1.8.5",
         "prosemirror-transform": "^1.10.4",
       },
+      "devDependencies": {
+        "@scriv/md": "workspace:*",
+      },
     },
     "packages/host-api": {
       "name": "@scriv/host-api",
@@ -126,6 +129,9 @@
       "version": "0.1.0",
       "dependencies": {
         "@scriv/doc-model": "workspace:*",
+        "@scriv/intellisense": "workspace:*",
+        "@scriv/lsp": "workspace:*",
+        "@scriv/md": "workspace:*",
         "@scriv/ooxml": "workspace:*",
         "prosemirror-commands": "^1.7.1",
         "prosemirror-history": "^1.4.1",

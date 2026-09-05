@@ -1,5 +1,5 @@
-import { OffsetMap } from "@scriv/doc-model";
-import { DiagnosticsClient, type Diagnostic } from "@scriv/lsp";
+import { OffsetMap, proseText } from "@scriv/doc-model";
+import { DiagnosticsClient, type Diagnostic, type Severity } from "@scriv/lsp";
 import { Plugin, PluginKey, type EditorState } from "prosemirror-state";
 import { Decoration, DecorationSet, type EditorView } from "prosemirror-view";
 
@@ -14,14 +14,32 @@ import { Decoration, DecorationSet, type EditorView } from "prosemirror-view";
 export const diagnosticsKey = new PluginKey<DiagnosticsState>("scriv-diagnostics");
 
 export interface DiagnosticsState {
-  /** Positions are document positions, already mapped from the checker's text offsets. */
+  /**
+   * Positions are document positions, already mapped from the checker's text offsets.
+   *
+   * EVERY diagnostic is here, including the ones below the severity floor and therefore not
+   * underlined. Filtering at this level would mean the quick-fix key could not reach a hint
+   * the writer deliberately put the caret on, and a future panel would have nothing to list.
+   * The floor decides what is DRAWN, not what is known.
+   */
   items: { from: number; to: number; diagnostic: Diagnostic }[];
   decorations: DecorationSet;
   /** Round-trip time of the last check, for the status bar. */
   elapsedMs: number;
+  /** Drawn in the text: at or above the severity floor. */
+  shown: number;
+  /** Known but not drawn. Reported, so quiet is never indistinguishable from clean. */
+  muted: number;
+  /** True while the document is still being scanned for the first time. */
+  scanning: boolean;
 }
 
-const EMPTY: DiagnosticsState = { items: [], decorations: DecorationSet.empty, elapsedMs: 0 };
+const EMPTY: DiagnosticsState = {
+  items: [], decorations: DecorationSet.empty, elapsedMs: 0, shown: 0, muted: 0, scanning: false,
+};
+
+/** Severity order, quietest first. A diagnostic is drawn when its rank is at or above the floor. */
+const RANK: Record<Severity, number> = { hint: 0, info: 1, warning: 2, error: 3 };
 
 const CLASS: Record<string, string> = {
   error: "scriv-diag scriv-diag-error",
@@ -30,30 +48,41 @@ const CLASS: Record<string, string> = {
   hint: "scriv-diag scriv-diag-hint",
 };
 
-function build(state: EditorState, diagnostics: Diagnostic[]): DiagnosticsState {
+function build(state: EditorState, diagnostics: Diagnostic[], floor: Severity): DiagnosticsState {
   const from = 0;
   const to = state.doc.content.size;
   const map = new OffsetMap(state.doc, from, to);
   const items: DiagnosticsState["items"] = [];
   const decos: Decoration[] = [];
+  const min = RANK[floor];
+  let muted = 0;
 
   for (const d of diagnostics) {
     const a = map.pos(d.from);
     const b = map.pos(d.to);
     if (b <= a) continue;
     items.push({ from: a, to: b, diagnostic: d });
+    if ((RANK[d.severity] ?? 1) < min) { muted++; continue; }
     decos.push(Decoration.inline(a, b, {
       class: CLASS[d.severity] ?? CLASS.info!,
       title: `${d.message} (${d.source}: ${d.code})`,
     }));
   }
-  return { items, decorations: DecorationSet.create(state.doc, decos), elapsedMs: 0 };
+  return {
+    items, decorations: DecorationSet.create(state.doc, decos), elapsedMs: 0,
+    shown: decos.length, muted, scanning: false,
+  };
 }
 
 export interface DiagnosticsOptions {
   /** Document language. Harper declines anything that is not English. */
   language: () => string;
-  onTiming?: (elapsedMs: number, count: number) => void;
+  /**
+   * Quietest severity to underline. Read on every result rather than captured once, so
+   * changing it takes effect on the next refresh without rebuilding the editor.
+   */
+  floor?: () => Severity;
+  onTiming?: (info: { elapsedMs: number; shown: number; muted: number; scanning: boolean }) => void;
 }
 
 export function diagnosticsPlugin(opts: DiagnosticsOptions): Plugin<DiagnosticsState> {
@@ -64,9 +93,11 @@ export function diagnosticsPlugin(opts: DiagnosticsOptions): Plugin<DiagnosticsS
     state: {
       init: () => EMPTY,
       apply(tr, value, _old, newState) {
-        const incoming = tr.getMeta(diagnosticsKey) as { diagnostics: Diagnostic[]; elapsedMs: number } | undefined;
+        const incoming = tr.getMeta(diagnosticsKey) as
+          { diagnostics: Diagnostic[]; elapsedMs: number; scanning: boolean } | undefined;
         if (incoming) {
-          return { ...build(newState, incoming.diagnostics), elapsedMs: incoming.elapsedMs };
+          const floor = opts.floor?.() ?? "warning";
+          return { ...build(newState, incoming.diagnostics, floor), elapsedMs: incoming.elapsedMs, scanning: incoming.scanning };
         }
         if (!tr.docChanged) return value;
         // Map the existing decorations forward so squiggles track the text while the next
@@ -81,11 +112,22 @@ export function diagnosticsPlugin(opts: DiagnosticsOptions): Plugin<DiagnosticsS
       const worker = new Worker(new URL("./diagnostics.worker.ts", import.meta.url), { type: "module" });
       client = new DiagnosticsClient(worker, {
         onDiagnostics: (diagnostics, meta) => {
-          opts.onTiming?.(meta.elapsedMs, diagnostics.length);
-          view.dispatch(view.state.tr.setMeta(diagnosticsKey, { diagnostics, elapsedMs: meta.elapsedMs }));
+          const tr = view.state.tr.setMeta(diagnosticsKey, {
+            diagnostics, elapsedMs: meta.elapsedMs, scanning: meta.partial,
+          });
+          view.dispatch(tr);
+          const st = diagnosticsKey.getState(view.state);
+          opts.onTiming?.({
+            elapsedMs: meta.elapsedMs,
+            shown: st?.shown ?? 0,
+            muted: st?.muted ?? 0,
+            scanning: meta.partial,
+          });
         },
       });
-      const send = (v: EditorView) => client?.request(v.state.doc.textBetween(0, v.state.doc.content.size, "\n"), opts.language());
+      // `proseText`, not `textBetween`: code is masked to spaces so the checker never sees
+      // it. Same length, so the offsets it returns still map through OffsetMap unchanged.
+      const send = (v: EditorView) => client?.request(proseText(v.state.doc), opts.language());
       send(view);
       return {
         update(v, prev) {

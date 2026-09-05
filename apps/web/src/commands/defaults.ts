@@ -212,6 +212,24 @@ export function registerDefaultCommands(controller: EditorController): () => voi
       run: (ctx) => ctx.ui.cycleTheme(),
     },
     {
+      id: "view.diagnosticFloor",
+      title: "Show style hints as well as errors",
+      category: "View",
+      keybinding: "Mod-Alt-i",
+      run: (ctx) => {
+        const showingAll = getPrefs().diagnosticFloor === "hint";
+        setPrefs({ diagnosticFloor: showingAll ? "warning" : "hint" });
+        ctx.ui.notify(
+          showingAll
+            ? "Style hints hidden. Spelling and grammar still marked."
+            : "Style hints shown — readability, word choice, regionalisms.",
+        );
+        // The floor is read when a result is built, so the change lands on the next refresh.
+        // Nudging the editor makes that refresh happen now rather than at the next keystroke.
+        ctx.view?.dispatch(ctx.view.state.tr);
+      },
+    },
+    {
       id: "view.paragraphStyle",
       title: "Toggle paragraph style (indented / spaced)",
       category: "View",
