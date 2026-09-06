@@ -90,6 +90,7 @@ export function registerDefaultCommands(controller: EditorController): () => voi
     // ---------------------------------------------------------------- file
     {
       id: "file.quickOpen",
+      whenTyping: true,
       title: "Open file…",
       category: "File",
       keybinding: "Mod-p",
@@ -97,6 +98,7 @@ export function registerDefaultCommands(controller: EditorController): () => voi
     },
     {
       id: "file.save",
+      whenTyping: true,
       title: "Save",
       category: "File",
       keybinding: "Mod-s",
@@ -170,6 +172,7 @@ export function registerDefaultCommands(controller: EditorController): () => voi
     // ---------------------------------------------------------------- view
     {
       id: "view.commandPalette",
+      whenTyping: true,
       title: "Show all commands",
       category: "View",
       keybinding: ["Mod-Shift-p", "F1"],
@@ -177,6 +180,7 @@ export function registerDefaultCommands(controller: EditorController): () => voi
     },
     {
       id: "view.toggleSidebar",
+      whenTyping: true,
       title: "Toggle sidebar",
       category: "View",
       keybinding: "Mod-\\",
@@ -210,6 +214,19 @@ export function registerDefaultCommands(controller: EditorController): () => voi
       // Cmd-Alt-D toggles the Dock on macOS and never reaches the page.
       keybinding: "Mod-Alt-t",
       run: (ctx) => ctx.ui.cycleTheme(),
+    },
+    {
+      id: "view.comments",
+      title: "Show comments",
+      category: "View",
+      // NOT Mod-Shift-c: that is "Clear formatting", registered later in this same file, and
+      // later registrations win — so this would have been a binding that silently did
+      // something else. Mod-Alt-c is taken too.
+      keybinding: "Mod-Shift-m",
+      run: (ctx) => {
+        setPrefs({ sidebar: true, pane: "comments" });
+        ctx.ui.focusComments();
+      },
     },
     {
       id: "view.diagnosticFloor",

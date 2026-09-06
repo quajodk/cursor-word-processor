@@ -52,6 +52,15 @@ export interface GitApi {
   log(root: string, path: string, limit?: number): Promise<
     { commit: string; author: string; timestamp: number; summary: string }[]
   >;
+  /**
+   * `user.name` as git resolves it here, or "" when it is unset or this is not a repo.
+   *
+   * The one place the app learns who the writer is. Nothing else identifies them: there is
+   * no account, nothing phones home, and a comment reply has to be signed by somebody a Word
+   * reader will recognise. Empty rather than a guess — signing a colleague's document
+   * "Anonymous" is worse than signing it with the tool's name.
+   */
+  authorName(root: string): Promise<string>;
 }
 
 export interface SearchHit {

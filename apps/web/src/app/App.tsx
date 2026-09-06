@@ -8,6 +8,7 @@ import { InlineEditBar } from "./InlineEditBar";
 import { DiffPane } from "./DiffPane";
 import { FileTree, type TreeHandle } from "./FileTree";
 import { Palette, type PaletteMode } from "./Palette";
+import { CommentsPane } from "./CommentsPane";
 import { getPrefs, setPrefs, subscribePrefs, watchSystemTheme } from "./prefs";
 import { SearchPane } from "./SearchPane";
 import { setStatus } from "./status";
@@ -34,11 +35,42 @@ export function App() {
   const [palette, setPalette] = useState<PaletteMode | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [showDiff, setShowDiff] = useState(false);
+  /**
+   * Bumped whenever the open document changes identity or content.
+   *
+   * The comments panel reads threads out of the controller's `meta`, which is mutated in
+   * place rather than replaced — a reply appends to an array — so React has nothing to
+   * compare. This is the signal that says "look again".
+   */
+  const [docRevision, setDocRevision] = useState(0);
 
   const controller = useMemo(() => new EditorController(host), []);
   const treeRef = useRef<TreeHandle>(null);
   const rootRef = useRef("");
   rootRef.current = root;
+
+  /**
+   * Who a reply is from.
+   *
+   * There is no account system and nothing here phones home, so the name comes from the
+   * workspace's own git config via the host, falling back to a plain label. Writing
+   * "Anonymous" into a colleague's Word document would be worse than writing nothing
+   * identifying at all, so the fallback says what it is.
+   */
+  const [commentAuthor, setCommentAuthor] = useState({ name: "scriv", initials: "S" });
+  useEffect(() => {
+    if (!root) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const name = (await host.git.authorName(root)).trim();
+        if (cancelled || name.length === 0) return;
+        const initials = name.split(/\s+/).map((w) => w[0]!).join("").slice(0, 3).toUpperCase();
+        setCommentAuthor({ name, initials });
+      } catch { /* not a git workspace, or no user.name: the fallback stands */ }
+    })();
+    return () => { cancelled = true; };
+  }, [root]);
 
   const notify = useCallback((message: string, tone: "info" | "error" = "info") => {
     const id = Date.now() + Math.random();
@@ -108,6 +140,7 @@ export function App() {
     () =>
       controller.subscribe((ev) => {
         if (ev.type === "opened") setOpenPath(ev.path);
+        setDocRevision((n) => n + 1);
       }),
     [controller],
   );
@@ -150,6 +183,12 @@ export function App() {
       },
 
       focusEditor: () => controller.focus(),
+      focusComments: () => {
+        setPrefs({ sidebar: true, pane: "comments" });
+        // After the pane has actually rendered: the tab switch is a state change, and
+        // focusing a list that does not exist yet silently does nothing.
+        requestAnimationFrame(() => document.querySelector<HTMLElement>(".comments-list")?.focus());
+      },
       focusTree: () => {
         setPrefs({ sidebar: true, pane: "files" });
         requestAnimationFrame(() => treeRef.current?.focus());
@@ -252,6 +291,15 @@ export function App() {
           >
             Search
           </button>
+          <button
+            type="button"
+            className="sidebar-tab"
+            role="tab"
+            aria-selected={prefs.pane === "comments"}
+            onClick={() => setPrefs({ pane: "comments" })}
+          >
+            Comments
+          </button>
         </div>
 
         {prefs.pane === "files" ? (
@@ -261,6 +309,8 @@ export function App() {
             onOpen={(path) => void ui.openFile(path)}
             handleRef={treeRef}
           />
+        ) : prefs.pane === "comments" ? (
+          <CommentsPane controller={controller} revision={docRevision} author={commentAuthor} />
         ) : (
           <SearchPane
             root={root}

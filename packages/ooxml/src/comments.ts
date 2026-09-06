@@ -123,6 +123,16 @@ export interface NewReply {
   initials: string;
   /** ISO-8601. Word writes seconds-resolution UTC with a trailing Z. */
   date: string;
+  /**
+   * The `w14:paraId` to give the reply's body paragraph.
+   *
+   * Supplied by the caller so that re-exporting the same pending reply produces the same
+   * bytes. Every save of an open .docx re-applies the whole pending list to the pristine
+   * origin — the sidecar's byte offsets point into that origin, so it cannot be swapped for
+   * the just-written package — and a paraId minted at export time would make each save
+   * differ from the last for no reason. Generated here when omitted.
+   */
+  paraId?: string;
 }
 
 export interface CommentWriteResult {
@@ -181,7 +191,7 @@ export function applyCommentEdits(
       if (!rootParaId) { problems.push(`comment ${reply.parentId} has no w14:paraId, so a reply cannot be threaded to it`); continue; }
 
       const id = String(nextId++);
-      const paraId = randomHex8();
+      const paraId = reply.paraId ?? randomHex8();
       commentsXml = insertBefore(commentsXml, `</${prefix}comments>`, commentElement(prefix, id, paraId, reply));
       newEx.push(`<w15:commentEx w15:paraId="${paraId}" w15:paraIdParent="${rootParaId}" w15:done="0"/>`);
       newIds.push(`<w16cid:commentId w16cid:paraId="${paraId}" w16cid:durableId="${randomHex8()}"/>`);

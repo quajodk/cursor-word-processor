@@ -74,6 +74,12 @@ export class GitService {
     return res.code === 0 ? res.stdout : null;
   }
 
+  /** `git config user.name`, or "" when unset. Never throws: an unconfigured repo is normal. */
+  async authorName(root: string): Promise<string> {
+    const res = await this.git(root, ["config", "--get", "user.name"]);
+    return res.code === 0 ? res.stdout.trim() : "";
+  }
+
   async blame(root: string, path: string): Promise<BlameLine[]> {
     const abs = this.ws.resolve(path);
     const res = await this.git(root, ["blame", "--line-porcelain", "--", abs]);

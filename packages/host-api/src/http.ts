@@ -119,6 +119,7 @@ export function createHttpHost(baseUrl: string, opts: HttpHostOptions = {}): Hos
       show: (root, path, rev) => rpc<string | null>("git.show", [root, path, rev]),
       blame: (root, path) => rpc<BlameLine[]>("git.blame", [root, path]),
       log: (root, path, limit) => rpc("git.log", [root, path, limit]),
+      authorName: (root) => rpc<string>("git.authorName", [root]),
     },
 
     search: {

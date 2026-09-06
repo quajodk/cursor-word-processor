@@ -142,6 +142,22 @@ export class EditorController {
     this.view?.focus();
   }
 
+  /**
+   * Mark the document unsaved because of something that is not a document transaction.
+   *
+   * A comment reply changes what will be written without changing a single character of
+   * prose — it lives in the codec's `meta`, not in the ProseMirror doc, precisely so that it
+   * is not undoable and cannot leak into the Markdown. The dirty flag is normally set from
+   * `dispatch`, which never sees such a change, so without this the reply would be silently
+   * dropped by the "no unsaved changes" check on the next open.
+   */
+  markDirty(): void {
+    if (this.dirty) return;
+    this.dirty = true;
+    setStatus({ dirty: true }, true);
+    this.emit({ type: "dirty", dirty: true });
+  }
+
   // ---------------------------------------------------------------- the hot path
 
   private dispatch(tr: Transaction): void {

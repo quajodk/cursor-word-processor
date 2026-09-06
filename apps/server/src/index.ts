@@ -57,6 +57,7 @@ const methods: Record<string, Handler> = {
   // the stricter check. Every optional argument across this table has the same hazard.
   "git.show": async ([root, path, rev]) => await git.show(str(root), str(path), rev == null ? undefined : str(rev)),
   "git.blame": async ([root, path]) => await git.blame(str(root), str(path)),
+  "git.authorName": async ([root]) => await git.authorName(str(root)),
   "git.log": async ([root, path, limit]) => await git.log(str(root), str(path), limit == null ? undefined : Number(limit)),
 
   "search.text": async ([root, query, opts]) => await search.text(str(root), str(query), opts as never),

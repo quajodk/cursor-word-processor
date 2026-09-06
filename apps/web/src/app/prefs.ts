@@ -9,7 +9,7 @@
 export type Theme = "light" | "dark" | "system";
 export type ParagraphStyle = "book" | "spaced";
 export type Alignment = "ragged" | "justify";
-export type SidebarPane = "files" | "search";
+export type SidebarPane = "files" | "search" | "comments";
 /**
  * The quietest diagnostic drawn in the text.
  *

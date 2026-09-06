@@ -1,4 +1,4 @@
-import { exportDocx, importDocx, type DocxOrigin, type FidelitySidecar, type LedgerEntry } from "@scriv/ooxml";
+import { exportDocx, importDocx, type CommentEdits, type DocxOrigin, type FidelitySidecar, type LedgerEntry } from "@scriv/ooxml";
 import type { Node as PMNode } from "prosemirror-model";
 import { CodecError, type CodecResult, type DocumentCodec } from "./codec";
 
@@ -20,6 +20,15 @@ export interface DocxMeta {
   origin: DocxOrigin;
   /** What import could not model. Surfaced in the UI; never silently discarded. */
   ledger: LedgerEntry[];
+  /**
+   * Comment replies and resolutions made in this session, not yet in `origin`.
+   *
+   * Held here rather than applied to `origin` because the sidecar's byte offsets point into
+   * the original package: replacing it with the just-written one would invalidate every
+   * offset in the document. So the list accumulates and every save re-applies all of it to
+   * the pristine origin, which is idempotent — see `editor/comments.ts`.
+   */
+  commentEdits?: CommentEdits;
 }
 
 function isDocxMeta(value: unknown): value is DocxMeta {
@@ -42,7 +51,7 @@ function serializeBinary(doc: PMNode, meta: unknown): Uint8Array {
       "Markdown instead, or reopen the Word file.",
     );
   }
-  return exportDocx(doc, meta.sidecar, meta.origin).bytes;
+  return exportDocx(doc, meta.sidecar, meta.origin, { commentEdits: meta.commentEdits ?? null }).bytes;
 }
 
 /** Text entry points are never called for a binary codec, and say so rather than guessing. */

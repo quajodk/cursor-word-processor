@@ -281,6 +281,194 @@ button {
   outline-offset: -1px;
 }
 
+/* ------------------------------------------------------------------ comments */
+
+/*
+ * Threads in a panel, not margin bubbles.
+ *
+ * Bubbles are what Word and Docs do and they fail the moment two comments land on the same
+ * line or the window narrows. A reviewer's pass is a LIST of things to answer, so it is laid
+ * out as one — and it stays legible at sidebar width, which floating bubbles never do.
+ */
+
+.comments {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.comments-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  color: var(--panel-fg-dim);
+  font-size: 11px;
+  border-bottom: 1px solid var(--panel-rule);
+}
+
+.comments-toggle {
+  padding: 1px 6px;
+  color: inherit;
+  font: inherit;
+  background: none;
+  border: 1px solid var(--panel-rule);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.comments-note {
+  margin: 0;
+  padding: 7px 10px;
+  color: var(--panel-fg-dim);
+  font-size: 11px;
+  line-height: 1.45;
+  border-bottom: 1px solid var(--panel-rule);
+}
+
+.comments-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.comments-list:focus {
+  outline: none;
+}
+
+.comments-list:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.pane-empty {
+  padding: 14px 10px;
+  color: var(--panel-fg-dim);
+  font-size: 12px;
+}
+
+.comment-thread {
+  padding: 9px 10px 10px;
+  border-bottom: 1px solid var(--panel-rule);
+  border-left: 2px solid transparent;
+  cursor: default;
+}
+
+.comment-thread[data-active="true"] {
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+  border-left-color: var(--accent);
+}
+
+/* Resolved threads stay readable rather than being greyed to the edge of legibility: the
+   whole reason to show them is to check what was decided. */
+.comment-thread[data-resolved="true"] .comment-body {
+  color: var(--panel-fg-dim);
+}
+
+.comment-quote {
+  margin: 0 0 7px;
+  padding-left: 7px;
+  color: var(--panel-fg-dim);
+  font-size: 11px;
+  line-height: 1.5;
+  border-left: 2px solid var(--panel-rule);
+}
+
+.comment-quote.is-orphan {
+  font-style: italic;
+  border-left-color: var(--danger);
+}
+
+.comment-entry + .comment-entry {
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px dotted var(--panel-rule);
+}
+
+/* A reply that is not on disk yet is marked, not hidden. */
+.comment-entry[data-pending="true"] {
+  border-left: 2px solid var(--accent);
+  margin-left: -4px;
+  padding-left: 4px;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--panel-fg-dim);
+  font-size: 10px;
+}
+
+.comment-author {
+  color: var(--panel-fg);
+  font-weight: 600;
+}
+
+.comment-pending {
+  padding: 0 4px;
+  color: var(--accent);
+  border: 1px solid currentcolor;
+  border-radius: 6px;
+  font-size: 9px;
+}
+
+.comment-body {
+  margin: 3px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.comment-actions button {
+  padding: 2px 8px;
+  color: var(--panel-fg);
+  font: inherit;
+  font-size: 11px;
+  background: none;
+  border: 1px solid var(--panel-rule);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.comment-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.comment-actions button:not(:disabled):hover {
+  border-color: var(--accent);
+}
+
+.comment-input {
+  display: block;
+  width: 100%;
+  min-height: 56px;
+  margin-top: 8px;
+  padding: 5px 7px;
+  color: var(--panel-fg);
+  font: inherit;
+  font-size: 12px;
+  background: var(--app-bg);
+  border: 1px solid var(--panel-rule);
+  border-radius: var(--radius);
+  resize: vertical;
+}
+
+.comment-input:focus {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -1px;
+}
+
 /* ------------------------------------------------------------------ main */
 
 .main {

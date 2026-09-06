@@ -32,6 +32,8 @@ export interface CommandUi {
   openQuickOpen(): void;
   focusEditor(): void;
   focusTree(): void;
+  /** Put keyboard focus in the comments list, so threads are navigable without the mouse. */
+  focusComments(): void;
   toggleSidebar(): void;
   setTheme(theme: "light" | "dark" | "system"): void;
   cycleTheme(): void;
@@ -60,6 +62,19 @@ export interface Command {
   keybinding?: string | string[];
   /** Hidden from the palette when false. The binding is disabled too. */
   when?: (ctx: CommandContext) => boolean;
+  /**
+   * Fire even while the caret is in one of the app's own text fields.
+   *
+   * Off by default, and the default is the point. The dispatcher below runs in the CAPTURE
+   * phase on `window`, so it sees every key before the field does — which meant ⌘⏎ in the
+   * comment reply box ran "Exit code block" instead of posting the reply, and every ⌘B in
+   * the search field toggled bold in the document behind it. A field's own handler is a
+   * bubble-phase listener and never got a chance.
+   *
+   * Only commands that genuinely belong to the whole window opt in: the palette, save,
+   * quick-open. An editing command has no business firing while someone types a filename.
+   */
+  whenTyping?: boolean;
   run: (ctx: CommandContext) => void | Promise<void>;
 }
 
@@ -137,6 +152,20 @@ function toArray(v: string | string[] | undefined): string[] {
 }
 
 /**
+ * True when the event is being typed into one of the app's own fields.
+ *
+ * The ProseMirror editor is deliberately NOT one of them: editing commands are supposed to
+ * fire there, that is the whole point of a single dispatcher. Everything else — the palette
+ * input, the search field, a comment reply — belongs to its own component while it has focus.
+ */
+function inTextField(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.closest(".ProseMirror")) return false;
+  const tag = target.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target.isContentEditable;
+}
+
+/**
  * The single global key handler.
  *
  * Every binding in the app resolves here, including the ones that fire while the caret is in
@@ -152,10 +181,12 @@ export function installKeyboard(target: Window = window): () => void {
     const ctx = currentContext();
     if (!ctx) return;
 
+    const typing = inTextField(event.target);
     const commands = [...registry.values()];
     for (let i = commands.length - 1; i >= 0; i--) {
       const command = commands[i]!;
       if (command.bindings.length === 0) continue;
+      if (typing && !command.whenTyping) continue;
       if (command.when && !command.when(ctx)) continue;
       if (!command.bindings.some((b) => matchesEvent(b.parsed, event))) continue;
       event.preventDefault();
