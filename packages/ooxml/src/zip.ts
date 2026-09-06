@@ -324,7 +324,14 @@ function reassemble(
 
   const centralStart = at;
   for (const e of layout.entries) {
-    const rec = buf.slice(e.centralStart, e.centralEnd);
+    // `new Uint8Array(view)` and NOT `buf.slice(...)`. On a Node Buffer — which is what
+    // `readFileSync` and most host reads hand back — `.slice()` is the legacy alias for
+    // `subarray` and returns a VIEW. The `putU32` below then wrote the patched local-header
+    // offset straight back into the CALLER'S file bytes: exporting a document destroyed the
+    // in-memory original it had just been spliced from, so a second save from the same open
+    // document produced a package whose central directory pointed at nothing. The output was
+    // always correct; the input was quietly eaten.
+    const rec = new Uint8Array(buf.subarray(e.centralStart, e.centralEnd));
     putU32(rec, 42, newOffset.get(e.centralStart)!);
     const s = patched.get(e.centralStart);
     if (s) {
@@ -342,7 +349,8 @@ function reassemble(
   // package, and we refuse zip64 above) is carried through unchanged.
   push(buf.subarray(layout.centralEnd, layout.eocdStart));
 
-  const eocd = buf.slice(layout.eocdStart, layout.eocdStart + 22 + layout.eocdCommentLength);
+  // Copied for the same reason as the central records above: this is patched in place.
+  const eocd = new Uint8Array(buf.subarray(layout.eocdStart, layout.eocdStart + 22 + layout.eocdCommentLength));
   putU32(eocd, 12, centralSize);
   putU32(eocd, 16, centralStart);
   push(eocd);

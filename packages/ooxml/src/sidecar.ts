@@ -272,6 +272,14 @@ export interface CommentThread {
   /** From `commentsExtended.xml`, when present. */
   resolved: boolean;
   parentAnchorId: string | null;
+  /**
+   * `w14:paraId` of the last paragraph of the body — the key that commentsExtended.xml and
+   * commentsIds.xml join on. Not `w:id`, which is only meaningful inside comments.xml and
+   * document.xml. Null when the producer wrote no paraId, in which case the thread cannot
+   * carry a reply or a resolution and the export says so rather than guessing one.
+   */
+  paraId: string | null;
+  durableId: string | null;
   /** Aid the comment currently attaches to; updated by re-anchoring. */
   aid: string | null;
   /** Character offsets of the marked range within that block's text. */

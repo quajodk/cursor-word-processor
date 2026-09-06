@@ -28,6 +28,7 @@ import {
 } from "./xmlindex";
 import { sha256Hex, shortHash } from "./hash";
 import { Ledger, type LedgerEntry } from "./ledger";
+import { readCommentThreading } from "./comments";
 import { anchorOf, prepareBlocks, type Anchor, type BlockSignalInput } from "./anchor";
 import {
   SIDECAR_KIND, SIDECAR_VERSION, emptyPropStore, PROP_KINDS,
@@ -324,6 +325,9 @@ export function importDocx(bytes: Uint8Array, options: ImportOptions = {}): Impo
   const rels = parseRels(entries[relsPart]);
   const numbering = parseNumbering(entries["word/numbering.xml"]);
   const commentBodies = parseComments(entries["word/comments.xml"]);
+  // Thread structure lives in commentsExtended.xml, not in comments.xml. Reading it is what
+  // makes a reply a reply rather than a second unrelated thread on the same sentence.
+  const commentThreading = readCommentThreading(entries);
 
   const ix = XmlIndex.parse(documentXml);
   if (ix.stats.encoding !== "utf-8") {
@@ -945,12 +949,32 @@ export function importDocx(bytes: Uint8Array, options: ImportOptions = {}): Impo
     if (!aid) {
       ledger.add({ code: "comment-orphan", severity: "degraded", stage: "import", detail: `comment ${id} has no range in the document body; it will not be shown` });
     }
+    const threading = commentThreading.get(id);
     comments[anchorId] = {
       anchorId, commentIds: [id],
       author: body_.author, initials: body_.initials, date: body_.date,
       text: body_.text, xml: body_.xml,
-      resolved: false, parentAnchorId: null, aid, span: null,
+      resolved: threading?.resolved ?? false,
+      // The parent pointer is a paraId; the sidecar speaks anchorIds. Resolved in a second
+      // pass below, once every comment's paraId is known.
+      parentAnchorId: null,
+      paraId: threading?.paraId ?? null,
+      durableId: threading?.durableId ?? null,
+      aid, span: null,
     };
+  }
+
+  // paraId -> anchorId, so `w15:paraIdParent` can become something the rest of the app can use.
+  {
+    const byParaId = new Map<string, string>();
+    for (const t of Object.values(comments)) if (t.paraId) byParaId.set(t.paraId, t.anchorId);
+    for (const t of Object.values(comments)) {
+      const parentParaId = commentThreading.get(t.commentIds[0]!)?.paraIdParent;
+      if (!parentParaId) continue;
+      const parent = byParaId.get(parentParaId);
+      if (parent) t.parentAnchorId = parent;
+      else ledger.add({ code: "comment-orphan", severity: "info", stage: "import", detail: `${t.anchorId} replies to paraId ${parentParaId}, which is not a comment in this document; shown as a top-level thread` });
+    }
   }
   for (const anchorId of commentToBlock.keys()) {
     if (!comments[anchorId]) {

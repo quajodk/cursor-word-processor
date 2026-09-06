@@ -40,6 +40,7 @@ import {
   type XmlNode,
 } from "./xmlindex";
 import { Ledger, type LedgerEntry } from "./ledger";
+import { applyCommentEdits, anchorReplies, type CommentEdits } from "./comments";
 import { spliceZip, ZipError } from "./zip";
 import type {
   BlockRecord, ByteRange, FidelitySidecar, PropBlob,
@@ -57,6 +58,14 @@ export interface TrackedChangesOptions {
 }
 
 export interface ExportOptions {
+  /**
+   * Replies to add and threads to resolve, written into the four annotation parts.
+   *
+   * Separate from the document because a comment is metadata about the text, not text: a
+   * reply must not become a ReplaceStep in the ProseMirror document, or it would be undoable,
+   * exportable as prose, and part of the Markdown. See `comments.ts`.
+   */
+  commentEdits?: CommentEdits | null;
   /**
    * When set, deletions become real Word revisions (`w:del` + `w:delText`) instead of being
    * omitted, and synthesized content becomes `w:ins`. Off by default: a plain export of an
@@ -827,6 +836,44 @@ export function exportDocx(
       else ledger.add({ code: "splice-props-dropped", severity: "degraded", stage: "export", part: relsPart, detail: "could not append hyperlink relationships; the links point nowhere" });
     }
   }
+
+  /* -------------------------------------------------- comment replies and resolutions */
+  //
+  // Done here, after document.xml is assembled, because a reply needs the same text range as
+  // its parent and that range only exists once the body has been spliced. A reply whose range
+  // cannot be placed is not written AT ALL — a `w:comment` with no range in the body is what
+  // Word reports as a corrupt file, so half-writing one would be worse than refusing.
+  let finalDocumentXml = documentXml;
+  if (options.commentEdits && (options.commentEdits.replies.length > 0 || options.commentEdits.resolved.size > 0)) {
+    const entryMap: Record<string, Uint8Array> = {};
+    for (const e of origin.entries) entryMap[e.name] = e.bytes;
+
+    const written = applyCommentEdits(entryMap, options.commentEdits);
+    for (const p of written.problems) {
+      ledger.add({ code: "comment-orphan", severity: "degraded", stage: "export", detail: p });
+    }
+
+    const pairs = written.replyIds.map((replyId, i) => ({ parentId: options.commentEdits!.replies[i]!.parentId, replyId }));
+    const anchored = anchorReplies(finalDocumentXml, enc, wp, pairs);
+    for (const p of anchored.problems) {
+      ledger.add({ code: "comment-orphan", severity: "degraded", stage: "export", detail: p });
+    }
+
+    if (anchored.anchored === pairs.length) {
+      finalDocumentXml = anchored.documentXml;
+      for (const [name, bytes] of Object.entries(written.parts)) replacements[name] = bytes;
+      if (pairs.length > 0) {
+        ledger.add({ code: "comment-orphan", severity: "info", stage: "export", count: pairs.length, detail: `${pairs.length} repl${pairs.length === 1 ? "y" : "ies"} written into word/comments.xml with matching ranges in the body` });
+      }
+    } else if (options.commentEdits.resolved.size > 0) {
+      // Resolutions are independent of replies and touch only commentsExtended.xml, so a
+      // reply that could not be anchored must not take the resolutions down with it.
+      const resolveOnly = applyCommentEdits(entryMap, { replies: [], resolved: options.commentEdits.resolved });
+      for (const [name, bytes] of Object.entries(resolveOnly.parts)) replacements[name] = bytes;
+      ledger.add({ code: "comment-orphan", severity: "degraded", stage: "export", detail: `${pairs.length - anchored.anchored} of ${pairs.length} replies could not be anchored and were dropped; resolutions were still recorded` });
+    }
+  }
+  if (finalDocumentXml !== documentXml) replacements[sidecar.origin.documentPart] = finalDocumentXml;
 
   const commentsPart = origin.entries.find((e) => e.name === "word/comments.xml");
   if (commentsPart && Object.keys(sidecar.comments).length > 0) {
