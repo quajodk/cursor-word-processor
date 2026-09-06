@@ -36,7 +36,14 @@ something here, change this file first and say so.
 
 **Hard rule:** nothing above the seam may import `node:fs`, `node:child_process`, or call
 `fetch` at an absolute URL. If a package needs the disk, it takes a `HostApi` as a parameter.
-The audit agent enforces this with a lint rule, not with good intentions.
+`packages/host-api/test/seam.test.ts` enforces this, not good intentions. It runs in
+`bun test` with everything else, so a violation fails the build the same way a broken round
+trip does.
+
+This sentence used to claim a lint rule enforced the seam. There was no lint rule, and there
+is no linter in the repo — the rule read as enforced, so nobody checked it, which is worse
+than admitting it was a convention. That is the failure mode this document is most exposed
+to: it is binding, so anything in it that is not true is a defect.
 
 ## 2. Packages
 

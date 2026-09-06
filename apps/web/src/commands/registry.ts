@@ -34,6 +34,8 @@ export interface CommandUi {
   focusTree(): void;
   /** Put keyboard focus in the comments list, so threads are navigable without the mouse. */
   focusComments(): void;
+  /** Show or hide the fidelity panel: what this document loses, and what a save would write. */
+  toggleFidelity(): void;
   toggleSidebar(): void;
   setTheme(theme: "light" | "dark" | "system"): void;
   cycleTheme(): void;

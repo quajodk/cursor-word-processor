@@ -229,6 +229,13 @@ export function registerDefaultCommands(controller: EditorController): () => voi
       },
     },
     {
+      id: "view.fidelity",
+      title: "Fidelity: what this document loses",
+      category: "View",
+      keybinding: "Mod-Alt-f",
+      run: (ctx) => ctx.ui.toggleFidelity(),
+    },
+    {
       id: "view.diagnosticFloor",
       title: "Show style hints as well as errors",
       category: "View",

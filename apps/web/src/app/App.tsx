@@ -9,6 +9,7 @@ import { DiffPane } from "./DiffPane";
 import { FileTree, type TreeHandle } from "./FileTree";
 import { Palette, type PaletteMode } from "./Palette";
 import { CommentsPane } from "./CommentsPane";
+import { FidelityPane } from "./FidelityPane";
 import { getPrefs, setPrefs, subscribePrefs, watchSystemTheme } from "./prefs";
 import { SearchPane } from "./SearchPane";
 import { setStatus } from "./status";
@@ -35,6 +36,7 @@ export function App() {
   const [palette, setPalette] = useState<PaletteMode | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [showDiff, setShowDiff] = useState(false);
+  const [showFidelity, setShowFidelity] = useState(false);
   /**
    * Bumped whenever the open document changes identity or content.
    *
@@ -183,6 +185,7 @@ export function App() {
       },
 
       focusEditor: () => controller.focus(),
+      toggleFidelity: () => setShowFidelity((v) => !v),
       focusComments: () => {
         setPrefs({ sidebar: true, pane: "comments" });
         // After the pane has actually rendered: the tab switch is a state change, and
@@ -330,6 +333,9 @@ export function App() {
           paragraph={prefs.paragraph}
           alignment={prefs.alignment}
         />
+        {showFidelity && (
+          <FidelityPane controller={controller} revision={docRevision} onClose={() => setShowFidelity(false)} />
+        )}
         {showDiff && (
           <DiffPane
             host={host}

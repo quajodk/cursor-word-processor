@@ -794,6 +794,191 @@ button {
   color: var(--ink-faint);
 }
 
+/* ---------------------------------------------------------------- fidelity pane */
+
+/*
+ * Docked below the document, like the changes pane, and NOT a modal.
+ *
+ * The question it answers — "what will a Word user see missing?" — is one you ask WHILE
+ * looking at the paragraph you are about to send. A dialog that covers the document makes you
+ * answer it from memory.
+ */
+.fidelity {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  max-height: 45vh;
+  padding: 12px 14px 16px;
+  border-top: 1px solid var(--rule);
+  background: var(--surface);
+  font-family: var(--ui-font);
+  font-size: 13px;
+  overflow: hidden;
+}
+
+.main > .fidelity {
+  flex: 0 0 auto;
+}
+
+.fidelity-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fidelity-head h2 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.fidelity-head button {
+  padding: 2px 9px;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 12px;
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.fidelity-body {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.fidelity-lede {
+  margin: 0 0 10px;
+  max-width: 78ch;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.fidelity-body h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.fidelity-body h4 {
+  margin: 10px 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.fidelity-badge {
+  padding: 1px 7px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.fidelity-badge.is-clean { color: var(--ok); border: 1px solid currentcolor; }
+.fidelity-badge.is-soft { color: var(--ink-soft); border: 1px solid var(--rule); }
+.fidelity-badge.is-warn { color: var(--danger); border: 1px solid currentcolor; }
+
+.fidelity-run {
+  padding: 2px 9px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.fidelity-run:disabled { opacity: 0.5; cursor: progress; }
+.fidelity-run:not(:disabled):hover { border-color: var(--accent); }
+
+.fidelity-verdict { margin: 6px 0; }
+.fidelity-verdict.is-clean { color: var(--ok); }
+.fidelity-verdict.is-warn { color: var(--danger); }
+
+.fidelity-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px 18px;
+  margin: 8px 0;
+}
+
+.fidelity-stats div { display: flex; flex-direction: column; gap: 1px; }
+.fidelity-stats dt { font-size: 11px; color: var(--ink-soft); }
+.fidelity-stats dd {
+  margin: 0;
+  font-family: var(--mono-font, ui-monospace, monospace);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.fidelity-parts,
+.fidelity-foot {
+  margin: 4px 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.fidelity-diff {
+  margin: 6px 0;
+  padding: 8px 10px;
+  overflow-x: auto;
+  font-family: var(--mono-font, ui-monospace, monospace);
+  font-size: 12px;
+  line-height: 1.5;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+}
+
+.fidelity-group ul { margin: 0; padding-left: 0; list-style: none; }
+
+.fidelity-group li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  padding: 4px 0 4px 9px;
+  border-left: 2px solid var(--rule);
+  line-height: 1.45;
+}
+
+.fidelity-group[data-severity="dropped"] li { border-left-color: var(--danger); }
+.fidelity-group[data-severity="degraded"] li { border-left-color: var(--ink-soft); }
+
+.fidelity-group code {
+  font-family: var(--mono-font, ui-monospace, monospace);
+  font-size: 11.5px;
+  color: var(--ink);
+}
+
+.fidelity-count {
+  font-family: var(--mono-font, ui-monospace, monospace);
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.fidelity-detail {
+  flex: 1 1 24ch;
+  min-width: 0;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
 /* ---------------------------------------------------------------- changes pane */
 .scriv-diff {
   display: flex;
