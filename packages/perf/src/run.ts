@@ -19,13 +19,24 @@ import { benchDocOpen } from "./bench/docopen";
 import { benchDiagnostics } from "./bench/diagnostics";
 import { benchCompletion } from "./bench/completion";
 import { benchDocxImport } from "./bench/docximport";
-import { evaluate, loadBaseline, saveBaseline, fingerprint } from "./gate";
+import { evaluate, loadBaseline, saveBaseline, fingerprint, type BudgetOverrides } from "./gate";
+import { benchKeystrokeToPaint, isUp, type PaintResult } from "./browser/e2e";
+import { startCalibrationServer } from "./browser/server";
 import { fmtMs } from "./stats";
 import type { Stats } from "./stats";
 
 const argv = Bun.argv.slice(2);
 const updateBaseline = argv.includes("--update-baseline");
 const json = argv.includes("--json");
+/**
+ * Keystroke → paint needs a real browser, and it is ON by default.
+ *
+ * §5 budgets it and house rule 4 says the budget fails the build, so making it opt-in would
+ * mean the one row that measures what the writer actually feels is the one row nobody runs.
+ * It degrades to `no-measurement` with a reason when Chromium is absent, rather than being
+ * quietly skipped.
+ */
+const skipBrowser = argv.includes("--no-browser");
 
 const fp = fingerprint();
 if (!json) {
@@ -94,9 +105,76 @@ if (!json) {
   console.log("");
 }
 
+// ---- keystroke -> paint, in a real browser ------------------------------------------
+//
+// SCRIV_PERF_URL points at a running apps/web; without it, the calibration page mounts a
+// real prosemirror-view on the same 40k-word document with the app's own plugin stack. The
+// two are NOT the same measurement and the gate is told which it got: only the app is
+// `exact`, because only the app has the app's CSS and its React chrome around the editor.
+const overrides: BudgetOverrides = {};
+let paint: PaintResult | null = null;
+let paintNote: string | null = null;
+
+if (skipBrowser) {
+  paintNote = "skipped: --no-browser";
+} else {
+  const appUrl = Bun.env.SCRIV_PERF_URL;
+  let calibration: { url: string; stop(): void } | null = null;
+  try {
+    let url = appUrl && (await isUp(appUrl)) ? appUrl : null;
+    let source: "app" | "calibration" = "app";
+    if (!url) {
+      if (appUrl) paintNote = `SCRIV_PERF_URL=${appUrl} is not responding; used the calibration page instead`;
+      calibration = await startCalibrationServer(gen.json);
+      url = calibration.url;
+      source = "calibration";
+    }
+    paint = await benchKeystrokeToPaint({ url, source });
+    measurements["keystroke.to-paint"] = paint.stats;
+    if (source === "calibration") {
+      overrides["keystroke.to-paint"] = {
+        mode: "lower-bound",
+        measures:
+          `${paint.method} in real Chromium, on the calibration page: a real prosemirror-view ` +
+          "over the 40k-word corpus document, running the app's own plugin stack and the " +
+          "app's own stylesheets — so layout cost is the real layout cost.",
+        excludes: [
+          "the app's React chrome around the editor (the sidebar, status bar and panels)",
+          "diagnosticsPlugin, which builds a Worker (measured as diagnostics.refresh)",
+          "OS-level input latency before the browser sees the key",
+          "display scan-out after the frame is swapped",
+        ],
+      };
+    }
+  } catch (err) {
+    // A missing browser is a missing measurement, not a failed build — but it is REPORTED,
+    // because the alternative is a row that silently never runs.
+    const message = err instanceof Error ? err.message : String(err);
+    paintNote = /executable doesn't exist|ENOENT|Executable doesn't exist/i.test(message)
+      ? "Chromium is not installed. Run `bunx playwright install chromium` to measure this row."
+      : message.split("\n")[0]!;
+  } finally {
+    calibration?.stop();
+  }
+}
+
+if (!json) {
+  if (paint) {
+    console.log(`  paint     ${paint.source} · ${paint.method} · ${paint.browser}`);
+    for (const m of paint.methods) console.log(`            ${m.method}: p50 ${m.stats.p50.toFixed(2)} p99 ${m.stats.p99.toFixed(2)} ms (n=${m.stats.n})`);
+    if (paint.longTasks.count > 0) {
+      console.log(`            long tasks while typing: ${paint.longTasks.count}, worst ${paint.longTasks.maxMs.toFixed(0)} ms`);
+    }
+    for (const n of paint.notes) console.log(`            NOTE ${n}`);
+  } else if (paintNote) {
+    console.log(`  paint     not measured — ${paintNote}`);
+  }
+  console.log("");
+}
+
 // ---- evaluate -----------------------------------------------------------------------
 const baseline = await loadBaseline();
-const { checks, failed } = evaluate(measurements, baseline);
+const { checks, failed } = evaluate(measurements, baseline, overrides);
 
 if (!json) {
   for (const c of checks) {
@@ -127,6 +205,12 @@ const payload = {
   keystroke: ks.all,
   docOpen: { total: open.total, fromJson: open.fromJson, stateCreate: open.stateCreate },
   docxImport: docx,
+  paint: paint
+    ? {
+        source: paint.source, method: paint.method, browser: paint.browser,
+        stats: paint.stats, methods: paint.methods, longTasks: paint.longTasks, notes: paint.notes,
+      }
+    : { unavailable: paintNote },
   completion: {
     worst: completion.worst, sigil: completion.sigil, typing: completion.typing,
     symbols: completion.symbols, offered: completion.offered, indexBuildMs: completion.indexBuildMs,

@@ -190,9 +190,18 @@ export const SAMPLING = {
   keystrokeSamples: 15000,
   docOpenWarmup: 3,
   docOpenSamples: 25,
-  /** Browser: real key events are slow to dispatch, so the budget here is wall-clock. */
-  paintWarmup: 30,
-  paintSamples: 240,
+  /**
+   * Browser: real key events are slow to dispatch, so the budget here is wall-clock —
+   * roughly 55 ms per sample, because anything faster and Chromium coalesces the input.
+   *
+   * 900, not 240. At 240 the p99 rested on 3 order statistics, which is under the gate's
+   * `MIN_TAIL_SUPPORT` of 8 — so the row printed a number, reported it as OVER BUDGET, and
+   * then declined to gate on it, every single run. A budget that can never fail is not a
+   * budget. 900 puts ~10 samples behind the p99, which is the point at which the gate will
+   * act on it. The cost is about 50 seconds of the run.
+   */
+  paintWarmup: 60,
+  paintSamples: 900,
 } as const;
 
 export const CORPUS = {

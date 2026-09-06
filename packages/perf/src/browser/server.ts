@@ -8,29 +8,43 @@ import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { repoRoot } from "../paths";
 
 const here = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * The calibration page's entry, which lives in apps/web because it imports the app's own
+ * plugin stack. Bundled by path rather than imported, so packages/perf never takes a
+ * compile-time dependency on the app — the same reason `resolvePlugins` uses a dynamic
+ * import. If this file is missing the bundle fails loudly rather than silently measuring a
+ * page with no editor on it.
+ */
+const ENTRY = join(repoRoot(), "apps", "web", "src", "perf-entry.ts");
+
+/**
+ * The app's real stylesheets, served into the calibration page.
+ *
+ * Layout cost is part of keystroke → paint, so a hand-written approximation of the writing
+ * surface measures a document nobody reads. `app.css` supplies the design tokens
+ * `document.css` is written against; without it every `var(--…)` falls back to nothing and
+ * the page lays out at default font and full width, which is a different measurement again.
+ */
+const APP_STYLES = ["app.css", "document.css"].map((f) =>
+  join(repoRoot(), "apps", "web", "src", "styles", f));
 
 const HTML = `<!doctype html>
 <html><head><meta charset="utf-8"><title>scriv perf calibration</title>
 <style id="pm-css">/* prosemirror-view css injected at runtime */</style>
 <style>
-  /* Layout close to a writing surface: a measured column, real line-height, real font.
-     Layout cost is part of keystroke→paint, so this is not decoration. */
-  html,body { margin:0; padding:0; background:#fff; color:#111; }
-  body { font: 16px/1.65 Georgia, "Iowan Old Style", "Times New Roman", serif; }
-  #editor { max-width: 46rem; margin: 0 auto; padding: 4rem 2rem 12rem; }
-  .ProseMirror { outline: none; white-space: pre-wrap; word-wrap: break-word; }
-  .ProseMirror h1,.ProseMirror h2,.ProseMirror h3,.ProseMirror h4 { font-family: -apple-system, system-ui, sans-serif; line-height:1.25; margin: 1.8em 0 .6em; }
-  .ProseMirror p { margin: 0 0 1em; }
-  .ProseMirror pre { background:#f4f4f4; padding:.75em 1em; overflow-x:auto; font: 13px/1.5 ui-monospace, Menlo, monospace; }
-  .ProseMirror blockquote { border-left:3px solid #ddd; margin-left:0; padding-left:1em; color:#444; }
-  .ProseMirror table { border-collapse: collapse; width:100%; margin: 1em 0; }
-  .ProseMirror td,.ProseMirror th { border:1px solid #ccc; padding:.4em .6em; vertical-align: top; font-size: .9em; }
-  .ProseMirror .scriv-comment { background: rgba(255,214,0,.28); }
-  .ProseMirror .scriv-ins { text-decoration: underline; }
-</style></head>
-<body><div id="editor"></div><script type="module" src="/entry.js"></script></body></html>`;
+  /* Only what the app's own CSS assumes about the page around it. Everything typographic —
+     measure, rhythm, faces, list markers, tables — comes from apps/web/src/styles below,
+     because approximating it would be measuring a document nobody reads. */
+  html,body { margin:0; padding:0; height:100%; }
+  body { background: var(--app-bg, #fff); color: var(--ink, #111); }
+</style>
+<style id="app-css">/* apps/web styles injected at runtime */</style>
+</head>
+<body><div class="doc-scroll"><article class="doc-page" data-para="book" data-align="ragged"><div id="editor"></div></article></div><script type="module" src="/entry.js"></script></body></html>`;
 
 export interface CalibrationServer {
   url: string;
@@ -39,7 +53,7 @@ export interface CalibrationServer {
 
 export async function startCalibrationServer(docJson: unknown): Promise<CalibrationServer> {
   const built = await Bun.build({
-    entrypoints: [join(here, "entry.ts")],
+    entrypoints: [ENTRY],
     target: "browser",
     minify: false,
     sourcemap: "none",
@@ -58,7 +72,14 @@ export async function startCalibrationServer(docJson: unknown): Promise<Calibrat
       pmCss = readFileSync(join(here, "../../node_modules/prosemirror-view/style/prosemirror.css"), "utf8");
     } catch { /* the page still works; layout differs slightly and we say so */ }
   }
-  const html = HTML.replace("/* prosemirror-view css injected at runtime */", pmCss);
+  let appCss = "";
+  for (const f of APP_STYLES) {
+    try { appCss += readFileSync(f, "utf8") + "\n"; }
+    catch { /* a missing stylesheet is reported by the caller as a note, not a crash */ }
+  }
+  const html = HTML
+    .replace("/* prosemirror-view css injected at runtime */", pmCss)
+    .replace("/* apps/web styles injected at runtime */", appCss);
   const docBody = JSON.stringify(docJson);
 
   const server = Bun.serve({

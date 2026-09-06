@@ -594,3 +594,49 @@ ins.scriv-ins-ai { box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--link, #6d
 }
 @keyframes scriv-caret-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .scriv-cursor { animation: none; } }
+
+/* ---- long-document rendering ------------------------------------------- */
+
+/*
+ * `content-visibility: auto` on every top-level block.
+ *
+ * MEASURED, on the 40k-word corpus document in real Chromium (packages/perf, three
+ * independent trace methods):
+ *
+ *              keystroke -> frame swap        main thread only
+ *   without    p50 11.09   p99 17.82 ms       p50 9.60  p99 15.20 ms
+ *   with       p50  7.38   p99 13.06 ms       p50 6.00  p99 11.10 ms
+ *
+ * That is the difference between missing the 16 ms frame budget at p99 and having three
+ * milliseconds of headroom, and it is 33% off the median keystroke.
+ *
+ * WHY IT IS THIS BIG: ProseMirror renders the whole document. CodeMirror-based editors
+ * virtualize the viewport and pay for the visible lines only; ProseMirror's tree model is
+ * what makes decorations and the docx mapping tractable (ARCHITECTURE.md §0), and this is
+ * the cost that comes with it. `content-visibility` is the browser's own version of that
+ * virtualization, so we get it without the editor having to know.
+ *
+ * `contain-intrinsic-size: auto <estimate>` — `auto` makes the browser remember each
+ * block's real height after its first render, so the estimate only governs blocks the
+ * reader has never reached. The per-type estimates below keep the initial scrollbar close
+ * to honest; without them a long document's scrollbar visibly grows as you scroll into it.
+ *
+ * NOT applied to tables: a table's height is not predictable from its type, and a bad
+ * estimate on one is far more visible than the latency it would save.
+ */
+.doc-page .ProseMirror > * {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 9em;
+}
+
+.doc-page .ProseMirror > :is(h1, h2, h3, h4, h5, h6) {
+  contain-intrinsic-size: auto 2.6em;
+}
+
+.doc-page .ProseMirror > :is(hr, figure) {
+  contain-intrinsic-size: auto 4em;
+}
+
+.doc-page .ProseMirror > table {
+  content-visibility: visible;
+}

@@ -120,15 +120,28 @@ export interface Check {
   detail: string[];
 }
 
+/**
+ * Per-run adjustments to a budget's honesty fields.
+ *
+ * The mode of a measurement is not always a property of the budget: keystroke→paint is
+ * `exact` when it runs against the shipping app and a LOWER BOUND when it runs against the
+ * calibration page, which has the real plugin stack but not the app's CSS or React chrome.
+ * Baking `exact` into budgets.ts and then measuring the cheaper thing would be exactly the
+ * kind of quiet overstatement the mode system exists to prevent.
+ */
+export type BudgetOverrides = Record<string, Partial<Pick<Budget, "mode" | "measures" | "excludes">>>;
+
 export function evaluate(
   measurements: Record<string, Stats | undefined>,
   baseline: BaselineFile | null,
+  overrides: BudgetOverrides = {},
 ): { checks: Check[]; failed: boolean } {
   const key = fingerprintKey(fingerprint());
   const base = baseline?.machines[key];
   const checks: Check[] = [];
 
-  for (const budget of Object.values(BUDGETS)) {
+  for (const declared of Object.values(BUDGETS)) {
+    const budget: Budget = { ...declared, ...overrides[declared.id] };
     const stats = measurements[budget.id];
     const reasons: string[] = [];
     const detail: string[] = [];

@@ -135,6 +135,20 @@ describe("the host seam (ARCHITECTURE.md §1)", () => {
     expect(leaks).toEqual([]);
   });
 
+  test("no compiled output is sitting beside the sources", () => {
+    // A failed `tsc -b` once left .js/.d.ts/.js.map files next to their .ts sources in
+    // apps/web/src. That is worse than untidy: Vite resolves a bare specifier to the .js
+    // first, so a stale build artifact silently shadows the file you are editing. The cause
+    // (packages/perf statically importing apps/web) is fixed; this is the tripwire.
+    const stray: string[] = [];
+    for (const rel of new Glob("{apps,packages}/**/src/**/*.{js,mjs,cjs,d.ts,js.map}").scanSync(root)) {
+      const posix = rel.split("\\").join("/");
+      if (posix.includes("/node_modules/") || posix.includes("/dist/")) continue;
+      stray.push(posix);
+    }
+    expect(stray).toEqual([]);
+  });
+
   test("apps/server is below the seam and does import the machine", () => {
     // The inverse check: if the host implementation stopped touching the disk, either it has
     // moved somewhere unexpected or the exclusion list is stale and hiding real violations.
