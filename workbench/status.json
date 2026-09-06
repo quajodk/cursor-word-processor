@@ -1,6 +1,6 @@
 {
-  "wave": 14,
-  "waveTitle": "Comments: reply and resolve, into the .docx",
+  "wave": 15,
+  "waveTitle": "Fidelity made visible; keystroke \u2192 paint measured and 35% faster",
   "pieces": [
     {
       "id": "foundation",
@@ -53,8 +53,8 @@
       "scope": "Keystroke budget enforced by a test that fails the build",
       "builder": "done",
       "critic": "pending",
-      "evidence": "Runs the app's real 17-plugin stack. Completion and diagnostics are now measured and gated instead of reported as 'subsystem not built yet'. Baseline recorded for this machine.",
-      "gap": "Keystroke \u2192 paint (16 ms) still has no samples: packages/perf/src/browser/e2e.ts is imported by nothing. 'Off main thread' is asserted structurally, not observed."
+      "evidence": "Every row in ARCHITECTURE \u00a75 is now measured. Keystroke\u2192paint runs in real Chromium on the app's own plugin stack and stylesheets, with three independent trace methods. Baseline recorded on a quiet machine. GATE: pass on two consecutive runs.",
+      "gap": "\u201cOff main thread\u201d for diagnostics is asserted structurally, not observed \u2014 proving no long task lands during a refresh needs a PerformanceObserver in the browser harness."
     },
     {
       "id": "textops",
@@ -109,6 +109,15 @@
       "critic": "pending",
       "evidence": "Blind-comparison task step 5 runs end to end on a real Word document and was verified by opening the saved file: 30 of 34 parts byte-identical, the reply threaded under its parent, the parent marked done. 8 round-trip tests against real corpus files.",
       "gap": "Creating a new comment on a selection is not built. Markdown comments are CriticMarkup, which cannot carry an author, a thread or a resolved state \u2014 the panel disables reply/resolve there and says so."
+    },
+    {
+      "id": "fidelity-panel",
+      "name": "Fidelity panel",
+      "scope": "What this document loses on the way in, and what a save would actually write",
+      "builder": "done",
+      "critic": "pending",
+      "evidence": "Runs a real export on demand and throws it away, so the answer is what would be written rather than an estimate. On a 452-block RFP: unedited, 0 of 29 parts rewritten and byte-identical; one word typed, 1 of 29 parts and 1 block rebuilt.",
+      "gap": "No jump-to-block from a ledger entry yet: an entry names an `aid` but clicking it does not move the caret there."
     }
   ],
   "metrics": [
@@ -121,11 +130,12 @@
       "note": "Now measured against the app's own 17-plugin stack via apps/web/src/perf-plugins.ts. Every earlier keystroke number on this page was measured against aidPlugin + history \u2014 two plugins out of seventeen."
     },
     {
-      "label": "Keystroke \u2192 DOM, in browser",
-      "value": 2.7,
+      "label": "Keystroke \u2192 paint, end to end",
+      "value": 11.65,
       "unit": "ms p99",
-      "budget": "8",
-      "state": "measured"
+      "budget": "16",
+      "state": "measured",
+      "note": "Measured at last: the Playwright/CDP harness existed and was imported by nothing. First real number was 17.0 ms \u2014 over budget \u2014 and the gate would not act on it because 240 samples put only 3 behind the p99. Samples raised to 900, then fixed: `content-visibility: auto` on top-level blocks took p50 from 11.09 to 6.00 ms and p99 from 17.82 to 11.65. Three independent trace methods, real Chromium, the app's own plugin stack and stylesheets."
     },
     {
       "label": "Open 40k-word doc",
@@ -280,6 +290,22 @@
       "budget": "\u2014",
       "state": "measured",
       "note": "And not one of them has a reply or a resolution. That is why the round-trip test writes its own: there is nothing in the world\u2019s .docx files here to read back."
+    },
+    {
+      "label": "Keystroke \u2192 paint, median",
+      "value": 6.0,
+      "unit": "ms p50",
+      "budget": "16",
+      "state": "measured",
+      "note": "Was 11.09 ms. ProseMirror renders every block of the document; content-visibility is the browser\u2019s own viewport virtualization, so the editor never has to know."
+    },
+    {
+      "label": "Word parts rewritten, one-word edit",
+      "value": 1,
+      "unit": "of 29",
+      "budget": "1",
+      "state": "measured",
+      "note": "Shown to the writer in the fidelity panel before they send the file: 451 of 452 blocks copied verbatim, 1 rebuilt. Checked in 69 ms by running a real export and throwing it away."
     }
   ],
   "decisions": [
@@ -375,6 +401,10 @@
     }
   ],
   "notes": [
+    "The keystroke\u2192paint harness was complete, well-designed, and imported by nothing \u2014 a whole subsystem with a row in the report and no caller. Wired up, it failed: 17.0 ms against a 16 ms budget. And the gate would not act on it, because 240 samples put only 3 behind the p99 and the tail-support floor is 8. A budget that can never fail is not a budget.",
+    "ProseMirror renders every block; CodeMirror-based editors virtualize the viewport. That is the bill for the tree model that makes decorations and the docx mapping tractable. `content-visibility: auto` is the browser's own version of that virtualization \u2014 p50 11.09 \u2192 6.00 ms \u2014 and the obvious risk, that it makes jumping to the end of a long document expensive, was measured both ways and is not real: ~10-13 ms either way.",
+    "A failed `tsc -b` had scattered .js and .d.ts files beside their sources in apps/web/src. Vite resolves a bare specifier to the .js first, so a stale artifact silently shadows the file you are editing. There is now a tripwire test for it.",
+    "The first perf baseline of this wave was recorded with the dev servers and a browser running, and came out 3\u00d7 too slow \u2014 which would have made every future regression invisible. Re-recorded on a quiet machine.",
     "spliceZip was eating its own input. `buf.slice(...)` on a Node Buffer \u2014 what readFileSync and most host reads return \u2014 is the legacy alias for `subarray` and yields a VIEW, so patching the central directory wrote straight back into the caller's bytes. The exported package was always correct and the ORIGIN was destroyed, so the second save of an open .docx would splice from a package whose central directory pointed at nothing. Invisible with a plain Uint8Array, where `.slice()` copies \u2014 which is exactly why it survived.",
     "The importer hard-coded `resolved: false, parentAnchorId: null` and never opened commentsExtended.xml. Every reply in every document would have read as a separate top-level thread. The corpus hid it completely: 675 threads across 11 documents, and not one carries a reply or a resolution, so the aggregate scores were unaffected by a total gap.",
     "The global key dispatcher listens in the capture phase on window, so it saw every key before any text field did: \u2318\u23ce in the comment reply box ran \u201cExit code block\u201d, and \u2318B in the search field toggled bold in the document behind it. Commands now skip events aimed at a field outside the editor unless they opt in.",
