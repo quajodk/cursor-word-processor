@@ -1,6 +1,6 @@
 {
-  "wave": 13,
-  "waveTitle": "Diagnostics made incremental; the perf gate made real",
+  "wave": 14,
+  "waveTitle": "Comments: reply and resolve, into the .docx",
   "pieces": [
     {
       "id": "foundation",
@@ -99,7 +99,16 @@
       "builder": "done",
       "critic": "done",
       "evidence": "The comparison task\u2019s terminology rename, run on a real 801 KB consultation document with comment threads \u2014 1,161 paragraphs, 8,200 words. The term changed in 44 places; 1 of 20 zip parts changed; 33 of 1,186 paragraphs differ. comments.xml, styles.xml, numbering.xml and settings.xml all come back BYTE-IDENTICAL, and pandoc reads the result.",
-      "gap": "The Markdown source of truth and the .scriv sidecar are still held only in memory when a .docx is opened directly, so closing the app loses that document\u2019s fidelity ledger."
+      "gap": "New comments (as against replies) are not written: a new thread needs an arbitrary range spliced into the body rather than one copied from a parent."
+    },
+    {
+      "id": "comments",
+      "name": "Comments",
+      "scope": "Read Word\u2019s thread structure; reply and resolve, written back into the four annotation parts",
+      "builder": "done",
+      "critic": "pending",
+      "evidence": "Blind-comparison task step 5 runs end to end on a real Word document and was verified by opening the saved file: 30 of 34 parts byte-identical, the reply threaded under its parent, the parent marked done. 8 round-trip tests against real corpus files.",
+      "gap": "Creating a new comment on a selection is not built. Markdown comments are CriticMarkup, which cannot carry an author, a thread or a resolved state \u2014 the panel disables reply/resolve there and says so."
     }
   ],
   "metrics": [
@@ -255,6 +264,22 @@
       "budget": "\u2014",
       "state": "measured",
       "note": "The first pass over a whole document, reported and deliberately not gated: \u00a75 budgets the refresh a writer feels while typing, not the open. Results stream in from the top as they are computed rather than the page staying blank."
+    },
+    {
+      "label": "Word parts untouched on a comment reply",
+      "value": 30,
+      "unit": "of 34",
+      "budget": "\u2014",
+      "state": "measured",
+      "note": "Reply posted and thread resolved on a real 7-thread Word document, then the saved file was opened and compared. Only comments.xml, commentsExtended.xml, commentsIds.xml and document.xml differ \u2014 and document.xml grew by 101 characters, the reply\u2019s range and nothing else."
+    },
+    {
+      "label": "Corpus documents carrying comments",
+      "value": 11,
+      "unit": "docs, 675 threads",
+      "budget": "\u2014",
+      "state": "measured",
+      "note": "And not one of them has a reply or a resolution. That is why the round-trip test writes its own: there is nothing in the world\u2019s .docx files here to read back."
     }
   ],
   "decisions": [
@@ -350,6 +375,9 @@
     }
   ],
   "notes": [
+    "spliceZip was eating its own input. `buf.slice(...)` on a Node Buffer \u2014 what readFileSync and most host reads return \u2014 is the legacy alias for `subarray` and yields a VIEW, so patching the central directory wrote straight back into the caller's bytes. The exported package was always correct and the ORIGIN was destroyed, so the second save of an open .docx would splice from a package whose central directory pointed at nothing. Invisible with a plain Uint8Array, where `.slice()` copies \u2014 which is exactly why it survived.",
+    "The importer hard-coded `resolved: false, parentAnchorId: null` and never opened commentsExtended.xml. Every reply in every document would have read as a separate top-level thread. The corpus hid it completely: 675 threads across 11 documents, and not one carries a reply or a resolution, so the aggregate scores were unaffected by a total gap.",
+    "The global key dispatcher listens in the capture phase on window, so it saw every key before any text field did: \u2318\u23ce in the comment reply box ran \u201cExit code block\u201d, and \u2318B in the search field toggled bold in the document behind it. Commands now skip events aimed at a field outside the editor unless they opt in.",
     "OffsetMap was wrong and a new test caught it. It emitted a separator for every BLOCK; textBetween emits one only before a TEXTBLOCK. A bullet list with four items is nine blocks and four textblocks \u2014 so in any document containing a list the map drifted by one position per extra wrapper, and every diagnostic, every AI hunk and every extra cursor after the first list landed on the wrong word. Nothing threw. The agreement is now checked character by character over 25 real documents.",
     "The incremental linter was expected to match a whole-document lint exactly. On real prose it does not \u2014 4 diagnostics in 200 \u2014 and the difference runs the other way: Harper does not treat a bare newline as a sentence end, so the joined document merged two speakers' dialogue into one '52-word sentence' warning while hiding a lowercase sentence start, a misspelling and a repeated word inside the paragraphs it had glued together. The test now asserts that every difference is a block-boundary artefact, checked causally by re-linting the glued reading.",
     "The completion bench's first workspace was 400 files taken in glob order. It got handed 374 three-line CommonMark spec fixtures and produced 13 symbols between them \u2014 a workspace number that was really the single-document number, which is the exact failure the workspace was added to avoid.",
