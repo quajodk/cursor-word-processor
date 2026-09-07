@@ -229,6 +229,13 @@ export function registerDefaultCommands(controller: EditorController): () => voi
       },
     },
     {
+      id: "agent.rename",
+      title: "Agent: rename a term across the workspace",
+      category: "AI",
+      keybinding: "Mod-Shift-r",
+      run: (ctx) => ctx.ui.toggleAgent(),
+    },
+    {
       id: "view.fidelity",
       title: "Fidelity: what this document loses",
       category: "View",

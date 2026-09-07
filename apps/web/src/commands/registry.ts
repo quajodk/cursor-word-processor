@@ -36,6 +36,8 @@ export interface CommandUi {
   focusComments(): void;
   /** Show or hide the fidelity panel: what this document loses, and what a save would write. */
   toggleFidelity(): void;
+  /** Show or hide agent mode: an instruction that edits the workspace, reviewed before it lands. */
+  toggleAgent(): void;
   toggleSidebar(): void;
   setTheme(theme: "light" | "dark" | "system"): void;
   cycleTheme(): void;

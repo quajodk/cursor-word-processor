@@ -10,6 +10,7 @@ import { FileTree, type TreeHandle } from "./FileTree";
 import { Palette, type PaletteMode } from "./Palette";
 import { CommentsPane } from "./CommentsPane";
 import { FidelityPane } from "./FidelityPane";
+import { AgentPane } from "./AgentPane";
 import { getPrefs, setPrefs, subscribePrefs, watchSystemTheme } from "./prefs";
 import { SearchPane } from "./SearchPane";
 import { setStatus } from "./status";
@@ -37,6 +38,7 @@ export function App() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [showDiff, setShowDiff] = useState(false);
   const [showFidelity, setShowFidelity] = useState(false);
+  const [showAgent, setShowAgent] = useState(false);
   /**
    * Bumped whenever the open document changes identity or content.
    *
@@ -186,6 +188,7 @@ export function App() {
 
       focusEditor: () => controller.focus(),
       toggleFidelity: () => setShowFidelity((v) => !v),
+      toggleAgent: () => setShowAgent((v) => !v),
       focusComments: () => {
         setPrefs({ sidebar: true, pane: "comments" });
         // After the pane has actually rendered: the tab switch is a state change, and
@@ -333,6 +336,20 @@ export function App() {
           paragraph={prefs.paragraph}
           alignment={prefs.alignment}
         />
+        {showAgent && (
+          <AgentPane
+            host={host}
+            root={root}
+            onClose={() => setShowAgent(false)}
+            onApplied={(paths) => {
+              notify(`Rewrote ${paths.length} file${paths.length === 1 ? "" : "s"}.`);
+              // The open document may be one of them: reload it so the editor is not showing
+              // text that no longer exists on disk.
+              const open = controller.path;
+              if (open && paths.some((p) => open.endsWith(p))) void ui.openFile(open);
+            }}
+          />
+        )}
         {showFidelity && (
           <FidelityPane controller={controller} revision={docRevision} onClose={() => setShowFidelity(false)} />
         )}

@@ -794,6 +794,117 @@ button {
   color: var(--ink-faint);
 }
 
+/* ---------------------------------------------------------------- agent pane */
+
+/*
+ * The panel IS the argument: a diff grouped by file, with accept and reject per site.
+ *
+ * A chat box that returns a paragraph describing what it would have done is not an agent,
+ * it is a colleague without commit access. What a writer needs is to see the change.
+ */
+.agent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  max-height: 60vh;
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--rule);
+  background: var(--surface);
+  font-family: var(--ui-font);
+  font-size: 13px;
+  overflow: hidden;
+}
+
+.main > .agent { flex: 0 0 auto; }
+
+.agent-head { display: flex; align-items: baseline; gap: 10px; }
+.agent-head h2 {
+  margin: 0;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.agent-sub { flex: 1; color: var(--ink-soft); font-size: 12px; }
+.agent-head button,
+.agent-run,
+.agent-apply,
+.agent-bulk button {
+  padding: 2px 9px;
+  color: var(--ink); font: inherit; font-size: 12px;
+  background: none; border: 1px solid var(--rule); border-radius: 3px; cursor: pointer;
+}
+.agent-run:disabled, .agent-apply:disabled { opacity: 0.45; cursor: not-allowed; }
+.agent-apply { border-color: var(--accent); color: var(--accent); }
+
+.agent-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
+.agent-form label { display: flex; flex-direction: column; gap: 3px; }
+.agent-form label > span { font-size: 11px; color: var(--ink-soft); }
+.agent-form input[type="text"], .agent-form input:not([type]) {
+  width: 20ch;
+  padding: 3px 7px;
+  color: var(--ink); font: inherit; font-size: 13px;
+  background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+}
+.agent-form input:focus { outline: 2px solid var(--focus-ring); outline-offset: -1px; }
+.agent-check { flex-direction: row !important; align-items: center; gap: 5px !important; }
+.agent-check span { font-size: 12px; }
+
+.agent-summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
+.agent-counts { color: var(--ink-soft); font-size: 12px; }
+.agent-bulk { display: flex; gap: 4px; margin-left: auto; }
+
+.agent-skipped { color: var(--ink-soft); font-size: 12px; }
+.agent-skipped ul { margin: 4px 0 0; padding-left: 18px; }
+
+.agent-list { flex: 1; min-height: 0; overflow-y: auto; }
+
+.agent-file + .agent-file { margin-top: 10px; }
+.agent-file-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 0; border-bottom: 1px solid var(--rule);
+  position: sticky; top: 0; background: var(--surface); z-index: 1;
+}
+.agent-file-head label { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.agent-file-head code {
+  font-family: var(--mono-font, ui-monospace, monospace); font-size: 12px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.agent-file-count { margin-left: auto; color: var(--ink-soft); font-size: 11px; white-space: nowrap; }
+
+.agent-site {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 2px 0 2px 4px;
+  cursor: pointer;
+}
+/* A rejected site stays legible: it is a decision, not an absence. */
+.agent-site[data-on="false"] .agent-line { opacity: 0.45; }
+.agent-site:hover { background: color-mix(in oklab, var(--accent) 7%, transparent); }
+
+.agent-line {
+  flex: 1; min-width: 0;
+  display: flex; align-items: baseline; gap: 2px;
+  font-family: var(--mono-font, ui-monospace, monospace); font-size: 12px;
+  white-space: pre; overflow: hidden;
+}
+.agent-lineno {
+  min-width: 4ch; margin-right: 6px;
+  color: var(--ink-soft); font-variant-numeric: tabular-nums; text-align: right;
+}
+.agent-ctx { color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; }
+.agent-line del { color: var(--danger); text-decoration: line-through; }
+.agent-line ins { color: var(--ok); text-decoration: none; }
+
+.agent-conf {
+  font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--ink-soft); white-space: nowrap;
+}
+.agent-site[data-confidence="uncertain"] .agent-conf { color: var(--danger); }
+
+.agent-foot { display: flex; align-items: center; gap: 10px; }
+.agent-note { color: var(--ink-soft); font-size: 11px; }
+.agent-error { margin: 4px 0; color: var(--danger); font-size: 12px; }
+.agent-report { font-size: 12px; }
+
 /* ---------------------------------------------------------------- fidelity pane */
 
 /*
