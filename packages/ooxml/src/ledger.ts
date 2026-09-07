@@ -37,6 +37,8 @@ export type LedgerCode =
   | "footnote-reference"         // reference kept as an anchor; body lives in another part
   | "comment-orphan"             // commentRangeStart with no end, or an id with no thread
   | "revision-unmodeled"         // moveFrom/moveTo/pPrChange/rPrChange: kept, not editable
+  | "numbering-unlabelled"        // w:numPr present but numbering.xml defines no label
+  | "numbering-format-approximated" // a number format outside the modelled set, shown as decimal
   | "encoding-nonstandard"       // document.xml is not UTF-8
   | "xml-foreign-nodes"          // comments / PIs inside document.xml
   // ---- anchor

@@ -64,8 +64,13 @@ function dialectFor(language: string | undefined): Dialect | undefined {
  *
  * The `LocalLinter` construction was written out three times — the worker, the tests, and
  * now the bench — and each copy independently decides whether to inline the binary. A copy
- * that fetched instead would pass its own tests and break local-first in production, so
- * there is one constructor and everything calls it.
+ * that fetched instead would pass its own tests and break local-first in production, so the
+ * shipping paths all come through here.
+ *
+ * `test/harper.test.ts` still builds its own `LocalLinter`, on purpose: it is the test that
+ * proves the dialect plumbing works, and it has to be able to pass a dialect this factory
+ * does not take. It uses `binaryInlined` too, so it is not a hole in the offline guarantee —
+ * but "everything calls it", which this comment used to say, was not true.
  */
 export function createHarperProvider(): HarperProvider {
   return new HarperProvider((dialect) =>

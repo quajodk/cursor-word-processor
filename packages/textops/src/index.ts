@@ -11,7 +11,7 @@ export {
   addNextOccurrence, selectAllOccurrences, addCursorVertical, clearCursors,
   type MultiCursorState, type CursorRange,
 } from "./multicursor";
-export { textopsKeymap, BINDINGS, KNOWN_CONFLICTS, type Binding } from "./keymap";
+export { textopsKeymap, BINDINGS, KNOWN_CONFLICTS, UNUSABLE_ON_MACOS, type Binding } from "./keymap";
 export {
   blockString, blockAt, blockAtPos, offsetOf, posOf, siblingBlock,
   marksAllowed, isLiteralContext, graphemeSegmenter, graphemeStep,

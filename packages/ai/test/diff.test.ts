@@ -129,6 +129,7 @@ describe("apply(diff) reconstructs the revision, over real prose", () => {
   }
 
   test("round-trips on real documents", () => {
+    expect(files.length).toBeGreaterThan(0); // a silent skip here would leave the one property this feature cannot lose unchecked
     if (files.length === 0) { console.warn("\n[ai] corpus/md absent - skipping"); return; }
     let checked = 0, ok = 0;
     for (const f of files) {

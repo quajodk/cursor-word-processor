@@ -154,4 +154,13 @@ cost is real, so it is measured in its own right, not averaged into the steady s
 3. **Local-first.** Works fully offline. AI is pluggable behind one interface, keyed by env var.
    Nothing phones home by default; with no key set, every non-AI feature still works.
 4. **Keyboard-first.** Every feature reachable without the mouse. Every command is in the command
-   palette with a binding. A perf test fails the build when per-keystroke latency regresses.
+   palette, and every command that has a binding shows it there. A perf test fails the build when
+   per-keystroke latency regresses.
+
+   This used to read "every command is in the command palette *with a binding*", which was false
+   for sixteen of them — the table operations, rename, revert, copy-path. Giving each a chord to
+   make the sentence true would spend the good keys on things nobody reaches for twice a day; the
+   palette is how they are reached, and that is the design rather than the shortfall.
+   `apps/web/test/bindings.test.ts` enforces what this paragraph now claims: no two commands live
+   on one chord, nothing sits on a chord macOS eats, and the two that collide with the browser's
+   own (⌘P, ⌘N) are listed there explicitly so a third cannot be added quietly.

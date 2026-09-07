@@ -30,6 +30,22 @@ interface Toast {
   tone: "info" | "error";
 }
 
+/**
+ * Move keyboard focus into a panel that has just opened.
+ *
+ * Prefers the first control a writer would actually use — a text field if the panel has one,
+ * else the first button — over the panel container, because focusing a `<section>` puts the
+ * caret nowhere and the next Tab starts from the top of the document anyway.
+ */
+function focusIn(selector: string): void {
+  const panel = document.querySelector<HTMLElement>(selector);
+  if (!panel) return;
+  const target = panel.querySelector<HTMLElement>("input, textarea, select")
+    ?? panel.querySelector<HTMLElement>("button")
+    ?? panel;
+  target.focus();
+}
+
 export function App() {
   const prefs = useSyncExternalStore(subscribePrefs, getPrefs);
   const [root, setRoot] = useState("");
@@ -187,8 +203,20 @@ export function App() {
       },
 
       focusEditor: () => controller.focus(),
-      toggleFidelity: () => setShowFidelity((v) => !v),
-      toggleAgent: () => setShowAgent((v) => !v),
+      // Both panels take keyboard focus when they open, after the frame that renders them.
+      // Flipping the boolean alone left focus in the document: the panel appeared, and a
+      // keyboard-only user had to Tab an unknown number of times to reach it — which is
+      // "reachable" in the sense that a filing cabinet in another building is reachable.
+      toggleFidelity: () => setShowFidelity((v) => {
+        const next = !v;
+        if (next) requestAnimationFrame(() => focusIn(".fidelity"));
+        return next;
+      }),
+      toggleAgent: () => setShowAgent((v) => {
+        const next = !v;
+        if (next) requestAnimationFrame(() => focusIn(".agent"));
+        return next;
+      }),
       focusComments: () => {
         setPrefs({ sidebar: true, pane: "comments" });
         // After the pane has actually rendered: the tab switch is a state change, and

@@ -12,7 +12,13 @@ import { addReply, readThreads, revealThread, setResolved, type Thread } from ".
  *
  * KEYBOARD FIRST, like everything else: j/k or arrows move between threads, Enter opens the
  * reply box, ⌘Enter posts, R resolves, Escape returns to the document. Nothing here needs the
- * mouse, and the same actions are in the palette with their bindings.
+ * mouse.
+ *
+ * These keys are LOCAL to the panel and are deliberately not commands: the palette is a view
+ * of the command registry, and putting "next comment thread" in it would advertise a global
+ * binding for something that only means anything while this list has focus. ⌘⇧M reaches the
+ * panel from anywhere, and that is the command. (This comment used to claim "the same actions
+ * are in the palette with their bindings", which was never true.)
  */
 
 export interface CommentsPaneProps {

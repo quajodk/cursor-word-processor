@@ -35,6 +35,10 @@ describe("spliceZip input safety", () => {
 
   test("leaves the caller's bytes untouched, even when handed a Node Buffer", () => {
     const damaged: string[] = [];
+    // Counted, not assumed. Every iteration below can `continue`, so without this the test
+    // would pass having spliced nothing at all — which is how a zip64 regression, or a
+    // rename of the document part, would hide from the very check written to catch it.
+    let spliced = 0;
     for (const name of names) {
       const buf = readFileSync(join(dir, name));
       const copy = new Uint8Array(buf);
@@ -42,21 +46,26 @@ describe("spliceZip input safety", () => {
       try { out = spliceZip(buf, { "word/document.xml": new TextEncoder().encode("<x/>") }).bytes; }
       catch { continue; } // zip64, or no such entry: not this test's subject
       expect(out.length).toBeGreaterThan(0);
+      spliced++;
       for (let i = 0; i < copy.length; i++) {
         if (buf[i] !== copy[i]) { damaged.push(`${name} @${i}`); break; }
       }
     }
     expect(damaged).toEqual([]);
+    expect(spliced).toBeGreaterThan(5);
   }, 120_000);
 
   test("a no-op splice is byte-identical and still leaves the input alone", () => {
+    let checked = 0;
     for (const name of names.slice(0, 5)) {
       const buf = readFileSync(join(dir, name));
       const copy = new Uint8Array(buf);
       let r;
       try { r = spliceZip(buf, {}); } catch { continue; }
+      checked++;
       expect(r.report.identical).toBe(true);
       expect(Array.from(buf)).toEqual(Array.from(copy));
     }
+    expect(checked).toBeGreaterThan(2);
   }, 120_000);
 });

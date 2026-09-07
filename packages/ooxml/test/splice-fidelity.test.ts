@@ -41,12 +41,18 @@ const propNames = (xml: string): Set<string> => {
 
 describe("splice engine against real Word documents", () => {
   test("corpus is present", () => {
-    if (files.length === 0) console.warn("\n[splice] corpus/docx absent — skipping. Fetch it to run these.");
-    expect(true).toBe(true);
+    // `expect(true).toBe(true)` used to stand here, and the two tests below returned early
+    // when the corpus was absent. So on a fresh clone — where `corpus/docx` is gitignored and
+    // therefore absent by default — all three passed green with ZERO assertions, and the only
+    // automated check of DOCX-FIDELITY.md's T0/T1 byte-identity targets was silently inert.
+    //
+    // That is precisely the failure this file's own comment below warns about ("a metric
+    // nobody asserts is a metric nobody is defending"), left in place for the one case where
+    // it matters most. `import.test.ts` had the right pattern all along.
+    expect(files.length).toBeGreaterThan(20);
   });
 
   test("an unedited round trip is byte-identical", () => {
-    if (files.length === 0) return;
     let identical = 0, n = 0;
     for (const f of files) {
       const orig = new Uint8Array(readFileSync(join(CORPUS, f)));
@@ -60,7 +66,6 @@ describe("splice engine against real Word documents", () => {
   }, 120_000);
 
   test("a one-word edit changes exactly one paragraph and loses no run formatting", () => {
-    if (files.length === 0) return;
     let n = 0, surgical = 0, formattingKept = 0;
     const unreported: string[] = [];
     for (const f of files) {

@@ -154,6 +154,7 @@ describe("against the real corpus", () => {
   })();
 
   test("indexes real documents without throwing, and finds real names", () => {
+    expect(files.length).toBeGreaterThan(0); // without this the test passes having asserted nothing
     if (files.length === 0) { console.warn("\n[intellisense] corpus/md absent - skipping"); return; }
     const ix = new WorkspaceIndex();
     let indexed = 0;

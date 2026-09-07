@@ -211,8 +211,12 @@ export function registerDefaultCommands(controller: EditorController): () => voi
       id: "view.cycleTheme",
       title: "Cycle theme (light / dark / system)",
       category: "View",
-      // Cmd-Alt-D toggles the Dock on macOS and never reaches the page.
-      keybinding: "Mod-Alt-t",
+      // NOT Mod-Alt-d (the Dock) and NOT Mod-Alt-t: that is "Insert table", registered later
+      // in this same file, and later registration wins. Cycling the theme was therefore dead
+      // for the entire time the caret was in the document — which is every time you would
+      // want it. Found by an audit reading the binding table, not by pressing the key: the
+      // collision is invisible unless you look at both registrations at once.
+      keybinding: "Mod-Alt-y",
       run: (ctx) => ctx.ui.cycleTheme(),
     },
     {

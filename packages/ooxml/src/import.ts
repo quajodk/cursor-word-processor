@@ -29,6 +29,7 @@ import {
 import { sha256Hex, shortHash } from "./hash";
 import { Ledger, type LedgerEntry } from "./ledger";
 import { readCommentThreading } from "./comments";
+import { computeLabels, type LevelDef, type NumberingTable } from "./numbering";
 import { anchorOf, prepareBlocks, type Anchor, type BlockSignalInput } from "./anchor";
 import {
   SIDECAR_KIND, SIDECAR_VERSION, emptyPropStore, PROP_KINDS,
@@ -221,43 +222,138 @@ class Props {
 
 function parseNumbering(bytes: Uint8Array | undefined): {
   fmt: Map<string, { numFmt: string | null; abstractNumId: string | null }>;
+  table: NumberingTable;
 } {
   const fmt = new Map<string, { numFmt: string | null; abstractNumId: string | null }>();
-  if (!bytes) return { fmt };
+  const table: NumberingTable = { byNumId: new Map(), unmodeled: [] };
+  if (!bytes) return { fmt, table };
   try {
     const ix = XmlIndex.parse(bytes);
     const root = ix.root.children.find((c) => c.local === "numbering");
-    if (!root) return { fmt };
-    const abstract = new Map<string, Map<number, string | null>>();
+    if (!root) return { fmt, table };
+
+    /** abstractNumId -> ilvl -> the full level definition. */
+    const abstract = new Map<string, Map<number, LevelDef>>();
     for (const an of wAll(root, "abstractNum")) {
       const id = attrNS(an, W_NS, "abstractNumId");
       if (!id) continue;
-      const levels = new Map<number, string | null>();
+      const levels = new Map<number, LevelDef>();
       for (const lvl of wAll(an, "lvl")) {
         const ilvl = Number(attrNS(lvl, W_NS, "ilvl") ?? "0");
-        levels.set(ilvl, wChildVal(lvl, "numFmt") ?? null);
+        const numFmt = wChildVal(lvl, "numFmt") ?? null;
+        const startRaw = Number(wChildVal(lvl, "start") ?? "1");
+        const restartRaw = wChildVal(lvl, "lvlRestart");
+        levels.set(ilvl, {
+          ilvl,
+          numFmt,
+          lvlText: wChildVal(lvl, "lvlText") ?? null,
+          start: Number.isFinite(startRaw) ? startRaw : 1,
+          lvlRestart: restartRaw === undefined ? null : (Number.isFinite(Number(restartRaw)) ? Number(restartRaw) : null),
+          isLgl: w(lvl, "isLgl") !== null,
+          suff: wChildVal(lvl, "suff") ?? null,
+        });
+        // A format outside the set `numbering.ts` renders is shown as a decimal. That is a
+        // visible approximation, so it is named rather than passing silently.
+        if (numFmt && !KNOWN_NUM_FMTS.has(numFmt)) table.unmodeled.push(numFmt);
       }
       abstract.set(id, levels);
     }
+
     for (const num of wAll(root, "num")) {
       const numId = attrNS(num, W_NS, "numId");
       if (!numId) continue;
       const absId = wChildVal(num, "abstractNumId") ?? null;
-      const levels = absId !== null ? abstract.get(absId) : undefined;
-      const overrides = new Map<number, string | null>();
+      const levels = new Map<number, LevelDef>(absId !== null ? abstract.get(absId) ?? [] : []);
+      const startOverride = new Map<number, number>();
+
       for (const ov of wAll(num, "lvlOverride")) {
         const ilvl = Number(attrNS(ov, W_NS, "ilvl") ?? "0");
+        const so = wChildVal(ov, "startOverride");
+        if (so !== undefined && Number.isFinite(Number(so))) startOverride.set(ilvl, Number(so));
         const lvl = w(ov, "lvl");
-        if (lvl) overrides.set(ilvl, wChildVal(lvl, "numFmt") ?? null);
+        if (!lvl) continue;
+        const base = levels.get(ilvl) ?? { ilvl, numFmt: null, lvlText: null, start: 1, lvlRestart: null, isLgl: false, suff: null };
+        levels.set(ilvl, {
+          ...base,
+          numFmt: wChildVal(lvl, "numFmt") ?? base.numFmt,
+          lvlText: wChildVal(lvl, "lvlText") ?? base.lvlText,
+        });
       }
+
+      table.byNumId.set(numId, { numId, abstractNumId: absId, levels, startOverride });
       for (let i = 0; i < 9; i++) {
-        const f = overrides.get(i) ?? levels?.get(i) ?? null;
-        fmt.set(`${numId}:${i}`, { numFmt: f, abstractNumId: absId });
+        fmt.set(`${numId}:${i}`, { numFmt: levels.get(i)?.numFmt ?? null, abstractNumId: absId });
       }
     }
   } catch { /* numbering.xml is never required for text */ }
-  return { fmt };
+  return { fmt, table };
 }
+
+/**
+ * Numbering that lives on the paragraph STYLE rather than on the paragraph.
+ *
+ * This is how Word numbers headings, and it is the normal case rather than an exotic one:
+ * `Heading1`..`Heading9` each carry a `w:numPr` in styles.xml pointing at one shared numId
+ * with the matching `w:ilvl`, and the paragraphs in the body carry nothing but
+ * `w:pStyle w:val="Heading2"`.
+ *
+ * Reading only the paragraph's own `w:pPr` therefore misses almost every numbered heading in
+ * the world. Measured against the numbers Word itself cached in 14 corpus documents' tables
+ * of contents, paragraph-only resolution agreed with Word on 5.3% of 563 headings, and
+ * essentially all of the misses were headings we gave no number at all.
+ *
+ * `w:basedOn` is followed, because a house style is usually `basedOn="Heading2"` and inherits
+ * its numbering. The walk is depth-bounded: styles.xml is user data and a cycle in it must
+ * not hang the import.
+ */
+function parseStyleNumbering(bytes: Uint8Array | undefined): Map<string, { numId: string; ilvl: number }> {
+  const direct = new Map<string, { numId: string | null; ilvl: number | null; basedOn: string | null }>();
+  const out = new Map<string, { numId: string; ilvl: number }>();
+  if (!bytes) return out;
+
+  try {
+    const ix = XmlIndex.parse(bytes);
+    const root = ix.root.children.find((c) => c.local === "styles");
+    if (!root) return out;
+    for (const st of wAll(root, "style")) {
+      const id = attrNS(st, W_NS, "styleId");
+      if (!id) continue;
+      const pPr = w(st, "pPr");
+      const numPr = w(pPr, "numPr");
+      const numId = wChildVal(numPr, "numId") ?? null;
+      const ilvlRaw = wChildVal(numPr, "ilvl");
+      direct.set(id, {
+        numId,
+        // A style with a numId and no ilvl means level 0 — Heading1 is written that way.
+        ilvl: ilvlRaw === undefined ? (numId ? 0 : null) : (Number(ilvlRaw) || 0),
+        basedOn: wChildVal(st, "basedOn") ?? null,
+      });
+    }
+  } catch { /* styles.xml is never required for text */ }
+
+  for (const id of direct.keys()) {
+    let cur: string | null = id;
+    const seen = new Set<string>();
+    for (let hops = 0; cur !== null && hops < 16; hops++) {
+      if (seen.has(cur)) break;
+      seen.add(cur);
+      const def: { numId: string | null; ilvl: number | null; basedOn: string | null } | undefined = direct.get(cur);
+      if (!def) break;
+      if (def.numId !== null && def.numId !== "0") {
+        out.set(id, { numId: def.numId, ilvl: def.ilvl ?? 0 });
+        break;
+      }
+      cur = def.basedOn;
+    }
+  }
+  return out;
+}
+
+/** The formats `numbering.ts` renders exactly. Everything else falls back to decimal. */
+const KNOWN_NUM_FMTS = new Set([
+  "decimal", "decimalZero", "upperRoman", "lowerRoman", "upperLetter", "lowerLetter",
+  "ordinal", "bullet", "none", "chicago",
+]);
 
 /* ------------------------------------------------------------------ comments */
 
@@ -324,6 +420,7 @@ export function importDocx(bytes: Uint8Array, options: ImportOptions = {}): Impo
   const relsPart = `${documentPart.slice(0, documentPart.lastIndexOf("/") + 1)}_rels/${documentPart.slice(documentPart.lastIndexOf("/") + 1)}.rels`;
   const rels = parseRels(entries[relsPart]);
   const numbering = parseNumbering(entries["word/numbering.xml"]);
+  const styleNumbering = parseStyleNumbering(entries["word/styles.xml"]);
   const commentBodies = parseComments(entries["word/comments.xml"]);
   // Thread structure lives in commentsExtended.xml, not in comments.xml. Reading it is what
   // makes a reply a reply rather than a second unrelated thread on the same sentence.
@@ -615,11 +712,17 @@ export function importDocx(bytes: Uint8Array, options: ImportOptions = {}): Impo
     const pPrRef = props.intern("pPr", pPr, ix);
     const styleId = wChildVal(pPr, "pStyle") ?? null;
     const numPr = w(pPr, "numPr");
-    const numId = wChildVal(numPr, "numId") ?? null;
-    const ilvl = Number(wChildVal(numPr, "ilvl") ?? "0") || 0;
+    let numId = wChildVal(numPr, "numId") ?? null;
+    let ilvl = Number(wChildVal(numPr, "ilvl") ?? "0") || 0;
+    // Direct numbering wins; otherwise the paragraph's style supplies it. Heading numbering
+    // almost always arrives this second way — see `parseStyleNumbering`.
+    if (numId === null && styleId) {
+      const fromStyle = styleNumbering.get(styleId);
+      if (fromStyle) { numId = fromStyle.numId; ilvl = fromStyle.ilvl; }
+    }
     // A numId of 0 means "no numbering" in OOXML, not "list zero".
     const listed = numId !== null && numId !== "0";
-    const numRef = listed ? numRefFor(numId, ilvl) : null;
+    const numRef = listed && numId !== null ? numRefFor(numId, ilvl) : null;
 
     const sectPr = w(pPr, "sectPr");
     if (sectPr) props.intern("sectPr", sectPr, ix);
@@ -979,6 +1082,52 @@ export function importDocx(bytes: Uint8Array, options: ImportOptions = {}): Impo
   for (const anchorId of commentToBlock.keys()) {
     if (!comments[anchorId]) {
       ledger.add({ code: "comment-orphan", severity: "degraded", stage: "import", detail: `${anchorId} is anchored in the body but has no thread in word/comments.xml` });
+    }
+  }
+
+  /* -------------------------------------------------- numbering labels */
+  //
+  // The number a reader sees in front of a heading or list item — "1.", "2.1", "iv".
+  //
+  // Computed here rather than at each paragraph because a label depends on every numbered
+  // paragraph BEFORE it: counters advance and restart in document order, so a per-paragraph
+  // decision cannot know what "2.1" should be. `orderedAids` is that document order.
+  //
+  // Nothing here changes the document. The label goes in the sidecar, is drawn as a
+  // decoration, and never becomes text — see the note on `BlockRecord.numLabel`.
+  {
+    const numbered: { aid: string; numId: string; ilvl: number }[] = [];
+    for (const aid of orderedAids) {
+      const rec = blocks[aid];
+      if (!rec?.numRef) continue;
+      // `numRef` is minted as `n:<numId>:<ilvl>` by `numRefFor`.
+      const parts = rec.numRef.split(":");
+      if (parts.length !== 3) continue;
+      numbered.push({ aid, numId: parts[1]!, ilvl: Number(parts[2]) || 0 });
+    }
+
+    const labels = computeLabels(numbering.table, numbered);
+    let labelled = 0;
+    for (let i = 0; i < numbered.length; i++) {
+      const label = labels[i] ?? null;
+      blocks[numbered[i]!.aid]!.numLabel = label;
+      if (label !== null) labelled++;
+    }
+
+    const unnumbered = numbered.length - labelled;
+    if (unnumbered > 0) {
+      ledger.add({
+        code: "numbering-unlabelled", severity: "degraded", stage: "import", count: unnumbered,
+        detail: "blocks carry w:numPr but numbering.xml does not define a label for them; they are shown without a number",
+      });
+    }
+    if (numbering.table.unmodeled.length > 0) {
+      const kinds = [...new Set(numbering.table.unmodeled)];
+      ledger.add({
+        code: "numbering-format-approximated", severity: "degraded", stage: "import",
+        count: numbering.table.unmodeled.length,
+        detail: `number formats shown as decimals because they are not modelled: ${kinds.join(", ")}`,
+      });
     }
   }
 

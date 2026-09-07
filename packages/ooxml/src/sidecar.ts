@@ -214,6 +214,31 @@ export interface BlockRecord {
   level: number | null;
   /** Outline/list depth from `w:ilvl`. */
   listLevel: number | null;
+  /**
+   * The label Word renders in front of this block: "1.", "2.1", "iv", "(a)".
+   *
+   * DERIVED, and deliberately NOT in the document. It is computed from numbering.xml and
+   * document order, and it is display — the same category as a diagnostic squiggle or a
+   * blame gutter, which is the property ARCHITECTURE.md §0 chose ProseMirror for. Putting it
+   * in the node's text would write "2.1 Introduction" into the Markdown, where the next
+   * agent rename would treat the number as prose and the next export would emit it beside
+   * the number Word generates for itself.
+   *
+   * Null when the block is not numbered, when it is a bullet (a bullet has no label a
+   * cross-reference could name), or when numbering.xml did not define the level.
+   *
+   * MEASURED, AND NOT YET GOOD ENOUGH TO SHOW. Scored against the numbers Word itself cached
+   * in 14 corpus documents' tables of contents (`scripts/score-numbering.ts`), these labels
+   * agree with Word on 57.2% of 563 headings. Reading numbering off the paragraph STYLE as
+   * well as the paragraph took that from 5.3%; the remaining gap is documents where one
+   * outline is spread across several `w:num` entries that Word merges and this does not.
+   *
+   * So nothing renders this yet. A section number that is wrong is worse than one that is
+   * missing — the writer may cross-reference it — and 57% is a coin-flip a reader would
+   * trust. It is computed, stored and scored so the next pass is an improvement against a
+   * number rather than a fresh start.
+   */
+  numLabel?: string | null;
 
   runs: RunRecord[];
   /** Plain text of the block, as the editor sees it. The anchor signals are computed on this. */
