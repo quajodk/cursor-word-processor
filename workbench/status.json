@@ -1,6 +1,6 @@
 {
-  "wave": 15,
-  "waveTitle": "Fidelity made visible; keystroke \u2192 paint measured and 35% faster",
+  "wave": 16,
+  "waveTitle": "Agent mode: a workspace rename you can read before you accept it",
   "pieces": [
     {
       "id": "foundation",
@@ -81,7 +81,7 @@
       "builder": "done",
       "critic": "pending",
       "evidence": "Cmd-K works in the app: opens on a selection, and with no key configured reports which environment variable to set while everything else keeps working. Suggestion rendering verified without a key via CriticMarkup, which parses to the same marks. 29 package tests; 135 across the repo.",
-      "gap": "No provider key is set here, so a live streaming call and the conflict detection under real concurrent typing are unverified. Agent mode across the workspace is not built."
+      "gap": "The live provider round trip is still unverified: there is no API key in this environment, so Cmd-K streaming and agent mode's model layer have never been run against a real model. The deterministic half of agent mode needs no model and is tested against 120 real corpus documents."
     },
     {
       "id": "git",
@@ -118,6 +118,15 @@
       "critic": "pending",
       "evidence": "Runs a real export on demand and throws it away, so the answer is what would be written rather than an estimate. On a 452-block RFP: unedited, 0 of 29 parts rewritten and byte-identical; one word typed, 1 of 29 parts and 1 block rebuilt.",
       "gap": "No jump-to-block from a ledger entry yet: an entry names an `aid` but clicking it does not move the caret there."
+    },
+    {
+      "id": "agent",
+      "name": "Agent mode",
+      "scope": "An instruction that edits the whole workspace, reviewed site by site before it lands",
+      "builder": "done",
+      "critic": "pending",
+      "evidence": "Verified end to end in the running app on 1,492 files. Edits the file at byte offsets rather than regenerating it, so a one-word rename is a one-word diff. Sites flagged uncertain start rejected; the apply re-reads every file and skips sites that moved during review. 18 tests against 120 real corpus documents.",
+      "gap": "Only the rename instruction is built. Turning free-form natural language into a change set needs the model layer, which is unwired because there is no provider key here \u2014 claiming a round trip I have not seen would be worse than naming the boundary."
     }
   ],
   "metrics": [
@@ -306,6 +315,22 @@
       "budget": "1",
       "state": "measured",
       "note": "Shown to the writer in the fidelity panel before they send the file: 451 of 452 blocks copied verbatim, 1 rebuilt. Checked in 69 ms by running a real export and throwing it away."
+    },
+    {
+      "label": "Agent rename precision",
+      "value": 12,
+      "unit": "of 24 occurrences",
+      "budget": "\u2014",
+      "state": "measured",
+      "note": "\"Zephyrine\"\u2192\"Halcyon\" across a 1,492-file workspace. Exactly the 12 prose occurrences were proposed; the fenced block, the inline `zephyrine()`, the `require(\"zephyrine\")` and the URL in a link destination were all left alone. Applied \u2014 and the diff against the original 559-line file was the block seeded for the test and nothing else."
+    },
+    {
+      "label": "Agent sites found, real term",
+      "value": 152,
+      "unit": "in 45 of 1492 files",
+      "budget": "\u2014",
+      "state": "measured",
+      "note": "\"configuration\"\u2192\"setup\": 118 exact, 34 variant, 0 needing a decision. Grouped by file, every site showing its line, accept/reject per site."
     }
   ],
   "decisions": [
@@ -401,6 +426,9 @@
     }
   ],
   "notes": [
+    "Agent mode's rename needs no model, and that is the design rather than a limitation. Word boundaries, plurals, possessives, case and \"never touch code\" are all decidable; deciding them exactly is more useful than asking a model to guess, and it means the feature works with the network unplugged.",
+    "The rename's own test caught the bug that would have destroyed a workspace: `classify` extends a site to carry a plural but returned only the term's end, so `to` sat one suffix short of `before` \u2014 every carried site would have written \"settingss\" over \"configurations\". The invariant that caught it is \"every site's `before` is exactly the bytes at its offsets\".",
+    "The code mask errs toward calling things code. A missed rename is a site the writer fixes by hand; a rename inside a code fence is a broken example they may never notice. Link destinations count as code too \u2014 renaming inside a URL breaks the link while still looking right.",
     "The keystroke\u2192paint harness was complete, well-designed, and imported by nothing \u2014 a whole subsystem with a row in the report and no caller. Wired up, it failed: 17.0 ms against a 16 ms budget. And the gate would not act on it, because 240 samples put only 3 behind the p99 and the tail-support floor is 8. A budget that can never fail is not a budget.",
     "ProseMirror renders every block; CodeMirror-based editors virtualize the viewport. That is the bill for the tree model that makes decorations and the docx mapping tractable. `content-visibility: auto` is the browser's own version of that virtualization \u2014 p50 11.09 \u2192 6.00 ms \u2014 and the obvious risk, that it makes jumping to the end of a long document expensive, was measured both ways and is not real: ~10-13 ms either way.",
     "A failed `tsc -b` had scattered .js and .d.ts files beside their sources in apps/web/src. Vite resolves a bare specifier to the .js first, so a stale artifact silently shadows the file you are editing. There is now a tripwire test for it.",
