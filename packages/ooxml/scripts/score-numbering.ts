@@ -77,6 +77,10 @@ for (const name of readdirSync(dir).filter((f) => f.endsWith(".docx")).sort()) {
 
   // Our labels, keyed by heading text. A title that appears twice is dropped rather than
   // guessed at: matching the wrong occurrence would score noise.
+  // `Object.values` is NOT document order — integer-like aids get hoisted, see
+  // test/blockorder.test.ts — and that is fine HERE, checked rather than assumed: a heading
+  // seen once maps to its label, a heading seen twice is deleted, and both outcomes are the
+  // same under any permutation. Do not copy this loop somewhere order matters.
   const ours = new Map<string, string | null>();
   const seen = new Set<string>();
   for (const block of Object.values(imported.sidecar.blocks)) {

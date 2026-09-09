@@ -1042,8 +1042,24 @@ export function importDocx(bytes: Uint8Array, options: ImportOptions = {}): Impo
 
   /* -------------------------------------------------- comments */
 
+  // A comment range may cover several paragraphs; the thread binds to the FIRST of them, so
+  // this loop must run in DOCUMENT ORDER. `Object.entries(blocks)` is not document order.
+  //
+  // Aids are minted fresh on every import, and about one in 1,500 comes out as an all-digit
+  // string like "66030358" (measured: 4 integer-like aids across 6,015 corpus blocks).
+  // JavaScript hoists integer-like keys to the FRONT of an object's key order, ascending
+  // numerically, so those blocks teleport to the top of the iteration — a different few on
+  // every run, because the aids are random. A multi-paragraph comment could therefore bind to
+  // a later paragraph than the one it starts on, silently and nondeterministically.
+  //
+  // `orderedAids` is the importer's own record of document order and is what the numbering
+  // pass below and the anchor pass already use. Table children are pushed before their table,
+  // which does not matter here: only paragraphs carry `commentAnchors`, and paragraphs are in
+  // true document order relative to one another.
   const commentToBlock = new Map<string, string>();
-  for (const [aid, rec] of Object.entries(blocks)) {
+  for (const aid of orderedAids) {
+    const rec = blocks[aid];
+    if (!rec) continue;
     for (const anchorId of rec.commentAnchors ?? []) if (!commentToBlock.has(anchorId)) commentToBlock.set(anchorId, aid);
   }
   for (const [id, body_] of commentBodies) {
