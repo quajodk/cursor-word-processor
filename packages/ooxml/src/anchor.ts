@@ -675,6 +675,21 @@ export function reanchor(
 
   interface RawOp { kind: "match" | "split" | "merge" | "insert" | "delete"; i: number; j: number; score: number }
   const ops: RawOp[] = [];
+
+  /**
+   * Did this gap cell OPEN a gap (predecessor M) or EXTEND one (predecessor X/Y)?
+   *
+   * It is decided by re-running the same comparison the fill made — `open` against `extend` —
+   * and never by testing the stored cell for float equality against one of them. That test was
+   * the bug: `Math.abs(cur - fromM) < 1e-6` over a Float32 matrix whose values reach ~600,
+   * where one ulp is ~6e-5. It could not be true, so the traceback that entered a gap state
+   * never left it, and a five-paragraph insertion turned the rest of the walk into 5,382
+   * inserts. Every anchor before that point was reported lost.
+   *
+   * Comparing the two candidates instead is exact: when they are within a rounding error of
+   * each other both predecessors are equally optimal, so either answer is a correct traceback.
+   */
+  const leftGap = (open: number, extend: number): boolean => open >= extend;
   let i = m, j = n;
   let state: "M" | "X" | "Y" = (() => {
     const mm = get(M, m, n), xx = get(X, m, n), yy = get(Y, m, n);
@@ -683,25 +698,26 @@ export function reanchor(
 
   let guard = (m + n) * 4 + 16;
   while ((i > 0 || j > 0) && guard-- > 0) {
+    // The boundaries come FIRST. A gap state that reaches an edge has exactly one legal move
+    // left, and letting the gap branches below run there is what previously walked `j` to
+    // -4758: the ops were pushed with negative indices, wrote nowhere, and the guard was the
+    // only thing that ended the walk.
+    if (i === 0 && j === 0) break;
+    if (i === 0) { ops.push({ kind: "insert", i, j, score: 0 }); j--; continue; }
+    if (j === 0) { ops.push({ kind: "delete", i, j, score: 0 }); i--; continue; }
+
     if (state === "X") {
-      const cur = get(X, i, j);
-      const fromM = get(M, i - 1, j) + o.gapOpen;
       ops.push({ kind: "delete", i, j, score: 0 });
-      state = Math.abs(cur - fromM) < 1e-6 ? "M" : "X";
+      state = leftGap(get(M, i - 1, j) + o.gapOpen, get(X, i - 1, j) + o.gapExtend) ? "M" : "X";
       i--;
       continue;
     }
     if (state === "Y") {
-      const cur = get(Y, i, j);
-      const fromM = get(M, i, j - 1) + o.gapOpen;
       ops.push({ kind: "insert", i, j, score: 0 });
-      state = Math.abs(cur - fromM) < 1e-6 ? "M" : "Y";
+      state = leftGap(get(M, i, j - 1) + o.gapOpen, get(Y, i, j - 1) + o.gapExtend) ? "M" : "Y";
       j--;
       continue;
     }
-    if (i === 0 && j === 0) break;
-    if (i === 0) { ops.push({ kind: "insert", i, j, score: 0 }); j--; continue; }
-    if (j === 0) { ops.push({ kind: "delete", i, j, score: 0 }); i--; continue; }
 
     const cur = get(M, i, j);
     const s = simAt(i, j);
@@ -727,9 +743,23 @@ export function reanchor(
     if (chosen === "split") { i -= 1; j -= 2; }
     else if (chosen === "merge") { i -= 2; j -= 1; }
     else { i -= 1; j -= 1; }
-    const pi = chosen === "merge" ? i : i, pj = chosen === "split" ? j : j;
-    const mm = get(M, pi, pj), xx = get(X, pi, pj), yy = get(Y, pi, pj);
+    // `i` and `j` have already been stepped back by the op above, so this is the predecessor
+    // cell for all three of match, split and merge. (This line used to read
+    // `chosen === "merge" ? i : i` — two identical branches dressed up as a distinction.)
+    const mm = get(M, i, j), xx = get(X, i, j), yy = get(Y, i, j);
     state = mm >= xx && mm >= yy ? "M" : xx >= yy ? "X" : "Y";
+  }
+
+  // Every branch above decreases `i + j` by at least one, so the walk reaches (0,0) in at most
+  // m + n steps and the guard is unreachable. It stays as a backstop because the alternative to
+  // a guard here is a hang — but a backstop that fires silently is the "silent loss" this
+  // subsystem exists to prevent, so it is ledgered. A truncated traceback leaves the earliest
+  // blocks unassigned, which is the safe direction: lost, never misapplied.
+  if (guard <= 0) {
+    ledger.add({
+      code: "anchor-traceback-truncated", severity: "degraded", stage: "anchor",
+      detail: `alignment traceback did not reach the origin (stopped at anchor ${i}, block ${j}); blocks before that point were left unanchored`,
+    });
   }
   ops.reverse();
 

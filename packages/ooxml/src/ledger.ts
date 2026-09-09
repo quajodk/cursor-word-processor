@@ -48,6 +48,7 @@ export type LedgerCode =
   | "anchor-merged"              // two anchors became one block; the loser was retired
   | "anchor-inserted"            // a current block has no stored anchor: no origin properties
   | "anchor-ambiguous"           // best match was not decisively better than the runner-up
+  | "anchor-traceback-truncated" // alignment traceback did not reach the origin (should be unreachable)
   | "comment-reanchored"         // a comment moved to a surviving block, with a penalty
   // ---- export (reserved for the splice engine; defined here so both share one vocabulary)
   | "splice-regenerated"         // a paragraph had to be rebuilt rather than copied

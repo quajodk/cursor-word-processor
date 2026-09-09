@@ -29,10 +29,11 @@ import {
  * paragraph's Word properties to another, which is silent and is not. So the two are counted
  * separately and held to different standards — see the table of thresholds below.
  *
- * The first run of this file was also the first measurement of the subsystem. Across ~5,600
- * blocks per scenario: content-preserving edits recover 100%; position-changing edits recover
- * ~61%; and silent misapplication is 2-3 blocks, against ~2,200 safe losses. The engine fails
- * in the right direction, and it fails more often than it should.
+ * The first run of this file was also the first measurement of the subsystem, and it found a
+ * traceback bug that had been costing about 40 points of recall on every position-changing
+ * edit. Across ~5,600 blocks per scenario the engine now recovers 100% of content-preserving
+ * edits, 100% of insertions and deletions, 95.7% of moves and 93.8% of a combined week of
+ * editing, with 0-3 blocks silently misapplied.
  *
  * The scenarios are derived from each document's own vocabulary and sentence boundaries, so
  * none of them can be passed by pattern-matching a fixture, and the documents are whatever
@@ -60,9 +61,25 @@ function documents(limit: number, minBlocks = 60): Case[] {
     let imported;
     try { imported = importDocx(readFileSync(join(CORPUS, name))); } catch { continue; }
 
+    // DOCUMENT ORDER COMES FROM `range`, NOT FROM THE KEY ORDER OF `blocks`.
+    //
+    // Aids are random per import, and roughly one in 1,500 of them comes out looking like an
+    // integer ("66030358"). JavaScript hoists integer-like keys to the FRONT of an object's
+    // key order, ascending, so `Object.entries(sidecar.blocks)` teleports those few blocks to
+    // the top of the document — a different few on every run, because the aids are fresh each
+    // import. Measured on this corpus: 4 blocks in 6,015.
+    //
+    // That was enough to make this file's own numbers drift between runs (the combined
+    // scenario reported 5,645 blocks on two runs and 5,646 on a third) and it meant the
+    // alignment was being scored against a document nobody has, in an order Word never wrote.
+    // `export.ts` already sorts by `range` for exactly this reason; so does this.
+    const ordered = Object.entries(imported.sidecar.blocks)
+      .filter(([, rec]) => rec.range !== null)
+      .sort((a, b) => a[1].range![0] - b[1].range![0]);
+
     const blocks: BlockSignalInput[] = [];
     const aids: string[] = [];
-    for (const [aid, rec] of Object.entries(imported.sidecar.blocks)) {
+    for (const [aid, rec] of ordered) {
       if (rec.kind === "table") continue;
       if (rec.text.trim().length === 0) continue;
       blocks.push({
@@ -154,28 +171,35 @@ describe("the anchor engine against real documents", () => {
    * targets: they exist so the number cannot grow unnoticed.
    *
    * `minRecall` is set a few points BELOW what the engine currently achieves, so the next
-   * document added to the corpus does not turn the suite red. Where that floor is low it is
-   * recording a known defect, not endorsing one:
+   * document added to the corpus does not turn the suite red.
    *
-   *   CONTENT changes — reword, rewrite, split, merge — recover 100%.
-   *   POSITION changes — move, insert, delete — recover ~61%, and combined ~53%.
+   *   CONTENT changes  — reword, rewrite, split, merge — recover 100%.
+   *   POSITION changes — insert and delete recover 100%, move 95.7%, combined 93.8%.
    *
-   * The cause is measured, not guessed: with `recoverMoves` disabled (leaving the constrained
-   * Needleman-Wunsch alone), recall collapses to ~10% on any document past ~200 blocks, and
-   * to a near-constant ~50 matched blocks regardless of document size. Widening the band to
-   * 512 changes nothing. So the aligner is not absorbing insertions, and the exact-content
-   * recovery pass is carrying the entire feature. That is the next thing to fix; these floors
-   * make sure it is fixed forward and never quietly backward.
+   * These floors were 0.50 and 0.42 when this file was written, because the DP traceback was
+   * broken and the exact-content move-recovery pass was carrying the whole feature. The
+   * diagnosis was made by running the aligner with `recoverMoves: false`, which dropped recall
+   * to ~10% on any document past 200 blocks; the cause was a gap-state exit test that compared
+   * a Float32 cell for equality within 1e-6, sixty times finer than the ulp at those magnitudes.
+   * A traceback that entered a gap never left it. See `aligner.test.ts`, which pins the
+   * behaviour without needing this corpus.
+   *
+   * Insert and delete now misapply NOTHING, where they each misapplied 2 blocks before — the
+   * lost anchors were not merely lost, some of them were landing on the wrong block on the way
+   * out. `move` and `combined` are the two that still lose blocks (239 and 339), because a move
+   * genuinely is not expressible in an order-preserving alignment and is recovered afterwards
+   * by exact content match, which a reworded moved block defeats. That is the honest remaining
+   * limit, not a bug.
    */
   const SCENARIOS: { make: (c: Case) => Scenario; minRecall: number; maxMisapplied: number }[] = [
     { make: (c) => scenarioReword(c.blocks, c.aids, SEED, 0.2, 0.15), minRecall: 0.95, maxMisapplied: 0 },
     { make: (c) => scenarioRewrite(c.blocks, c.aids, SEED), minRecall: 0.95, maxMisapplied: 0 },
     { make: (c) => scenarioSplit(c.blocks, c.aids, SEED, 0.15), minRecall: 0.95, maxMisapplied: 0 },
     { make: (c) => scenarioMerge(c.blocks, c.aids, SEED, 0.15), minRecall: 0.95, maxMisapplied: 0 },
-    { make: (c) => scenarioMove(c.blocks, c.aids, SEED), minRecall: 0.50, maxMisapplied: 4 },
-    { make: (c) => scenarioInsert(c.blocks, c.aids, SEED, 4, 5), minRecall: 0.50, maxMisapplied: 4 },
-    { make: (c) => scenarioDelete(c.blocks, c.aids, SEED, 3, 4), minRecall: 0.50, maxMisapplied: 4 },
-    { make: (c) => scenarioCombined(c.blocks, c.aids, SEED), minRecall: 0.42, maxMisapplied: 5 },
+    { make: (c) => scenarioMove(c.blocks, c.aids, SEED), minRecall: 0.90, maxMisapplied: 3 },
+    { make: (c) => scenarioInsert(c.blocks, c.aids, SEED, 4, 5), minRecall: 0.97, maxMisapplied: 1 },
+    { make: (c) => scenarioDelete(c.blocks, c.aids, SEED, 3, 4), minRecall: 0.97, maxMisapplied: 1 },
+    { make: (c) => scenarioCombined(c.blocks, c.aids, SEED), minRecall: 0.88, maxMisapplied: 4 },
   ];
 
   for (const spec of SCENARIOS) {

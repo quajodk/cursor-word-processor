@@ -100,6 +100,26 @@ formatting bug the user can see and fix; a misapplied one corrupts a document th
 The ledger is surfaced in the UI (a "fidelity" panel), reported by the round-trip scorer, and is
 the primary quality metric for this subsystem.
 
+### What it actually scores
+Measured by `packages/ooxml/test/anchor.test.ts` across 12 corpus documents, ~5,600 blocks per
+scenario, against ground truth from `test/scenarios.ts`. The figures are reproducible run to
+run; if they ever stop being, suspect document order before suspecting the aligner:
+
+| out-of-session edit | identity recovered | anchors safely lost | **silently misapplied** |
+|---|---|---|---|
+| reword 20%@15% · rewrite 50%@50% · split · merge | 100% | 0 | 0 |
+| insert 4×5 · delete 3×4 | 100% | 0 | 0 |
+| move 66 blocks | 95.7% | 239 | 3 |
+| all of the above at once | 93.8% | 339 | 3 |
+
+The two failure columns are not the same kind of number and are held to different standards.
+The last column is the one this section is about; the middle one is a formatting loss the writer
+can see and the ledger reports.
+
+Moves are the remaining limit, and honestly so: a move is not expressible in an order-preserving
+alignment, so it is recovered afterwards by exact content match, which a block that was moved
+*and* reworded defeats. Those blocks are lost, not guessed at.
+
 ## 4. Export: the splice engine
 
 1. Read `word/document.xml` from the origin zip as **raw bytes**.
