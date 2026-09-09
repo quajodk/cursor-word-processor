@@ -6,7 +6,7 @@ import { existsSync } from "node:fs";
 
 type State = "done" | "running" | "queued" | "blocked" | "pending";
 interface Piece { id: string; name: string; scope: string; builder: State; critic: State; evidence: string | null; gap: string | null }
-interface Metric { label: string; value: string | number | null; unit: string; budget: string; state: string }
+interface Metric { label: string; value: string | number | null; unit: string; budget: string; state: string; lowerIsBetter?: boolean }
 interface Status {
   wave: number; waveTitle: string; pieces: Piece[]; metrics: Metric[];
   decisions: { t: string; d: string; why: string }[]; notes: string[];
@@ -40,15 +40,21 @@ const esc = (s: unknown) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&
 const chip = (s: State | string) => `<span class="chip chip-${esc(s)}">${esc(s)}</span>`;
 
 /**
- * Budget direction is inferred from the unit: a millisecond figure must come in UNDER its
- * budget, a percentage or a count must reach it. A tile that is over budget reads red —
- * a progress page that shows green while the gate is failing is worse than no page.
+ * Budget direction. A millisecond figure must come in UNDER its budget; a percentage or a
+ * count must REACH it. A tile that is over budget reads red — a progress page that shows
+ * green while the gate is failing is worse than no page.
+ *
+ * That inference was wrong for any count where fewer is better, and it was showing one such
+ * tile green: "Link targets lost, 1437 files" read 4 against a budget of 0, and 4 < 0 is
+ * false, so it rendered as passing. `lowerIsBetter` states the direction explicitly for those;
+ * the unit-based guess stays as the default for everything else.
  */
 const overBudget = (m: Metric): boolean | null => {
   if (m.value === null || m.state !== "measured") return null;
   const v = Number(m.value), b = Number(m.budget);
   if (!Number.isFinite(v) || !Number.isFinite(b)) return null;
-  return m.unit.includes("ms") ? v > b : v < b;
+  if (m.lowerIsBetter ?? m.unit.includes("ms")) return v > b;
+  return v < b;
 };
 
 const metricTile = (m: Metric) => {
