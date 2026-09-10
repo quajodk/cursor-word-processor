@@ -18,7 +18,7 @@
       "builder": "done",
       "critic": "done",
       "evidence": "The app runs. Real .md opened from disk, edited and saved back correctly — frontmatter, GFM table, ordered list, bold, em-dash, CJK and ± all survived. Live status bar reads 2.7 ms p99 keystroke latency in a real browser, including ProseMirror’s DOM write, against an 8 ms budget.",
-      "gap": "Only the Markdown path is wired. Opening a .docx in the app is not possible yet, so the document-polish comparison against Google Docs cannot be run."
+      "gap": "The presentation layer was built four times. A coherence pass driving the running app found two keyboard systems racing — a capture-phase window listener that preventDefaults before ProseMirror's plugins ever see the key, so the completion popup cannot be dismissed with Escape and two full implementations of ⌘K sit dead. Three panels share one slot with three focus policies and two words for “close”. Opening the comments pane scrolls the tab strip out of the window. None of it needs an algorithm rethought; all of it is apps/web."
     },
     {
       "id": "md",
@@ -481,9 +481,19 @@
       "t": "Safety nets and measurement",
       "d": "Measure each layer with the layer beneath it switched off",
       "why": "A recovery pass that runs after the aligner made a broken aligner look like a merely underperforming one at 61%. With it disabled the real figure was 10%, and the cause was findable in an afternoon."
+    },
+    {
+      "t": "Coherence",
+      "d": "One fresh agent per wave reconciles the pieces, driving the app rather than reading it",
+      "why": "Features built independently pass their own tests and still add up to four products. This pass found the model layer coherent and the presentation layer built four times over — a class of defect no feature's own test suite can see, because every one of them is individually correct."
     }
   ],
   "notes": [
+    "The coherence pass finally ran, after two earlier attempts died on a rate limit and a network error. Its verdict: scriv is not four features in a trench coat at the model layer — it is one tool whose presentation layer was built four times. Nearly every finding is in apps/web.",
+    "Two keyboard systems race and the window always wins. The command registry installs a capture-phase listener that calls preventDefault and stopPropagation before ProseMirror's plugin handlers run on bubble, so any key in both systems belongs to the registry. Observed live: with the completion popup open, ArrowDown reaches the editor and Escape does not — the popup cannot be dismissed. Four in-editor handlers are dead code, including two complete implementations of ⌘K, one commented as beating the command keymap. Three comments in one file each name a different plugin as the owner of Escape.",
+    "The git pillar is outside the command system entirely: a hand-rolled window keydown in App.tsx. Verified against the live palette — there is no diff, blame, git or changes entry in it. It is also invisible to the binding-collision test, which reads the command table from source.",
+    "Open a .docx and the changes pane is a silent empty box: its whole live text is “Changes / Blame / esc”, because the text accessor returns null for binary codecs. The pane carries three carefully written explanations for other dead ends and none for the one where the git feature meets the docx feature.",
+    "This page was carrying a false claim until the coherence pass caught it: the app shell's biggest gap still read “opening a .docx is not possible yet”, while a note further down the same page said a Word document opens, edits and saves through the UI. Both were published together.",
     "The alignment engine had no test at all — 925 lines of constrained Needleman–Wunsch, and beside it a 239-line ground-truth harness built for exactly this purpose that was imported by nothing. The expensive half of making it checkable had already been done and never used.",
     "Its first measurement found the bug. The traceback decided whether a gap had been opened or extended by testing a Float32 cell for equality within 1e-6, on a matrix whose values reach several hundred where one ulp is ~6e-5 — sixty times coarser than the tolerance. The test could not come out true, so a traceback that entered a gap never left it. One five-paragraph insertion 66 blocks from the end turned the rest of the walk into 5,382 consecutive inserts and ran the column index to -4758; every earlier anchor was reported lost.",
     "The alignment itself was never wrong. Instrumented on a 669-block document, the optimum score is reached along the true path, with true-pair similarity at p50 0.981 and displacement well inside the band. Every match was there to be taken. Only the walk back was broken — which is why the symptom looked like a scoring problem and stayed unexplained for a wave.",
