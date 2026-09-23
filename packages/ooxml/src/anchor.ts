@@ -406,6 +406,34 @@ export interface ReanchorOptions {
   weights?: SignalWeights;
   /** Try to recover moved blocks by exact content match after alignment. Default true. */
   recoverMoves?: boolean;
+  /**
+   * Fewest tokens a block may have and still be eligible for move recovery. Default 2.
+   *
+   * This was 3, copied from the WAYPOINT skeleton, where short text has to be excluded because
+   * the skeleton trades ambiguity off against other signals. Move recovery does not trade: it
+   * claims an anchor only when exactly ONE free anchor carries that content, so ambiguity
+   * disqualifies a candidate outright. The 3 was inherited rather than reasoned, and it was
+   * the dominant cause of the engine's remaining misses — 238 of 242 blocks missed after a
+   * moved section were short, and NONE of them were reworded.
+   *
+   * Swept against the corpus (12 documents, ~5,600 blocks), recall on move / combined:
+   *
+   *     3 (was)  95.7% / 93.8%   3 and 3 silently misapplied
+   *     2 (now)  96.2% / 94.4%   3 and 3          <- free
+   *     1        97.3% / 95.4%   3 and 4          <- buys recall with a misapplication
+   *     0        97.3% / 95.4%   3 and 4
+   *
+   * It stops at 2 because 1 crosses the line DOCX-FIDELITY.md §3 draws: a silently misapplied
+   * block is not payment for ninety recovered ones.
+   *
+   * A NEGATIVE RESULT worth not repeating: the obvious guard for going to 1 is to require, for
+   * short blocks, that the content be unique across the whole document on both sides — the
+   * skeleton's own rule — on the theory that "one FREE anchor" is weaker than it looks when
+   * five of six identical "Yes" paragraphs were already matched. Measured, that rule LOWERS
+   * recall (96.8% / 94.8%) and does not remove the fourth misapplication, so that block is not
+   * ambiguous in the way the theory assumed. Whatever causes it is still unexplained.
+   */
+  moveMinTokens?: number;
 }
 
 export const DEFAULT_OPTIONS: Required<Omit<ReanchorOptions, "weights">> & { weights: SignalWeights } = {
@@ -419,6 +447,7 @@ export const DEFAULT_OPTIONS: Required<Omit<ReanchorOptions, "weights">> & { wei
   mergePenalty: -0.45,
   allowSplitMerge: true,
   recoverMoves: true,
+  moveMinTokens: 2,
   weights: DEFAULT_WEIGHTS,
 };
 
@@ -805,10 +834,11 @@ export function reanchor(
   let moved = 0;
   if (o.recoverMoves) {
     const freeBlocks: number[] = [];
-    for (let b = 0; b < n; b++) if (anchorFor[b]! < 0 && prepared[b]!.tokens.length >= 3) freeBlocks.push(b);
+    const minTok = Math.max(0, o.moveMinTokens);
+    for (let b = 0; b < n; b++) if (anchorFor[b]! < 0 && prepared[b]!.tokens.length >= minTok) freeBlocks.push(b);
     if (freeBlocks.length > 0) {
       const freeAnchors: number[] = [];
-      for (let a = 0; a < m; a++) if (!anchorUsed[a] && anchors[a]!.tokenCount >= 3) freeAnchors.push(a);
+      for (let a = 0; a < m; a++) if (!anchorUsed[a] && anchors[a]!.tokenCount >= minTok) freeAnchors.push(a);
       if (freeAnchors.length > 0) {
         const byHash = new Map<string, number[]>();
         for (const a of freeAnchors) {

@@ -109,16 +109,20 @@ run; if they ever stop being, suspect document order before suspecting the align
 |---|---|---|---|
 | reword 20%@15% · rewrite 50%@50% · split · merge | 100% | 0 | 0 |
 | insert 4×5 · delete 3×4 | 100% | 0 | 0 |
-| move 66 blocks | 95.7% | 239 | 3 |
-| all of the above at once | 93.8% | 339 | 3 |
+| move 66 blocks | 96.2% | 214 | 3 |
+| all of the above at once | 94.4% | 307 | 3 |
 
 The two failure columns are not the same kind of number and are held to different standards.
 The last column is the one this section is about; the middle one is a formatting loss the writer
 can see and the ledger reports.
 
-Moves are the remaining limit, and honestly so: a move is not expressible in an order-preserving
-alignment, so it is recovered afterwards by exact content match, which a block that was moved
-*and* reworded defeats. Those blocks are lost, not guessed at.
+Moves are the remaining limit. A move is not expressible in an order-preserving alignment, so it
+is recovered afterwards by exact content match — and the blocks that pass through that net are
+mostly not the ones you would expect. Of 242 blocks missed after a moved section, 238 were SHORT
+(under three tokens) and none were reworded; move recovery had inherited a three-token floor from
+the waypoint skeleton, which needs it for a reason move recovery does not. Reworded moved blocks
+are a real limit too, but a smaller one: 66 of the combined scenario's 348 misses. Either way the
+blocks are lost and ledgered, never guessed at.
 
 ## 4. Export: the splice engine
 

@@ -32,7 +32,7 @@ import {
  * The first run of this file was also the first measurement of the subsystem, and it found a
  * traceback bug that had been costing about 40 points of recall on every position-changing
  * edit. Across ~5,600 blocks per scenario the engine now recovers 100% of content-preserving
- * edits, 100% of insertions and deletions, 95.7% of moves and 93.8% of a combined week of
+ * edits, 100% of insertions and deletions, 96.2% of moves and 94.4% of a combined week of
  * editing, with 0-3 blocks silently misapplied.
  *
  * The scenarios are derived from each document's own vocabulary and sentence boundaries, so
@@ -174,7 +174,7 @@ describe("the anchor engine against real documents", () => {
    * document added to the corpus does not turn the suite red.
    *
    *   CONTENT changes  — reword, rewrite, split, merge — recover 100%.
-   *   POSITION changes — insert and delete recover 100%, move 95.7%, combined 93.8%.
+   *   POSITION changes — insert and delete recover 100%, move 96.2%, combined 94.4%.
    *
    * These floors were 0.50 and 0.42 when this file was written, because the DP traceback was
    * broken and the exact-content move-recovery pass was carrying the whole feature. The
@@ -186,20 +186,26 @@ describe("the anchor engine against real documents", () => {
    *
    * Insert and delete now misapply NOTHING, where they each misapplied 2 blocks before — the
    * lost anchors were not merely lost, some of them were landing on the wrong block on the way
-   * out. `move` and `combined` are the two that still lose blocks (239 and 339), because a move
-   * genuinely is not expressible in an order-preserving alignment and is recovered afterwards
-   * by exact content match, which a reworded moved block defeats. That is the honest remaining
-   * limit, not a bug.
+   * out. `move` and `combined` are the two that still lose blocks (214 and 307).
+   *
+   * That explanation used to read "because a reworded moved block defeats exact content match".
+   * Classifying every miss showed it was wrong: of 242 blocks missed after a moved section, 238
+   * were SHORT — under three tokens — and NOT ONE was reworded. Move recovery was excluding
+   * them by a token floor of 3 inherited from the waypoint skeleton, which needs it for a
+   * reason move recovery does not share. Lowering that floor to 2 is free; see
+   * `moveMinTokens` in `src/anchor.ts` for the sweep and for the guard that was tried at 1
+   * and measured to make things worse. Reworded moved blocks are a real limit, but they are
+   * the minority case: 66 of the combined scenario's 348 misses.
    */
   const SCENARIOS: { make: (c: Case) => Scenario; minRecall: number; maxMisapplied: number }[] = [
     { make: (c) => scenarioReword(c.blocks, c.aids, SEED, 0.2, 0.15), minRecall: 0.95, maxMisapplied: 0 },
     { make: (c) => scenarioRewrite(c.blocks, c.aids, SEED), minRecall: 0.95, maxMisapplied: 0 },
     { make: (c) => scenarioSplit(c.blocks, c.aids, SEED, 0.15), minRecall: 0.95, maxMisapplied: 0 },
     { make: (c) => scenarioMerge(c.blocks, c.aids, SEED, 0.15), minRecall: 0.95, maxMisapplied: 0 },
-    { make: (c) => scenarioMove(c.blocks, c.aids, SEED), minRecall: 0.90, maxMisapplied: 3 },
+    { make: (c) => scenarioMove(c.blocks, c.aids, SEED), minRecall: 0.92, maxMisapplied: 3 },
     { make: (c) => scenarioInsert(c.blocks, c.aids, SEED, 4, 5), minRecall: 0.97, maxMisapplied: 1 },
     { make: (c) => scenarioDelete(c.blocks, c.aids, SEED, 3, 4), minRecall: 0.97, maxMisapplied: 1 },
-    { make: (c) => scenarioCombined(c.blocks, c.aids, SEED), minRecall: 0.88, maxMisapplied: 4 },
+    { make: (c) => scenarioCombined(c.blocks, c.aids, SEED), minRecall: 0.90, maxMisapplied: 4 },
   ];
 
   for (const spec of SCENARIOS) {
