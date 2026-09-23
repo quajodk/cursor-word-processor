@@ -3,6 +3,7 @@ import { formatBinding } from "../commands/keys";
 import { bindingsFor, currentContext, listCommands, type Command } from "../commands/registry";
 import { relativeTo } from "../host";
 import { fuzzyMatch, highlight } from "./fuzzy";
+import { handleListKey } from "./list-nav";
 
 /**
  * One overlay, three jobs: run a command, open a file, answer a question.
@@ -10,6 +11,11 @@ import { fuzzyMatch, highlight } from "./fuzzy";
  * The house rule is that every feature is in the palette with its binding. The palette is
  * therefore a *view* of the registry rather than a menu that has to be kept in step with it —
  * a command that exists is a command you can find, and one that has a binding shows it.
+ *
+ * It navigates in the app's list dialect (`list-nav.ts`) like every other list. The keys it
+ * used to own privately — arrows plus `Ctrl-n`/`Ctrl-p` — are in fact the dialect, because
+ * they are the only movement keys that can work in a list you navigate while typing into its
+ * query field.
  */
 
 export type PaletteMode =
@@ -103,30 +109,18 @@ export function Palette({ mode, onClose }: PaletteProps) {
   };
 
   const onKeyDown = (event: ReactKeyboardEvent) => {
-    switch (event.key) {
-      case "Escape":
+    // The one-line input mode has no list to move through, but Enter and Escape still have to
+    // mean confirm and cancel — so it declares a list of length zero and keeps the same keys.
+    handleListKey(event, {
+      index: active,
+      count: mode.kind === "input" ? 0 : choices.length,
+      onMove: setActive,
+      onActivate: commit,
+      onDismiss: () => {
         if (mode.kind === "input") mode.resolve(null);
         onClose();
-        break;
-      case "Enter":
-        commit();
-        break;
-      case "ArrowDown":
-        setActive((i) => Math.min(choices.length - 1, i + 1));
-        break;
-      case "ArrowUp":
-        setActive((i) => Math.max(0, i - 1));
-        break;
-      case "n":
-      case "p":
-        if (!event.ctrlKey) return;
-        setActive((i) => Math.max(0, Math.min(choices.length - 1, i + (event.key === "n" ? 1 : -1))));
-        break;
-      default:
-        return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
+      },
+    });
   };
 
   return (

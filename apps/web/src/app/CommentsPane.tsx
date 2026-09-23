@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { EditorController } from "../editor/controller";
 import { addReply, readThreads, revealThread, setResolved, type Thread } from "../editor/comments";
+import { handleListKey } from "./list-nav";
 
 /**
  * The comments panel.
@@ -10,9 +11,16 @@ import { addReply, readThreads, revealThread, setResolved, type Thread } from ".
  * this panel is to be *read* — a reviewer's pass is a list of things to answer, not a set of
  * objects floating over the prose.
  *
- * KEYBOARD FIRST, like everything else: j/k or arrows move between threads, Enter opens the
- * reply box, ⌘Enter posts, R resolves, Escape returns to the document. Nothing here needs the
- * mouse.
+ * KEYBOARD FIRST, like everything else: it moves in the app's list dialect (`list-nav.ts`),
+ * Enter opens the reply box, ⌘Enter posts, R resolves, Escape returns to the document. Nothing
+ * here needs the mouse.
+ *
+ * It used to move on `j`/`k` as well, which this file argued for as a local decision. The
+ * argument was right about the decision being local and wrong about that being enough: the
+ * palette moves on `Ctrl-n`/`Ctrl-p` and the tree on arrows alone, so a writer who learned
+ * `j`/`k` here typed the letter `j` into the palette's query box. `j`/`k` cannot be the app's
+ * dialect because two of the five lists are navigated while the caret is in a text field, so
+ * it is gone from the one list that had it rather than half-adopted by the rest.
  *
  * These keys are LOCAL to the panel and are deliberately not commands: the palette is a view
  * of the command registry, and putting "next comment thread" in it would advertise a global
@@ -79,25 +87,26 @@ export function CommentsPane({ controller, revision, author }: CommentsPaneProps
 
   const onKeyDown = (event: ReactKeyboardEvent) => {
     const thread = visible[active];
-    switch (event.key) {
-      case "ArrowDown": case "j": setActive((i) => Math.min(visible.length - 1, i + 1)); break;
-      case "ArrowUp": case "k": setActive((i) => Math.max(0, i - 1)); break;
-      case "Enter":
+
+    // Resolve is this list's own verb, so it is handled here rather than in the dialect.
+    if (event.key === "r" || event.key === "R") {
+      if (thread) toggleResolved(thread);
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    handleListKey(event, {
+      index: active,
+      count: visible.length,
+      onMove: setActive,
+      onActivate: () => {
         if (!thread) return;
         if (thread.canReply) { setReplying(thread.anchorId); queueMicrotask(() => replyRef.current?.focus()); }
         else reveal(thread);
-        break;
-      case "r": case "R":
-        if (thread) toggleResolved(thread);
-        break;
-      case "Escape":
-        controller.focus();
-        break;
-      default:
-        return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
+      },
+      onDismiss: () => controller.focus(),
+    });
   };
 
   if (snapshot.source === "none") {

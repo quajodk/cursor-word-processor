@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { HostApi } from "@scriv/host-api";
 import { blameSentences, diffDocuments, type DocumentDiff, type SentenceBlame, type SentenceChange } from "@scriv/workspace";
+import { codecFor } from "../doc/codec";
+import { Panel } from "./Panel";
 
 /**
  * The change view: what this document looks like against HEAD, in sentences.
@@ -8,6 +10,11 @@ import { blameSentences, diffDocuments, type DocumentDiff, type SentenceBlame, t
  * Everything a line diff gets wrong about prose is what this pane exists to show. A reflowed
  * paragraph is not a change. A moved sentence says "moved", once, rather than appearing as a
  * large deletion beside a large insertion. A reworded clause shows which words moved.
+ *
+ * It explains every dead end it can reach, because a change view showing nothing is
+ * indistinguishable from a document with no changes, and the second is a much more comforting
+ * thing to believe. There are four such ends: no repository, an untracked file, a tracked file
+ * that genuinely matches HEAD, and a document this pane cannot read at all.
  */
 
 type Mode = "changes" | "blame";
@@ -43,6 +50,21 @@ export function DiffPane({ host, root, path, currentText, onClose }: DiffPanePro
   useEffect(() => {
     let cancelled = false;
     if (!path) return;
+    // The fourth dead end, and the one nobody wrote a string for: the git feature meeting the
+    // docx feature. `currentText()` returns null for a binary codec, so the diff and the blame
+    // both stay null and every git branch below reports success — the file IS tracked, it DOES
+    // differ from HEAD — leaving a pane that renders its chrome and nothing else. A writer
+    // reads that as "no changes", which is the one conclusion it must not lead to.
+    if (isBinary(path)) {
+      setStatus(
+        `This document opens through the ${extensionOf(path)} codec, which reads it as bytes rather ` +
+        `than text. The sentence diff and the blame both need text, so neither can be computed ` +
+        `here — which is this pane's limit, not a statement that the file has not changed.`,
+      );
+      setHead(null);
+      setBlame(null);
+      return;
+    }
     setStatus("reading…");
     void (async () => {
       try {
@@ -70,29 +92,26 @@ export function DiffPane({ host, root, path, currentText, onClose }: DiffPanePro
     [head, text],
   );
 
-  const onKey = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Escape") { e.preventDefault(); onClose(); }
-  }, [onClose]);
-
   if (!path) return null;
 
-  return (
-    <section className="scriv-diff" aria-label="Changes" onKeyDown={onKey}>
-      <header className="scriv-diff-head">
-        <div className="scriv-diff-tabs" role="tablist">
-          <button role="tab" aria-selected={mode === "changes"} className={mode === "changes" ? "is-active" : ""}
-            onClick={() => setMode("changes")}>Changes</button>
-          <button role="tab" aria-selected={mode === "blame"} className={mode === "blame" ? "is-active" : ""}
-            onClick={() => setMode("blame")}>Blame</button>
-        </div>
-        {diff && mode === "changes" && (
-          <span className="scriv-diff-stats">
-            {summarise(diff)}
-          </span>
-        )}
-        <button className="scriv-diff-close" onClick={onClose} aria-label="Close changes">esc</button>
-      </header>
+  const controls = (
+    <>
+      <div className="scriv-diff-tabs" role="tablist">
+        <button role="tab" aria-selected={mode === "changes"} className={mode === "changes" ? "is-active" : ""}
+          onClick={() => setMode("changes")}>Diff</button>
+        <button role="tab" aria-selected={mode === "blame"} className={mode === "blame" ? "is-active" : ""}
+          onClick={() => setMode("blame")}>Blame</button>
+      </div>
+      {diff && mode === "changes" && (
+        <span className="scriv-diff-stats">
+          {summarise(diff)}
+        </span>
+      )}
+    </>
+  );
 
+  return (
+    <Panel name="scriv-diff" title="Changes" subtitle="Against HEAD, in sentences" controls={controls} onClose={onClose}>
       {status && <p className="scriv-diff-status">{status}</p>}
 
       {mode === "changes" && diff && (
@@ -118,8 +137,22 @@ export function DiffPane({ host, root, path, currentText, onClose }: DiffPanePro
           ))}
         </ol>
       )}
-    </section>
+    </Panel>
   );
+}
+
+/**
+ * The file's own extension, so the explanation above names the format the writer chose rather
+ * than the codec's internal label. `codecFor` decides what actually opens it; this only has to
+ * say which file we are talking about.
+ */
+function extensionOf(path: string): string {
+  const dot = path.lastIndexOf(".");
+  return dot < 0 ? "plain text" : path.slice(dot).toLowerCase();
+}
+
+function isBinary(path: string): boolean {
+  return codecFor(path).binary === true;
 }
 
 function summarise(diff: DocumentDiff): string {

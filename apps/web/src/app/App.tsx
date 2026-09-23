@@ -30,21 +30,6 @@ interface Toast {
   tone: "info" | "error";
 }
 
-/**
- * Move keyboard focus into a panel that has just opened.
- *
- * Prefers the first control a writer would actually use — a text field if the panel has one,
- * else the first button — over the panel container, because focusing a `<section>` puts the
- * caret nowhere and the next Tab starts from the top of the document anyway.
- */
-function focusIn(selector: string): void {
-  const panel = document.querySelector<HTMLElement>(selector);
-  if (!panel) return;
-  const target = panel.querySelector<HTMLElement>("input, textarea, select")
-    ?? panel.querySelector<HTMLElement>("button")
-    ?? panel;
-  target.focus();
-}
 
 export function App() {
   const prefs = useSyncExternalStore(subscribePrefs, getPrefs);
@@ -196,21 +181,25 @@ export function App() {
       // Flipping the boolean alone left focus in the document: the panel appeared, and a
       // keyboard-only user had to Tab an unknown number of times to reach it — which is
       // "reachable" in the sense that a filing cabinet in another building is reachable.
+      // FOCUS IS THE PANEL'S JOB, NOT THE SHELL'S. This used to call a `focusIn` helper that
+      // hunted for "the first control a writer would actually use" — a text field, else a
+      // button, else the container. That produced three different landing spots for what was
+      // meant to be one policy (the Term field in agent mode, the CLOSE BUTTON in fidelity,
+      // and nothing at all in the changes pane, whose selector never matched its class), and
+      // it left Escape unreachable wherever it landed outside the panel's own handler.
+      // `Panel` focuses itself on mount now, so every panel behaves the same way.
       toggleFidelity: () => setShowFidelity((v) => {
         const next = !v;
-        if (next) requestAnimationFrame(() => focusIn(".fidelity"));
         return next;
       }),
       toggleAgent: () => setShowAgent((v) => {
         const next = !v;
-        if (next) requestAnimationFrame(() => focusIn(".agent"));
         return next;
       }),
       // Same shape as its two neighbours. It used to be a `window` keydown of its own, which is
       // why the changes pane was the one panel that did not take focus when it opened.
       toggleDiff: () => setShowDiff((v) => {
         const next = !v;
-        if (next) requestAnimationFrame(() => focusIn(".diff"));
         return next;
       }),
       focusComments: () => {
@@ -342,12 +331,7 @@ export function App() {
         ) : prefs.pane === "comments" ? (
           <CommentsPane controller={controller} revision={docRevision} author={commentAuthor} />
         ) : (
-          <SearchPane
-            root={root}
-            onOpen={(path) => {
-              void ui.openFile(path);
-            }}
-          />
+          <SearchPane root={root} />
         )}
       </aside>
 

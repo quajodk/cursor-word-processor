@@ -9,7 +9,9 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type Ref,
 } from "react";
+import { currentContext } from "../commands/registry";
 import { host } from "../host";
+import { handleListKey } from "./list-nav";
 
 /**
  * The file tree.
@@ -18,8 +20,9 @@ import { host } from "../host";
  * fifty thousand files, and the difference must not be visible in the first paint. Children are
  * fetched when a folder is expanded and cached until the host reports a change under it.
  *
- * Fully keyboard-driven — arrows move, Right/Left expand and collapse, Enter opens — because
- * "every feature reachable without the mouse" has to include the one you use most.
+ * Fully keyboard-driven — it speaks the app's list dialect (`list-nav.ts`) like every other
+ * list, plus Right/Left to expand and collapse — because "every feature reachable without the
+ * mouse" has to include the one you use most, and has to include the way back out.
  */
 
 export interface TreeHandle {
@@ -164,36 +167,38 @@ export function FileTree({ root, openPath, onOpen, handleRef }: FileTreeProps) {
       const next = rows[Math.max(0, Math.min(rows.length - 1, index + delta))];
       if (next) setSelected(next.path);
     };
-    switch (event.key) {
-      case "ArrowDown":
-        move(1);
-        break;
-      case "ArrowUp":
-        move(-1);
-        break;
-      case "ArrowRight": {
+
+    // Expand and collapse are the tree's own verbs, layered on top of the shared dialect
+    // rather than folded into it: this is the only list in the app with a hierarchy, and a
+    // "go in / come out" pair would mean nothing in the other four.
+    if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+      const row = rows[index];
+      const forward = event.key === "ArrowRight";
+      if (row?.isDir && expanded.has(row.path) !== forward) toggle(row.path);
+      else move(forward ? 1 : -1);
+      event.preventDefault();
+      return;
+    }
+
+    handleListKey(event, {
+      index,
+      count: rows.length,
+      onMove: (to) => {
+        const next = rows[to];
+        if (next) setSelected(next.path);
+      },
+      onActivate: () => {
         const row = rows[index];
-        if (row?.isDir && !expanded.has(row.path)) toggle(row.path);
-        else move(1);
-        break;
-      }
-      case "ArrowLeft": {
-        const row = rows[index];
-        if (row?.isDir && expanded.has(row.path)) toggle(row.path);
-        else move(-1);
-        break;
-      }
-      case "Enter": {
-        const row = rows[index];
-        if (!row) break;
+        if (!row) return;
         if (row.isDir) toggle(row.path);
         else onOpen(row.path);
-        break;
-      }
-      default:
-        return;
-    }
-    event.preventDefault();
+      },
+      // The tree was the app's one keyboard dead end: every other focusable surface treats
+      // Escape as "give the document back", and once focus was in here the only route out was
+      // to run a command. It goes through the shell's own `focusEditor` rather than reaching
+      // for a view, because that is the same door ⌘⇧2 opens.
+      onDismiss: () => currentContext()?.ui.focusEditor(),
+    });
   };
 
   if (error) {

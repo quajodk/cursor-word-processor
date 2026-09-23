@@ -3,6 +3,8 @@ import { exportDocx, summarize, type LedgerEntry, type LedgerSeverity } from "@s
 import type { EditorController } from "../editor/controller";
 import type { DocxMeta } from "../doc/docx";
 import { markdownCodec } from "../doc/markdown";
+import { Panel } from "./Panel";
+import { revealBlock } from "./reveal";
 
 /**
  * What this document will lose, stated before it is handed over.
@@ -125,12 +127,7 @@ export function FidelityPane({ controller, revision, onClose }: FidelityPaneProp
   };
 
   return (
-    <section className="fidelity" role="dialog" aria-label="Fidelity">
-      <header className="fidelity-head">
-        <h2>Fidelity</h2>
-        <button type="button" onClick={onClose} aria-label="Close">Close</button>
-      </header>
-
+    <Panel name="fidelity" title="Fidelity" subtitle="What this document loses" onClose={onClose}>
       {!isDocx && controller.codec.id === "markdown" && (
         <div className="fidelity-body">
           <p className="fidelity-lede">
@@ -224,7 +221,7 @@ export function FidelityPane({ controller, revision, onClose }: FidelityPaneProp
           )}
         </div>
       )}
-    </section>
+    </Panel>
   );
 }
 
@@ -252,6 +249,15 @@ function EntryList({ entries, empty }: { entries: LedgerEntry[]; empty: string }
                   <span className="fidelity-detail">{e.detail}</span>
                   {e.confidence !== undefined && (
                     <span className="fidelity-count">confidence {e.confidence.toFixed(2)}</span>
+                  )}
+                  {/* An entry that names a block is an address, and an address the tool will
+                      not take you to is a worse answer than no address. `aid` is the model's
+                      own stable block identity, so unlike a line number it cannot go stale
+                      while the panel is open. */}
+                  {e.aid && (
+                    <button type="button" className="fidelity-goto" onClick={() => revealBlock(e.aid!)}>
+                      Go to it
+                    </button>
                   )}
                 </li>
               ))}

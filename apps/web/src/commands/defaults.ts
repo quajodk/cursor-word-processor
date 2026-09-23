@@ -406,9 +406,20 @@ export function registerDefaultCommands(controller: EditorController): () => voi
         }));
       },
     },
+    // ONE WORD, ONE REFERENT. "Suggestion" used to mean both of the things on this screen at
+    // once: a Harper diagnostic and an AI rewrite, with three verbs between them — accept,
+    // reject, apply. The split is that a SUGGESTION is what the checker proposes about your
+    // prose, and a CHANGE is what someone (a colleague, the AI, agent mode) proposes to the
+    // document. "Change" is the word the model layer already settled on — the tracked-change
+    // marks, the changes pane, agent mode's review list — so the screen now agrees with it.
+    //
+    // Deliberately NOT resolved the other way, by calling diagnostics "hints": `hint` is
+    // already a severity here (see `view.diagnosticFloor`, "Show style hints as well as
+    // errors"), and promoting it to the umbrella term would collide it with the rung of its
+    // own ladder. That is the disease, not the cure.
     {
       id: "ai.accept",
-      title: "Accept AI suggestion",
+      title: "Accept AI change",
       category: "Assist",
       keybinding: "Mod-Enter",
       when: (ctx) => ctx.view !== null,
@@ -416,7 +427,7 @@ export function registerDefaultCommands(controller: EditorController): () => voi
     },
     {
       id: "ai.reject",
-      title: "Reject AI suggestion",
+      title: "Reject AI change",
       category: "Assist",
       keybinding: "Mod-Backspace",
       when: (ctx) => ctx.view !== null,
@@ -424,7 +435,7 @@ export function registerDefaultCommands(controller: EditorController): () => voi
     },
     {
       id: "diagnostics.quickFix",
-      title: "Apply suggestion at cursor",
+      title: "Apply suggested fix at cursor",
       category: "Assist",
       keybinding: "Mod-.",
       when: inEditor,
