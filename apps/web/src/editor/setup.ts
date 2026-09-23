@@ -84,19 +84,31 @@ export function editorPlugins(opts: PluginOptions = {}): Plugin[] {
     // bound to the same arrow, and after history so undo still sees one step per edit.
     expandPlugin(),
     killRingPlugin(),
-    // Before the text-op keymap so a multi-cursor edit intercepts typing, and before the
-    // base keymap so Escape collapses cursors rather than reaching the document.
+    // ORDER HERE DECIDES ONLY WHAT THE EDITOR ARBITRATES AMONG ITSELF.
+    //
+    // Three comments used to live in this block, each naming a different owner for Escape —
+    // multi-cursor, the AI review, the completion list. They cannot all be right, and in fact
+    // none of them decided anything: the command registry listens on `window` in the CAPTURE
+    // phase, and everything here runs on the contenteditable during bubbling, so any key that
+    // is also a registered command never arrived. Escape is one, because `cursor.clear` is in
+    // the text-op binding table and `defaults.ts` turns every entry in that table into a
+    // command. Nobody chose that; it fell out of deriving the palette from the bindings.
+    //
+    // A surface that needs a key the registry also has now says so explicitly, via
+    // `claimEditorKeys` in `commands/registry.ts`. Plugin order is the tie-break BELOW that,
+    // between plugins whose handlers actually run.
+    //
+    // Before the text-op keymap so a multi-cursor edit intercepts typing.
     multiCursorPlugin(),
-    // Before the text ops: while a suggestion is under review, Cmd-Enter and Escape belong
-    // to the review, not to the document.
+    // Claims Escape / Cmd-Enter / Cmd-Backspace while a suggestion is under review.
     inlineEditPlugin(),
     // Diagnostics only when a language is supplied: bun's test runner has no Worker, and a
     // plugin that constructs one unconditionally would make the doc-model tests need a DOM.
     ...(opts.language
       ? [diagnosticsPlugin({ language: opts.language, floor: opts.diagnosticFloor, onTiming: opts.onDiagnostics })]
       : []),
-    // Completion before the text-op keymap: while the popup is open, Up/Down/Enter belong to
-    // the list, not to the document.
+    // Claims Up/Down/Enter/Tab/Escape while the popup is open; before the text-op keymap so
+    // its handler also wins the editor-internal tie-break.
     ...(opts.symbols ? [completionPlugin(opts.symbols.index, opts.currentPath ?? (() => null))] : []),
     textopsKeymap(),
     scrivInputRules(),

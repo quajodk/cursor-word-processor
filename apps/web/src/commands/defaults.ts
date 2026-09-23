@@ -240,6 +240,19 @@ export function registerDefaultCommands(controller: EditorController): () => voi
       run: (ctx) => ctx.ui.toggleAgent(),
     },
     {
+      // The fourth pillar was the only one outside the command system: ⌘⇧G was a hand-rolled
+      // `window` keydown in App.tsx. That made it invisible in three ways at once — no palette
+      // entry, so the whole diff-and-blame feature could not be found without already knowing
+      // the chord; invisible to `apps/web/test/bindings.test.ts`, which reads this file, so a
+      // collision with it could never be caught; and it ignored `whenTyping`, so it fired while
+      // you were typing "G" into a field with ⌘⇧ held.
+      id: "view.toggleDiff",
+      title: "Changes: diff and blame against git",
+      category: "View",
+      keybinding: "Mod-Shift-g",
+      run: (ctx) => ctx.ui.toggleDiff(),
+    },
+    {
       id: "view.fidelity",
       title: "Fidelity: what this document loses",
       category: "View",

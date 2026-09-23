@@ -123,17 +123,6 @@ export function App() {
 
   useEffect(() => watchSystemTheme(), []);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === "g" && e.shiftKey && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setShowDiff((v) => !v);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
 
 
   // Index the workspace for completion. Deliberately fire-and-forget and unawaited: the
@@ -215,6 +204,13 @@ export function App() {
       toggleAgent: () => setShowAgent((v) => {
         const next = !v;
         if (next) requestAnimationFrame(() => focusIn(".agent"));
+        return next;
+      }),
+      // Same shape as its two neighbours. It used to be a `window` keydown of its own, which is
+      // why the changes pane was the one panel that did not take focus when it opened.
+      toggleDiff: () => setShowDiff((v) => {
+        const next = !v;
+        if (next) requestAnimationFrame(() => focusIn(".diff"));
         return next;
       }),
       focusComments: () => {

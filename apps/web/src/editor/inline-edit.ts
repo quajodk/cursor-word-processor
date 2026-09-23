@@ -1,4 +1,5 @@
 import type { HostApi } from "@scriv/host-api";
+import { claimEditorKeys } from "../commands/registry";
 import { acceptSuggestion, hasSuggestion, rejectSuggestion, suggestRewrite } from "@scriv/ai";
 import { Plugin, PluginKey, type EditorState, type Transaction } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
@@ -101,17 +102,15 @@ export function inlineEditPlugin(): Plugin<InlineEditState> {
         const st = inlineEditKey.getState(view.state);
         if (!st) return false;
 
-        // Mod-K opens the prompt. Bound here rather than on the window so it beats the
-        // command keymap deterministically instead of racing it through event bubbling.
-        if (event.key === "k" && (event.metaKey || event.ctrlKey) && !event.shiftKey) {
-          const { from, to } = view.state.selection;
-          if (from === to) return false;
-          const original = view.state.doc.textBetween(from, to, "\n");
-          view.dispatch(view.state.tr.setMeta(inlineEditKey, {
-            kind: "prompt", from, to, original, revId: `ai-${Date.now().toString(36)}`,
-          }));
-          return true;
-        }
+        // ⌘K USED TO BE HANDLED HERE, with a comment claiming it "beats the command keymap
+        // deterministically instead of racing it through event bubbling". It did not: the
+        // command keymap is a capture-phase listener on `window`, so it wins every time, and
+        // `defaults.ts` has carried an identical implementation the whole time. Two builders
+        // solved the same problem twice, each believing theirs was the one that ran.
+        //
+        // The registry's copy is the one kept, because the palette is derived from the binding
+        // table — a command that lives only in a plugin is a feature with no discoverable way
+        // in, which house rule 4 forbids.
         if (st.phase === "reviewing" || st.phase === "conflict") {
           if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) return accept(view);
           if (event.key === "Backspace" && (event.metaKey || event.ctrlKey)) return reject(view);
@@ -119,6 +118,19 @@ export function inlineEditPlugin(): Plugin<InlineEditState> {
         }
         return false;
       },
+    },
+
+    view: (editorView) => {
+      // A suggestion under review owns the keys that decide it. Escape was going to
+      // `cursor.clear` and collapsing the multi-cursor instead of rejecting the edit.
+      const release = claimEditorKeys("inline-edit", (event) => {
+        const st = inlineEditKey.getState(editorView.state);
+        if (!st || (st.phase !== "reviewing" && st.phase !== "conflict")) return false;
+        const mod = event.metaKey || event.ctrlKey;
+        if (event.key === "Escape" && !mod) return true;
+        return mod && (event.key === "Enter" || event.key === "Backspace");
+      });
+      return { destroy: release };
     },
   });
 }

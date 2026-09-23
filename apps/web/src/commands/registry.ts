@@ -38,6 +38,8 @@ export interface CommandUi {
   toggleFidelity(): void;
   /** Show or hide agent mode: an instruction that edits the workspace, reviewed before it lands. */
   toggleAgent(): void;
+  /** Show or hide the changes pane: sentence-granularity diff and blame against git. */
+  toggleDiff(): void;
   toggleSidebar(): void;
   setTheme(theme: "light" | "dark" | "system"): void;
   cycleTheme(): void;
@@ -170,6 +172,50 @@ function inTextField(target: EventTarget | null): boolean {
 }
 
 /**
+ * A surface INSIDE the editor that owns certain keys while it is showing.
+ *
+ * `whenTyping` already gives the app's own `<input>`s an escape hatch from the global
+ * dispatcher — it was added after ⌘⏎ in the comment reply box ran "Exit code block". The editor
+ * never got the same hatch, and it has the identical problem one layer in: the dispatcher is a
+ * CAPTURE-phase listener on `window`, and ProseMirror's `handleKeyDown` props run on the
+ * contenteditable during BUBBLING, so any key in both systems belongs to the dispatcher and the
+ * plugin's handler for it can never run.
+ *
+ * That silently killed four in-editor handlers. The completion popup could not be dismissed
+ * with Escape (`cursor.clear` from the text-op binding table won the key); Escape could not
+ * reject a pending AI edit for the same reason; and ⌘K existed twice, in `inline-edit.ts` and
+ * in `defaults.ts`, with the plugin's copy carrying a comment claiming it "beats the command
+ * keymap deterministically" when in fact it never ran at all.
+ *
+ * The fix inverts the coupling. Rather than teach every global command about every modal
+ * surface — which is N×M and gets forgotten — a surface declares which keys it owns while it
+ * is up, and the dispatcher yields. There is still exactly one dispatcher and one place to
+ * reason about precedence; it now just has a way to know that something nearer the caret has a
+ * better claim.
+ */
+export type KeyClaim = (event: KeyboardEvent) => boolean;
+
+const keyClaims = new Map<string, KeyClaim>();
+
+/**
+ * Claim keys for an in-editor surface. Returns a release function; call it when the surface
+ * goes away. Registering the same id twice replaces the earlier claim.
+ */
+export function claimEditorKeys(id: string, claim: KeyClaim): () => void {
+  keyClaims.set(id, claim);
+  return () => { if (keyClaims.get(id) === claim) keyClaims.delete(id); };
+}
+
+/** The id of the surface claiming this event, or null. Exposed for tests and diagnostics. */
+export function editorKeyClaim(event: KeyboardEvent): string | null {
+  for (const [id, claim] of keyClaims) {
+    // A claim that throws must not swallow every key in the app.
+    try { if (claim(event)) return id; } catch { /* ignore a broken claim */ }
+  }
+  return null;
+}
+
+/**
  * The single global key handler.
  *
  * Every binding in the app resolves here, including the ones that fire while the caret is in
@@ -186,6 +232,12 @@ export function installKeyboard(target: Window = window): () => void {
     if (!ctx) return;
 
     const typing = inTextField(event.target);
+
+    // An in-editor modal surface outranks a global binding for the keys it claims. The event is
+    // deliberately left alone — not preventDefault'd — so it goes on to bubble into ProseMirror
+    // and reach the plugin whose handler was previously dead.
+    if (!typing && editorKeyClaim(event) !== null) return;
+
     const commands = [...registry.values()];
     for (let i = commands.length - 1; i >= 0; i--) {
       const command = commands[i]!;
