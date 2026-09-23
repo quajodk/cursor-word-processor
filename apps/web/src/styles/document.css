@@ -377,21 +377,9 @@
   box-shadow: 0 1px 0 color-mix(in oklab, var(--ink-dim) 55%, transparent);
 }
 
-.ProseMirror .scriv-ins {
-  color: var(--ok);
-  text-decoration: underline;
-  text-decoration-thickness: 0.06em;
-  text-underline-offset: 0.18em;
-}
-
-.ProseMirror .scriv-del {
-  color: var(--danger);
-  text-decoration: line-through;
-}
-
-.ProseMirror .scriv-ins-ai {
-  background: color-mix(in oklab, var(--ok) 12%, transparent);
-}
+/* Tracked changes are marks too, but they are a design of their own; see the bottom of
+   this file. Nothing about them is styled here, deliberately — two rules for one mark is
+   exactly how they came to render as a hybrid of two stylesheets. */
 
 /* ---- figures ------------------------------------------------------------ */
 
@@ -538,35 +526,89 @@
 }
 
 /* ---------------------------------------------------------------- tracked changes */
-/* One appearance for an AI suggestion and a colleague's revision, because they are the same
-   thing in the document. Origin only changes the hue, so a reader can tell at a glance who
-   proposed a change without learning a second visual language for it. */
-ins.scriv-ins {
-  text-decoration: none;
-  background: color-mix(in srgb, var(--good) 16%, transparent);
-  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--good) 55%, transparent);
+/*
+ * ONE appearance for a change, everywhere a change is shown.
+ *
+ * Two stylesheets for this landed and the document rendered neither. A text-colour design
+ * (`.ProseMirror .scriv-ins`: green underlined text, red struck text) sat above this
+ * background-wash one, and the two fought on two separate axes. Specificity: (0,2,0) beats
+ * (0,1,1), so the text design won every head-to-head and the wash only showed through on
+ * properties it did not set. Undefined variables: this block's `var(--good)` was defined
+ * nowhere, so `color-mix()` was invalid at computed-value time and the whole declaration was
+ * dropped. Measured on live elements, an AI insertion came out as a green highlight with a
+ * blue underline — the colour scheme of neither author.
+ *
+ * KEPT: the wash. DELETED: the text-colour block, outright, rather than out-specified.
+ *   - This file's own diagnostics rule, forty lines down, is "severity changes the colour and
+ *     the weight of the LINE, never the colour of the prose." Colouring a tracked insertion's
+ *     text broke that rule for the one mark most likely to also be carrying a squiggle, and
+ *     spent the text-decoration budget the squiggle needs.
+ *   - It is the only one of the two that can say WHO without teaching a second visual
+ *     language: shape says what happened, hue says who proposed it. The text design would
+ *     have needed four prose colours in running text to do the same.
+ *   - The changes pane already drew a change this way, so keeping the other design would have
+ *     meant the document and the pane that lists the document's changes disagreeing. (The
+ *     agent pane drew it the text-colour way; it no longer does — see app.css.)
+ *
+ * Shape = what: an insertion is a wash with a rule under it, a deletion is struck and dimmed.
+ * Hue = who: `--ok` for a person, `--link` for the AI.
+ *
+ * That split was arguable and got decided on Word's behaviour rather than on taste. Word colours
+ * a tracked change by AUTHOR and distinguishes insertion from deletion by underline versus
+ * strikethrough — hue = who, shape = what, exactly this. A product whose reason for existing is
+ * round-tripping Word documents should not teach its readers a second convention for the thing
+ * Word already taught them. It does mean a green wash can sit under struck text, which looks odd
+ * for a moment and then reads correctly as "this person deleted this", which is what Word shows.
+ * `schema.ts` has always emitted
+ * `scriv-del-user` and `scriv-del-ai` and neither had any CSS, so a colleague's deletion and
+ * the AI's were indistinguishable; they are not now.
+ *
+ * The selectors are bare `ins`/`del` on purpose. Those two elements exist in exactly three
+ * places — the tracked-change marks, the changes pane and the agent pane — and all three mean
+ * the same thing, so one rule is the whole point. Nothing else is caught: the strike mark
+ * renders as `<s>`, not `<del>` (doc-model/src/schema.ts:159).
+ */
+ins,
+del {
+  --change-hue: var(--ok);
 }
-del.scriv-del {
+
+ins.scriv-ins-ai,
+del.scriv-del-ai {
+  --change-hue: var(--link);
+}
+
+ins {
+  text-decoration: none;
+  background: color-mix(in srgb, var(--change-hue) 16%, transparent);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--change-hue) 55%, transparent);
+}
+
+del {
+  color: color-mix(in srgb, var(--ink) 55%, transparent);
   text-decoration: line-through;
   text-decoration-thickness: 1px;
-  color: color-mix(in srgb, var(--ink) 55%, transparent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--change-hue) 70%, transparent);
+  background: color-mix(in srgb, var(--change-hue) 12%, transparent);
 }
-ins.scriv-ins-ai { background: color-mix(in srgb, var(--link, #6d8fd4) 18%, transparent); }
-ins.scriv-ins-ai { box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--link, #6d8fd4) 55%, transparent); }
 
 /* ---------------------------------------------------------------- diagnostics */
 /* Underlines rather than backgrounds: a squiggle must be visible without competing with the
    text it marks, and a writer scanning a page should be able to ignore it. Severity changes
-   the colour and the weight of the line, never the colour of the prose. */
+   the colour and the weight of the line, never the colour of the prose.
+
+   The colours are the app's one severity ladder — --danger / --warn / --ink-faint — not a
+   private one. `error` used to be --accent, which is the colour of the caret, the drop cursor
+   and the column-resize handle, and is not what an error is anywhere else in the app (a
+   toast's error is --danger). --accent is a chrome affordance; it is not a severity. */
 .scriv-diag {
   text-decoration-line: underline;
   text-decoration-style: wavy;
   text-decoration-skip-ink: none;
   text-underline-offset: 3px;
 }
-.scriv-diag-error { text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; }
-.scriv-diag-warning { text-decoration-color: var(--warn, #B8862C); text-decoration-thickness: 1.5px; }
+.scriv-diag-error { text-decoration-color: var(--danger); text-decoration-thickness: 1.5px; }
+.scriv-diag-warning { text-decoration-color: var(--warn); text-decoration-thickness: 1.5px; }
 .scriv-diag-info { text-decoration-color: var(--ink-faint); text-decoration-thickness: 1px; }
 /* Hints are suggestions of taste, not errors. Dotted and faint, so they stay ignorable. */
 .scriv-diag-hint {

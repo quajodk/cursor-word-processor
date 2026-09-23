@@ -11,6 +11,7 @@
   /* Chrome surfaces */
   --app-bg: #e8e5de;
   --panel-bg: #f2f0ea;
+  --panel-raised: #fbf9f4;
   --panel-fg: #3c3830;
   --panel-fg-dim: #857e70;
   --panel-rule: #d6d1c4;
@@ -18,7 +19,20 @@
   --panel-active: #dbd5c6;
   --focus-ring: #6c88a8;
   --accent: #4a6684;
+  /*
+   * The severity ladder, and it is a ladder: --danger is "broken, or will be lost", --warn is
+   * "look at this", --ok is "this is fine". --warn was referenced by five rules across both
+   * stylesheets and defined by neither, so each one carried its own guess at it — #B8862C in
+   * document.css, #D3A03A here. Two hexes for one token that did not exist. It exists now;
+   * the dark value is the lighter guess, which is the one that reads on dark chrome.
+   *
+   * --good is NOT here on purpose. It was a fifth name for the green that --ok already is, and
+   * it was likewise undefined, which silently killed every `color-mix()` that used it —
+   * including the tracked-insertion wash, the whole point of that design. Every reference to
+   * it now says --ok. A token nobody defined is not a token, and the fix is one green, not two.
+   */
   --danger: #9c4a3c;
+  --warn: #8a6518;
   --ok: #4d7048;
 
   /* Document surfaces — see document.css */
@@ -40,6 +54,7 @@
   --ui: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 
+  --sidebar-w: 268px;
   --ui-size: 12.5px;
   --radius: 5px;
 }
@@ -49,6 +64,7 @@
 
   --app-bg: #100f0e;
   --panel-bg: #191816;
+  --panel-raised: #211f1c;
   --panel-fg: #cbc5b9;
   --panel-fg-dim: #7e7869;
   --panel-rule: #2b2925;
@@ -57,6 +73,7 @@
   --focus-ring: #6f8dab;
   --accent: #8aa8c6;
   --danger: #cd7a68;
+  --warn: #d3a03a;
   --ok: #8fb182;
 
   --paper: #1b1a18;
@@ -107,7 +124,7 @@ button {
 
 .app {
   display: grid;
-  grid-template-columns: var(--sidebar-w, 268px) 1fr;
+  grid-template-columns: var(--sidebar-w) 1fr;
   grid-template-rows: 1fr auto;
   grid-template-areas: "side main" "status status";
   height: 100%;
@@ -128,6 +145,23 @@ button {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  /*
+   * A grid item's default `min-height: auto` refuses to shrink below its content. With the
+   * comments pane in here the sidebar grew to 1507px inside a 486px shell, the grid row grew
+   * with it, and the tab strip and the status bar left the window — measured: tablist at
+   * -69px, status bar 1000px below the fold. `.comments-list` had `overflow-y: auto` all
+   * along and never scrolled, because nothing above it was ever given a height to fit into.
+   *
+   * `.comments` inside it already carries `min-height: 0` for exactly this failure, and `.app`
+   * around it is a plain block, where `auto` computes to 0 anyway. The one element between
+   * them is the only one of the three that is actually a grid item — so it is the only one
+   * where `min-height: auto` bites, and it is the one that was missed.
+   *
+   * `body { overflow: hidden }` does not save you here: it propagates to the viewport, so
+   * there is no scrollbar, but `hidden` still scrolls when something inside it takes focus —
+   * which is how the chrome left the screen with no visible way to bring it back.
+   */
+  min-height: 0;
   background: var(--panel-bg);
   border-right: 1px solid var(--panel-rule);
 }
@@ -512,7 +546,7 @@ button {
 }
 
 .status-chip[data-tone="warn"] {
-  color: var(--danger);
+  color: var(--warn);
 }
 
 .status-chip[data-tone="ok"] {
@@ -691,11 +725,11 @@ button {
   max-height: 17rem;
   overflow-y: auto;
   padding: 4px;
-  background: var(--surface-raised, var(--surface));
+  background: var(--panel-raised);
   border: 1px solid var(--rule);
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, .18), 0 12px 32px -12px rgba(0, 0, 0, .45);
-  font-family: var(--ui-font);
+  font-family: var(--ui);
   font-size: 13px;
 }
 .scriv-completion[hidden] { display: none; }
@@ -710,16 +744,16 @@ button {
   cursor: default;
   white-space: nowrap;
 }
-.scriv-completion-row.is-selected { background: var(--selection, rgba(125, 145, 190, .22)); }
+.scriv-completion-row.is-selected { background: var(--sel); }
 
 .scriv-completion-kind {
-  font-family: var(--mono-font);
+  font-family: var(--mono);
   font-size: 11px;
   text-align: center;
   color: var(--ink-faint);
 }
 .scriv-completion-kind.kind-citation { color: var(--accent); }
-.scriv-completion-kind.kind-heading { color: var(--good, #4FB587); }
+.scriv-completion-kind.kind-heading { color: var(--ok); }
 
 .scriv-completion-label {
   overflow: hidden;
@@ -733,7 +767,7 @@ button {
   font-weight: 600;
 }
 .scriv-completion-detail {
-  font-family: var(--mono-font);
+  font-family: var(--mono);
   font-size: 11px;
   color: var(--ink-faint);
   font-variant-numeric: tabular-nums;
@@ -751,14 +785,14 @@ button {
   gap: 10px;
   min-width: min(36rem, calc(100vw - 4rem));
   padding: 8px 12px;
-  background: var(--surface-raised, var(--surface));
+  background: var(--panel-raised);
   border: 1px solid var(--rule);
   border-radius: 6px;
   box-shadow: 0 2px 6px rgba(0,0,0,.2), 0 16px 40px -16px rgba(0,0,0,.5);
-  font-family: var(--ui-font);
+  font-family: var(--ui);
   font-size: 13px;
 }
-.scriv-inline-edit.is-conflict { border-color: var(--warn, #D3A03A); }
+.scriv-inline-edit.is-conflict { border-color: var(--warn); }
 .scriv-inline-edit.is-error { border-color: var(--accent); }
 
 .scriv-inline-edit-input {
@@ -771,7 +805,7 @@ button {
   padding: 4px 2px;
 }
 .scriv-inline-edit-status { color: var(--ink-soft); white-space: nowrap; }
-.scriv-inline-edit-warn { color: var(--warn, #D3A03A); flex: 1; }
+.scriv-inline-edit-warn { color: var(--warn); flex: 1; }
 
 .scriv-inline-edit-btn {
   display: inline-flex;
@@ -780,7 +814,7 @@ button {
   padding: 4px 10px;
   border: 1px solid var(--rule);
   border-radius: 4px;
-  background: var(--surface);
+  background: var(--panel-bg);
   color: var(--ink);
   font: inherit;
   cursor: pointer;
@@ -789,7 +823,7 @@ button {
 .scriv-inline-edit-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .scriv-inline-edit-btn.is-quiet { color: var(--ink-soft); }
 .scriv-inline-edit-btn kbd {
-  font-family: var(--mono-font);
+  font-family: var(--mono);
   font-size: 11px;
   color: var(--ink-faint);
 }
@@ -810,8 +844,8 @@ button {
   max-height: 60vh;
   padding: 12px 14px 14px;
   border-top: 1px solid var(--rule);
-  background: var(--surface);
-  font-family: var(--ui-font);
+  background: var(--panel-bg);
+  font-family: var(--ui);
   font-size: 13px;
   overflow: hidden;
 }
@@ -862,11 +896,11 @@ button {
 .agent-file-head {
   display: flex; align-items: center; gap: 8px;
   padding: 4px 0; border-bottom: 1px solid var(--rule);
-  position: sticky; top: 0; background: var(--surface); z-index: 1;
+  position: sticky; top: 0; background: var(--panel-bg); z-index: 1;
 }
 .agent-file-head label { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .agent-file-head code {
-  font-family: var(--mono-font, ui-monospace, monospace); font-size: 12px;
+  font-family: var(--mono); font-size: 12px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .agent-file-count { margin-left: auto; color: var(--ink-soft); font-size: 11px; white-space: nowrap; }
@@ -883,7 +917,7 @@ button {
 .agent-line {
   flex: 1; min-width: 0;
   display: flex; align-items: baseline; gap: 2px;
-  font-family: var(--mono-font, ui-monospace, monospace); font-size: 12px;
+  font-family: var(--mono); font-size: 12px;
   white-space: pre; overflow: hidden;
 }
 .agent-lineno {
@@ -891,14 +925,18 @@ button {
   color: var(--ink-soft); font-variant-numeric: tabular-nums; text-align: right;
 }
 .agent-ctx { color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; }
-.agent-line del { color: var(--danger); text-decoration: line-through; }
-.agent-line ins { color: var(--ok); text-decoration: none; }
+/* The two rules that stood here coloured this pane's <ins>/<del> text green and red — the
+   text-colour design, surviving in a pane after the document dropped it. An <ins>/<del> is a
+   change wherever it is, and a change has one appearance: see the tracked-changes block at the
+   bottom of document.css. */
 
 .agent-conf {
   font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase;
   color: var(--ink-soft); white-space: nowrap;
 }
-.agent-site[data-confidence="uncertain"] .agent-conf { color: var(--danger); }
+/* Uncertain means "check this", not "this failed" — --danger here made a match the agent was
+   merely unsure of look like the same class of thing as a dropped paragraph. */
+.agent-site[data-confidence="uncertain"] .agent-conf { color: var(--warn); }
 
 .agent-foot { display: flex; align-items: center; gap: 10px; }
 .agent-note { color: var(--ink-soft); font-size: 11px; }
@@ -922,8 +960,8 @@ button {
   max-height: 45vh;
   padding: 12px 14px 16px;
   border-top: 1px solid var(--rule);
-  background: var(--surface);
-  font-family: var(--ui-font);
+  background: var(--panel-bg);
+  font-family: var(--ui);
   font-size: 13px;
   overflow: hidden;
 }
@@ -1032,7 +1070,7 @@ button {
 .fidelity-stats dt { font-size: 11px; color: var(--ink-soft); }
 .fidelity-stats dd {
   margin: 0;
-  font-family: var(--mono-font, ui-monospace, monospace);
+  font-family: var(--mono);
   font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
@@ -1048,7 +1086,7 @@ button {
   margin: 6px 0;
   padding: 8px 10px;
   overflow-x: auto;
-  font-family: var(--mono-font, ui-monospace, monospace);
+  font-family: var(--mono);
   font-size: 12px;
   line-height: 1.5;
   background: var(--paper);
@@ -1068,17 +1106,21 @@ button {
   line-height: 1.45;
 }
 
+/* Same three rungs, same three colours, as the diagnostics squiggle and the status chips:
+   --danger is lost, --warn is compromised, --ink-faint is a note. `degraded` used to be
+   --ink-soft, which is the colour of ordinary secondary text and read as "no severity". */
 .fidelity-group[data-severity="dropped"] li { border-left-color: var(--danger); }
-.fidelity-group[data-severity="degraded"] li { border-left-color: var(--ink-soft); }
+.fidelity-group[data-severity="degraded"] li { border-left-color: var(--warn); }
+.fidelity-group[data-severity="info"] li { border-left-color: var(--ink-faint); }
 
 .fidelity-group code {
-  font-family: var(--mono-font, ui-monospace, monospace);
+  font-family: var(--mono);
   font-size: 11.5px;
   color: var(--ink);
 }
 
 .fidelity-count {
-  font-family: var(--mono-font, ui-monospace, monospace);
+  font-family: var(--mono);
   font-size: 11px;
   color: var(--ink-soft);
 }
@@ -1098,8 +1140,8 @@ button {
   min-height: 0;
   padding: 12px 14px 16px;
   border-top: 1px solid var(--rule);
-  background: var(--surface);
-  font-family: var(--ui-font);
+  background: var(--panel-bg);
+  font-family: var(--ui);
   font-size: 13px;
   max-height: 45vh;
   overflow: hidden;
@@ -1112,12 +1154,12 @@ button {
 }
 .scriv-diff-tabs button.is-active { color: var(--ink); border-color: var(--rule); background: var(--paper); }
 .scriv-diff-stats {
-  margin-left: auto; font-family: var(--mono-font); font-size: 11.5px;
+  margin-left: auto; font-family: var(--mono); font-size: 11.5px;
   color: var(--ink-faint); font-variant-numeric: tabular-nums;
 }
 .scriv-diff-close {
   border: 1px solid var(--rule); border-radius: 3px; background: none;
-  color: var(--ink-faint); font-family: var(--mono-font); font-size: 11px;
+  color: var(--ink-faint); font-family: var(--mono); font-size: 11px;
   padding: 2px 7px; cursor: pointer;
 }
 .scriv-diff-status { margin: 0; color: var(--ink-soft); }
@@ -1130,43 +1172,40 @@ button {
 
 /* A stripe carries the kind, so the list is scannable without reading every label. */
 .scriv-change {
-  border-left: 3px solid var(--idle);
+  /* --idle was undefined, which made this shorthand invalid at computed-value time and left
+     the neutral kinds with no stripe at all. --rule is the same neutral the fidelity pane
+     already uses for an unranked row. */
+  border-left: 3px solid var(--rule);
   padding: 6px 0 6px 10px;
 }
-.scriv-change-reworded, .scriv-change-moved-and-reworded { border-left-color: var(--warn, #B8862C); }
-.scriv-change-moved { border-left-color: var(--link, #6d8fd4); }
-.scriv-change-inserted { border-left-color: var(--good); }
-.scriv-change-deleted { border-left-color: var(--accent); }
+.scriv-change-reworded, .scriv-change-moved-and-reworded { border-left-color: var(--warn); }
+.scriv-change-moved { border-left-color: var(--link); }
+.scriv-change-inserted { border-left-color: var(--ok); }
+.scriv-change-deleted { border-left-color: var(--danger); }
 .scriv-change-split, .scriv-change-merged { border-left-color: var(--ink-faint); }
 
 .scriv-change-head { display: flex; gap: 10px; align-items: baseline; margin-bottom: 3px; }
 .scriv-change-kind {
-  font-family: var(--mono-font); font-size: 10.5px; text-transform: uppercase;
+  font-family: var(--mono); font-size: 10.5px; text-transform: uppercase;
   letter-spacing: .07em; color: var(--ink-faint);
 }
 .scriv-change-section { font-size: 11.5px; color: var(--ink-faint); }
 .scriv-change-body {
-  margin: 0; font-family: var(--doc-font, Georgia, serif); font-size: 14px; line-height: 1.5;
+  margin: 0; font-family: var(--serif); font-size: 14px; line-height: 1.5;
   color: var(--ink);
 }
-.scriv-change-body del {
-  text-decoration: line-through; text-decoration-thickness: 1px;
-  color: color-mix(in srgb, var(--ink) 55%, transparent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-}
-.scriv-change-body ins {
-  text-decoration: none;
-  background: color-mix(in srgb, var(--good) 16%, transparent);
-}
+/* <ins>/<del> in a change body are styled by the one tracked-changes rule at the bottom of
+   document.css — this pane's near-copy of it stood here — so a change in the list that says
+   what changed looks the same as the change on the page. */
 
 .scriv-blame-row { display: grid; grid-template-columns: 8rem 1fr; gap: 10px; align-items: baseline; }
 .scriv-blame-who {
-  font-family: var(--mono-font); font-size: 11px; color: var(--ink-faint);
+  font-family: var(--mono); font-size: 11px; color: var(--ink-faint);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 /* Mixed authorship is a real answer, not a missing one, so it is marked rather than hidden. */
-.scriv-blame-who.is-mixed { color: var(--warn, #B8862C); }
-.scriv-blame-text { font-family: var(--doc-font, Georgia, serif); font-size: 14px; }
+.scriv-blame-who.is-mixed { color: var(--warn); }
+.scriv-blame-text { font-family: var(--serif); font-size: 14px; }
 .scriv-blame-detail { grid-column: 2; font-size: 11px; color: var(--ink-faint); }
 
 /* The changes pane shares the main column with the editor.
