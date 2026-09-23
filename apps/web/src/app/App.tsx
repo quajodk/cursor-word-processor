@@ -31,6 +31,22 @@ interface Toast {
 }
 
 
+/**
+ * Put the caret back in the document, after the panel that took it has gone.
+ *
+ * Deferred a frame on purpose: the panel is still mounted at the moment its toggle runs, and
+ * `Panel`'s own unmount restores focus to whatever it remembered. Doing this first and letting
+ * that win where it can is the right order — this is the fallback for when what it remembered
+ * no longer exists.
+ */
+function focusEditorSoon(): void {
+  requestAnimationFrame(() => {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && active !== document.body && active.isConnected) return;
+    document.querySelector<HTMLElement>(".ProseMirror")?.focus();
+  });
+}
+
 export function App() {
   const prefs = useSyncExternalStore(subscribePrefs, getPrefs);
   const [root, setRoot] = useState("");
@@ -188,20 +204,15 @@ export function App() {
       // and nothing at all in the changes pane, whose selector never matched its class), and
       // it left Escape unreachable wherever it landed outside the panel's own handler.
       // `Panel` focuses itself on mount now, so every panel behaves the same way.
-      toggleFidelity: () => setShowFidelity((v) => {
-        const next = !v;
-        return next;
-      }),
-      toggleAgent: () => setShowAgent((v) => {
-        const next = !v;
-        return next;
-      }),
+      // Closing returns the caret to the document. `Panel` restores whatever had focus when it
+      // opened, but when it was opened FROM THE PALETTE that element was the palette's input
+      // and has since unmounted — so the shell names the fallback, which is the one place in
+      // this app that focus can always go home to.
+      toggleFidelity: () => setShowFidelity((v) => { if (v) focusEditorSoon(); return !v; }),
+      toggleAgent: () => setShowAgent((v) => { if (v) focusEditorSoon(); return !v; }),
       // Same shape as its two neighbours. It used to be a `window` keydown of its own, which is
       // why the changes pane was the one panel that did not take focus when it opened.
-      toggleDiff: () => setShowDiff((v) => {
-        const next = !v;
-        return next;
-      }),
+      toggleDiff: () => setShowDiff((v) => { if (v) focusEditorSoon(); return !v; }),
       focusComments: () => {
         setPrefs({ sidebar: true, pane: "comments" });
         // After the pane has actually rendered: the tab switch is a state change, and

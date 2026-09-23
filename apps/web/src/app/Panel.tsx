@@ -46,8 +46,20 @@ export function Panel({ name, title, subtitle, controls, onClose, children }: Pa
 
   // Take the focus the panel needs in order to be closed again. Flipping a boolean and
   // leaving focus in the document is what made Escape unreachable in two of these three.
+  //
+  // And GIVE IT BACK on the way out. Measured in the running app: pressing Escape here left
+  // `document.activeElement` on `<body>`, so the panel closed and the next keystroke went
+  // nowhere — the writer's caret had been taken and not returned. A panel that can only be
+  // escaped INTO is half a fix.
   useEffect(() => {
+    const previous = document.activeElement;
     ref.current?.focus();
+    return () => {
+      // Only if it still exists: when the panel was opened from the palette, the element that
+      // had focus was the palette's own input and it has since unmounted. The shell focuses
+      // the editor in that case (see `App.tsx`), which is the app's one persistent home.
+      if (previous instanceof HTMLElement && previous.isConnected) previous.focus();
+    };
   }, []);
 
   const onKeyDown = (event: ReactKeyboardEvent) => {

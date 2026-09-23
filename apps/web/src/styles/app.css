@@ -214,12 +214,19 @@ button {
   border-radius: 0;
 }
 
+/*
+ * Hover is the mouse; [data-selected] is the keyboard cursor. Two washes one step apart is how
+ * you get a list where you cannot tell which row Enter will open, so the keyboard one also gets
+ * a bar in the lane — the same mark the search results and the agent pane's sites use, because
+ * it is the same thing in all three.
+ */
 .tree-row:hover {
   background: var(--panel-hover);
 }
 
 .tree-row[data-selected="true"] {
   background: var(--panel-active);
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .tree-row[data-open="true"] {
@@ -283,6 +290,14 @@ button {
 
 .hit-row:hover {
   background: var(--panel-hover);
+}
+
+/* The keyboard cursor. Arrow keys move it, Enter opens it, and it is driven independently of
+   the mouse — so it cannot be the hover wash, which is what the row under the pointer already
+   has. Same bar as the file tree and the agent pane. */
+.hit-row[data-active="true"] {
+  background: var(--panel-active);
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .hit-line {
@@ -828,6 +843,120 @@ button {
   color: var(--ink-faint);
 }
 
+/* ---------------------------------------------------------------- the panel shell */
+
+/*
+ * One shell for the three panels that open into the main column: agent, fidelity, changes.
+ *
+ * They were three. Three header designs — two of them the same rule typed twice and already one
+ * property apart, the third with no heading at all and an 11px monospace lowercase `esc` chip
+ * for a close button, naming a key that did not work. Two panel heights. Two paddings.
+ * `Panel.tsx` made the markup one; this makes the appearance one. What stays in each pane's own
+ * rules is what is genuinely its own, which turns out to be only what goes INSIDE the panel.
+ *
+ * Token families, because the app has two and these panels were straddling them: the chrome
+ * family (--panel-*) for the shell, the header and the close button, and the document family
+ * (--ink-*, --paper, --rule) for the body. That is not a compromise, it is the line: the frame
+ * is chrome and belongs with the sidebar and the status bar, and the body is quoting the
+ * document, so it should be lit like the document. Before this the frame was half of each —
+ * --panel-bg behind --ink-soft text — which is why the panels read as a different product from
+ * the sidebar three centimetres to their left.
+ */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  /*
+   * One height. It was 60vh for the agent pane and 45vh for the other two, which is two
+   * builders' taste rather than a requirement: all three have their own scroll container
+   * inside, so this number only decides how much of the document the panel covers. 45 wins on
+   * the fidelity pane's own stated reason — the question these panels answer is one you ask
+   * WHILE looking at the paragraph, and a panel that eats the page makes you answer it from
+   * memory.
+   */
+  max-height: 45vh;
+  padding: 12px 14px 16px;
+  overflow: hidden;
+  border-top: 1px solid var(--panel-rule);
+  background: var(--panel-bg);
+  font-family: var(--ui);
+  font-size: 13px;
+}
+
+.main > .panel {
+  flex: 0 0 auto;
+}
+
+/*
+ * The panel takes focus on mount, because that is how its own Escape handler gets to fire at
+ * all (Panel.tsx). So focus lands on a 45vh box with nothing on it to say that it moved.
+ *
+ * `outline: none` here is exactly the regression house rule 4 exists to stop: the writer's
+ * keystrokes have stopped going to the document and nothing on screen says where they went.
+ * So, a ring — and on `:focus`, not `:focus-visible`. `:focus-visible` is the right default for
+ * something the user clicked, but nobody asked for this focus with either device; the panel
+ * took it. The fact worth showing is "the keyboard is here now", and that is equally true
+ * whether the panel was opened from the palette or with a mouse.
+ *
+ * Drawn inset, so it reads as the panel's own edge lighting up rather than as an outline around
+ * a very large button, and it goes away the moment focus moves to a control inside — which then
+ * shows its own ring, so the trail never breaks.
+ */
+.panel:focus {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+/* `center`, not `baseline`: this row mixes bare text with bordered controls (the changes pane
+   puts its mode tabs in here), and baseline hangs those off the text they sit beside. */
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.panel-head h2 {
+  margin: 0;
+  color: var(--panel-fg);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.panel-sub {
+  color: var(--panel-fg-dim);
+  font-size: 12px;
+}
+
+/*
+ * One close button, where there were three: `--ink` bordered, `--ink-soft` bordered (the same
+ * rule retyped, and the one property that had drifted), and the monospace `esc` chip. The word
+ * is "Close" now, so it is set in the UI face at the size of every other control in the panel
+ * instead of looking like a keycap.
+ */
+.panel-close {
+  margin-left: auto;
+  padding: 2px 9px;
+  color: var(--panel-fg);
+  font: inherit;
+  font-size: 12px;
+  background: none;
+  border: 1px solid var(--panel-rule);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.panel-close:hover {
+  border-color: var(--accent);
+}
+
+.panel-close:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
 /* ---------------------------------------------------------------- agent pane */
 
 /*
@@ -835,31 +964,9 @@ button {
  *
  * A chat box that returns a paragraph describing what it would have done is not an agent,
  * it is a colleague without commit access. What a writer needs is to see the change.
+ *
+ * The shell, the header and the close button are .panel above. Everything here is the argument.
  */
-.agent {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-height: 0;
-  max-height: 60vh;
-  padding: 12px 14px 14px;
-  border-top: 1px solid var(--rule);
-  background: var(--panel-bg);
-  font-family: var(--ui);
-  font-size: 13px;
-  overflow: hidden;
-}
-
-.main > .agent { flex: 0 0 auto; }
-
-.agent-head { display: flex; align-items: baseline; gap: 10px; }
-.agent-head h2 {
-  margin: 0;
-  font-size: 12px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase;
-  color: var(--ink-soft);
-}
-.agent-sub { flex: 1; color: var(--ink-soft); font-size: 12px; }
-.agent-head button,
 .agent-run,
 .agent-apply,
 .agent-bulk button {
@@ -898,7 +1005,6 @@ button {
   padding: 4px 0; border-bottom: 1px solid var(--rule);
   position: sticky; top: 0; background: var(--panel-bg); z-index: 1;
 }
-.agent-file-head label { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .agent-file-head code {
   font-family: var(--mono); font-size: 12px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -907,12 +1013,28 @@ button {
 
 .agent-site {
   display: flex; align-items: baseline; gap: 8px;
-  padding: 2px 0 2px 4px;
-  cursor: pointer;
+  padding: 2px 0 2px 6px;
+  /* The row was a <label> wrapping a checkbox and the whole strip was clickable. It is a <div>
+     now and only its buttons do anything, so it must stop advertising otherwise. */
+  cursor: default;
 }
 /* A rejected site stays legible: it is a decision, not an absence. */
 .agent-site[data-on="false"] .agent-line { opacity: 0.45; }
+
+/*
+ * Hover and the keyboard cursor are different states and must not look alike. The pointer is
+ * already telling you where the mouse is; nothing else tells you where the keyboard is, so the
+ * keyboard one is the one that has to be unmistakable. Hover is a wash. The cursor is a
+ * stronger wash AND a bar down its left edge — a different kind of mark, not a darker version
+ * of the same one, so the two are still told apart when both land on the same row. The bar is
+ * an inset shadow rather than a border so that arrowing down the list moves the mark without
+ * shunting forty rows sideways by two pixels.
+ */
 .agent-site:hover { background: color-mix(in oklab, var(--accent) 7%, transparent); }
+.agent-site[data-active="true"] {
+  background: color-mix(in oklab, var(--accent) 16%, transparent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
 
 .agent-line {
   flex: 1; min-width: 0;
@@ -920,10 +1042,21 @@ button {
   font-family: var(--mono); font-size: 12px;
   white-space: pre; overflow: hidden;
 }
+/* An address you can follow, so it is coloured like one — the same --link the document gives a
+   link and the fidelity ledger's "Go to it". It used to be --ink-soft, i.e. a label, which is
+   what it was: three panels showed you an address and none of them would take you there. */
 .agent-lineno {
+  flex: none;
   min-width: 4ch; margin-right: 6px;
-  color: var(--ink-soft); font-variant-numeric: tabular-nums; text-align: right;
+  padding: 0 2px;
+  color: var(--link);
+  font-family: var(--mono); font-size: 12px;
+  font-variant-numeric: tabular-nums; text-align: right;
+  background: none; border: 0; border-radius: 2px;
+  cursor: pointer;
 }
+.agent-lineno:hover { text-decoration: underline; }
+.agent-lineno:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
 .agent-ctx { color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; }
 /* The two rules that stood here coloured this pane's <ins>/<del> text green and red — the
    text-colour design, surviving in a pane after the document dropped it. An <ins>/<del> is a
@@ -938,6 +1071,31 @@ button {
    merely unsure of look like the same class of thing as a dropped paragraph. */
 .agent-site[data-confidence="uncertain"] .agent-conf { color: var(--warn); }
 
+/*
+ * This pair IS the decision now. The checkbox that used to carry it is gone, so `aria-pressed`
+ * is the whole signal, and it has to survive being scanned down a list of forty sites — which a
+ * one-pixel border change does not. Filled, not outlined: outlined is what the unpressed
+ * sibling already is.
+ *
+ * --accent, not --ok and --danger. Accepting is not "good" and rejecting is not an error; both
+ * are just the answer you gave, and the label says which. Spending the severity colours here
+ * would put a red box next to every change a writer decided not to take.
+ */
+.agent-verdict { display: flex; flex: none; gap: 4px; }
+.agent-verdict button {
+  padding: 1px 7px;
+  color: var(--panel-fg-dim); font: inherit; font-size: 11px;
+  background: none; border: 1px solid var(--panel-rule); border-radius: 3px; cursor: pointer;
+}
+.agent-verdict button:hover { border-color: var(--accent); }
+.agent-verdict button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+.agent-verdict button[aria-pressed="true"] {
+  color: var(--panel-bg);
+  font-weight: 600;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
 .agent-foot { display: flex; align-items: center; gap: 10px; }
 .agent-note { color: var(--ink-soft); font-size: 11px; }
 .agent-error { margin: 4px 0; color: var(--danger); font-size: 12px; }
@@ -951,52 +1109,9 @@ button {
  * The question it answers — "what will a Word user see missing?" — is one you ask WHILE
  * looking at the paragraph you are about to send. A dialog that covers the document makes you
  * answer it from memory.
+ *
+ * The shell, the header and the close button are .panel above. What follows is the ledger.
  */
-.fidelity {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-height: 0;
-  max-height: 45vh;
-  padding: 12px 14px 16px;
-  border-top: 1px solid var(--rule);
-  background: var(--panel-bg);
-  font-family: var(--ui);
-  font-size: 13px;
-  overflow: hidden;
-}
-
-.main > .fidelity {
-  flex: 0 0 auto;
-}
-
-.fidelity-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.fidelity-head h2 {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
-
-.fidelity-head button {
-  padding: 2px 9px;
-  color: var(--ink-soft);
-  font: inherit;
-  font-size: 12px;
-  background: none;
-  border: 1px solid var(--rule);
-  border-radius: 3px;
-  cursor: pointer;
-}
-
 .fidelity-body {
   min-height: 0;
   overflow-y: auto;
@@ -1125,6 +1240,18 @@ button {
   color: var(--ink-soft);
 }
 
+/* Same treatment as the agent pane's line number, because it is the same promise: an entry
+   that names a block is an address, and an address the tool will not take you to is a worse
+   answer than no address at all. */
+.fidelity-goto {
+  flex: none;
+  padding: 0 6px;
+  color: var(--link); font: inherit; font-size: 11px;
+  background: none; border: 1px solid var(--panel-rule); border-radius: 3px; cursor: pointer;
+}
+.fidelity-goto:hover { border-color: var(--accent); }
+.fidelity-goto:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+
 .fidelity-detail {
   flex: 1 1 24ch;
   min-width: 0;
@@ -1133,34 +1260,20 @@ button {
 }
 
 /* ---------------------------------------------------------------- changes pane */
-.scriv-diff {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-height: 0;
-  padding: 12px 14px 16px;
-  border-top: 1px solid var(--rule);
-  background: var(--panel-bg);
-  font-family: var(--ui);
-  font-size: 13px;
-  max-height: 45vh;
-  overflow: hidden;
-}
-.scriv-diff-head { display: flex; align-items: center; gap: 12px; }
+/* Shell, header, heading and close button are .panel. This pane is the one that used to have no
+   heading at all and a monospace `esc` chip; it has both now, and they are everyone else's. */
 .scriv-diff-tabs { display: flex; gap: 2px; }
 .scriv-diff-tabs button {
   padding: 3px 10px; border: 1px solid transparent; border-radius: 3px;
   background: none; color: var(--ink-soft); font: inherit; cursor: pointer;
 }
 .scriv-diff-tabs button.is-active { color: var(--ink); border-color: var(--rule); background: var(--paper); }
+/* `margin-left: auto` moved to .panel-close, which is the only thing in a panel header that
+   should be pinned to the right. Two auto margins in one row split the slack between them and
+   left the count floating in the middle of nothing. */
 .scriv-diff-stats {
-  margin-left: auto; font-family: var(--mono); font-size: 11.5px;
+  font-family: var(--mono); font-size: 11.5px;
   color: var(--ink-faint); font-variant-numeric: tabular-nums;
-}
-.scriv-diff-close {
-  border: 1px solid var(--rule); border-radius: 3px; background: none;
-  color: var(--ink-faint); font-family: var(--mono); font-size: 11px;
-  padding: 2px 7px; cursor: pointer;
 }
 .scriv-diff-status { margin: 0; color: var(--ink-soft); }
 
@@ -1220,6 +1333,4 @@ button {
   flex: 1 1 auto;
   min-height: 0;
 }
-.main > .scriv-diff {
-  flex: 0 0 auto;
-}
+/* .main > .panel carries this for all three panels now; see the panel shell. */
