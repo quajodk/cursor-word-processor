@@ -1,6 +1,6 @@
 {
-  "wave": 18,
-  "waveTitle": "The alignment engine, measured for the first time and then fixed",
+  "wave": 19,
+  "waveTitle": "The seams: one keyboard, one panel, one word for a change",
   "pieces": [
     {
       "id": "foundation",
@@ -17,8 +17,8 @@
       "scope": "React chrome, ProseMirror surface, bun server implementing HostApi",
       "builder": "done",
       "critic": "done",
-      "evidence": "The app runs. Real .md opened from disk, edited and saved back correctly — frontmatter, GFM table, ordered list, bold, em-dash, CJK and ± all survived. Live status bar reads 2.7 ms p99 keystroke latency in a real browser, including ProseMirror’s DOM write, against an 8 ms budget.",
-      "gap": "The presentation layer was built four times. A coherence pass driving the running app found two keyboard systems racing — a capture-phase window listener that preventDefaults before ProseMirror's plugins ever see the key, so the completion popup cannot be dismissed with Escape and two full implementations of ⌘K sit dead. Three panels share one slot with three focus policies and two words for “close”. Opening the comments pane scrolls the tab strip out of the window. None of it needs an algorithm rethought; all of it is apps/web."
+      "evidence": "The app runs, and now runs as one product. A coherence pass drove it and found the model layer coherent and the PRESENTATION layer built four times; all three of its top findings are fixed and re-verified in the running app. The completion popup dismisses with Escape — measured the same way it was measured broken: display block and 272px high before, display none and 0 after. The palette answers “blame”. Closing a panel returns the caret to the document. Real .md opens, edits and saves back correctly; live keystroke latency reads 2.7 ms p99 in a real browser against an 8 ms budget.",
+      "gap": "Nothing arbitrates how many panels are open at once — three independent booleans, and all three open leaves the document a sliver. `j`/`k` were removed from the comments pane to get one list dialect, which is a real removal for anyone who learned them there. And `reveal.ts` picks which occurrence of a phrase to jump to by proportion when the file and the document disagree on the count, so it can land a paragraph out."
     },
     {
       "id": "md",
@@ -35,8 +35,8 @@
       "scope": "Offset-recording XML index, fidelity sidecar, alignment-based re-anchoring",
       "builder": "done",
       "critic": "done",
-      "evidence": "288/288 real Word documents import; mean text recovery 99.49%. The re-anchoring engine — 925 lines of constrained Needleman–Wunsch, what the design calls “the actual research problem” — now has a test, and it found a traceback bug worth ~40 points of recall on every position-changing edit. Across 12 documents and ~5,600 blocks per scenario: reword, rewrite, split, merge, insert and delete all recover 100%; a moved section 95.7%; a week of every kind of edit at once 93.8%. Reproducible run to run.",
-      "gap": "Moves are the honest limit: a move is not expressible in an order-preserving alignment, so it is recovered afterwards by exact content match, which a block that was moved AND reworded defeats. Those 239 blocks are lost and ledgered, never guessed at. Text inside text boxes and content controls is still dropped."
+      "evidence": "288/288 real Word documents import; mean text recovery 99.49%. The re-anchoring engine — 925 lines of constrained Needleman–Wunsch, what the design calls “the actual research problem” — now has a test, and it found a traceback bug worth ~40 points of recall on every position-changing edit. Across 12 documents and ~5,600 blocks per scenario: reword, rewrite, split, merge, insert and delete all recover 100%; a moved section 96.2%; a week of every kind of edit at once 94.4%. Reproducible run to run.",
+      "gap": "Moves are the remaining limit, and the reason is not the one this project kept giving. Of 242 blocks missed after a moved section, 238 were SHORT — under three tokens — and NOT ONE was reworded; move recovery had inherited a three-token floor from the waypoint skeleton, which needs it for a reason move recovery does not share. Reworded moved blocks are a real limit too, but the minority one: 66 of 348. Text inside text boxes and content controls is still dropped."
     },
     {
       "id": "score",
@@ -374,6 +374,49 @@
       "budget": "—",
       "state": "measured",
       "note": "1,235 block ids across the whole corpus come out as all-digit strings, and JavaScript hoists integer-like keys to the front of an object regardless of insertion order. So `Object.keys(blocks)` is not document order — about one block in a hundred moves, and a different few on every import, because the ids are random."
+    },
+    {
+      "label": "Dead in-editor key handlers",
+      "value": 0,
+      "unit": "was 4",
+      "budget": "0",
+      "state": "measured",
+      "lowerIsBetter": true,
+      "note": "The command registry listens on `window` in the CAPTURE phase and ProseMirror's handlers run on BUBBLE, so every key in both systems belonged to the registry and the plugin's handler for it could never run. Nobody had chosen that: Escape became a global binding as a side effect of deriving the palette from the text-op binding table."
+    },
+    {
+      "label": "Palette entries for diff and blame",
+      "value": 1,
+      "unit": "was 0",
+      "budget": "1",
+      "state": "measured",
+      "note": "The whole fourth pillar was a hand-rolled window keydown in App.tsx — no palette entry, so it could not be found without already knowing the chord; invisible to the binding-collision test, which reads the command table; and deaf to `whenTyping`, so it fired while you typed."
+    },
+    {
+      "label": "Panels you cannot Escape out of",
+      "value": 0,
+      "unit": "was 2 of 3",
+      "budget": "0",
+      "state": "measured",
+      "lowerIsBetter": true,
+      "note": "One of them had a CORRECT Escape handler, on a section that nothing ever focused. The fix for a handler that never fires is to give the element focus, not to move the handler."
+    },
+    {
+      "label": "CSS tokens resolving to nothing",
+      "value": 0,
+      "unit": "was 20",
+      "budget": "0",
+      "state": "measured",
+      "lowerIsBetter": true,
+      "note": "`--surface` seven times with no fallback, so the completion popup, the inline-edit bar, the agent pane, the fidelity pane and the changes pane were all rendering with no background of their own. A custom property that does not exist does not warn, does not throw, and does not fall back — the declaration is simply dropped."
+    },
+    {
+      "label": "Tests",
+      "value": 300,
+      "unit": "across 29 files",
+      "budget": "271",
+      "state": "measured",
+      "note": "Up from 271. The additions are the ones a feature's own test suite structurally could not have written: the key dispatcher run against a fake window, the list dialect as a table with negative assertions, and a tripwire for CSS tokens that resolve to nothing."
     }
   ],
   "decisions": [
@@ -486,11 +529,38 @@
       "t": "Coherence",
       "d": "One fresh agent per wave reconciles the pieces, driving the app rather than reading it",
       "why": "Features built independently pass their own tests and still add up to four products. This pass found the model layer coherent and the presentation layer built four times over — a class of defect no feature's own test suite can see, because every one of them is individually correct."
+    },
+    {
+      "t": "Keyboard arbitration",
+      "d": "A surface inside the editor claims the keys it owns; the dispatcher yields without touching the event",
+      "why": "Teaching every global command about every modal surface is N×M and gets forgotten. Inverting it keeps one dispatcher and one place to reason about precedence, and it is the editor-side twin of the `whenTyping` hatch the app's own text fields already had."
+    },
+    {
+      "t": "Suggestion vs change",
+      "d": "A suggestion is what the checker proposes about your prose; a change is what someone proposes to the document",
+      "why": "One word meant both, on screen at once, with three verbs across them. Resolving it the other way — calling diagnostics “hints” — would have collided the umbrella term with `hint`, which is already a rung of that same severity ladder. That is the disease, not the cure."
+    },
+    {
+      "t": "Accent is never semantic",
+      "d": "`--accent` is the caret, the drop cursor and the resize handle, and nothing else",
+      "why": "It had become the colour of a diagnostic error and of a deleted sentence, which left “deleted” and “moved” sharing one arbitrary blue. One rule settled both of the questions the work escalated."
+    },
+    {
+      "t": "Panels",
+      "d": "`region`, not `dialog`; the panel takes focus on open and gives it back on close",
+      "why": "None of them traps focus or blocks the document, so announcing a dialog promises a modality the app does not implement. And a panel you can only escape INTO is half a fix — closing one used to leave the caret on `<body>`, where the next keystroke went nowhere."
     }
   ],
   "notes": [
-    "The coherence pass finally ran, after two earlier attempts died on a rate limit and a network error. Its verdict: scriv is not four features in a trench coat at the model layer — it is one tool whose presentation layer was built four times. Nearly every finding is in apps/web.",
-    "Two keyboard systems race and the window always wins. The command registry installs a capture-phase listener that calls preventDefault and stopPropagation before ProseMirror's plugin handlers run on bubble, so any key in both systems belongs to the registry. Observed live: with the completion popup open, ArrowDown reaches the editor and Escape does not — the popup cannot be dismissed. Four in-editor handlers are dead code, including two complete implementations of ⌘K, one commented as beating the command keymap. Three comments in one file each name a different plugin as the owner of Escape.",
+    "The coherence pass ran at last, on the third attempt — the first two died on a session rate limit and a network error, so the third was told to append findings to disk as it went rather than report at the end. Its verdict: scriv is not four features in a trench coat at the model layer. It is one tool whose presentation layer was built four times, and every seam it found is the same seam — a concept the model layer had already unified, re-invented once per feature in the UI.",
+    "THE DEEPEST ONE. Two keyboard systems raced and the window always won. The command registry listens on `window` in the CAPTURE phase; ProseMirror's handlers run on the contenteditable during BUBBLING. So any key in both systems belonged to the registry and the plugin's handler for it was dead — four times over, silently. The completion popup could not be dismissed with Escape. Escape could not reject a pending AI edit. And ⌘K existed twice, the plugin's copy carrying a comment claiming it “beats the command keymap deterministically instead of racing it through event bubbling”. It never ran at all.",
+    "Nobody ever chose Escape as a global binding. `cursor.clear` is an entry in the text-op binding table, and every entry in that table becomes a registered command — so it fell out of the good decision to derive the palette from the bindings. The best decisions in this project have produced several of its worst bugs, and always the same way: by being applied one layer further than they were reasoned about.",
+    "The fourth pillar was not in the command system at all. ⌘⇧G was a hand-rolled window keydown, which made diff and blame invisible three ways at once: no palette entry, so the feature could not be found without already knowing the chord; invisible to the binding-collision test, which reads the command table from source; and deaf to `whenTyping`, so it fired while you were typing into a field.",
+    "On a .docx — the format this product exists for — the changes pane was a silent empty box. The text accessor returns null for a binary codec, so diff and blame both stayed null while every git branch reported success: the file IS tracked, it DOES differ from HEAD. A writer reads that as “no changes”, which is the one conclusion it must not produce. The pane already had three carefully written explanations for its other dead ends and none for the one where two of the four pillars meet.",
+    "Twenty CSS custom properties resolved to nothing, and one of them had taken out a whole design. Tracked changes had two stylesheets: specificity decided which won head to head, but the loser's wash also used `var(--good)`, which was defined nowhere — so `color-mix()` was invalid and the declaration was dropped entirely. An AI insertion rendered as a green highlight with a blue underline, the colour scheme of neither author. `--surface` was undefined seven times over, so six panels had no background at all.",
+    "Live verification earned its keep: it found a defect that typecheck and 300 tests could not. Escape closed a panel and left focus on `<body>` — the panel went away and the next keystroke went nowhere. Every fix on this page was then re-verified in the running app, including by measuring the same properties the audit had measured when it found them broken.",
+    "Three of the fixes went in against the advice that came with them, and the reasons are on the record: `role=\"dialog\"` became `region` because nothing here traps focus; diagnostics kept the word “suggestion” because “hint” is already a rung of their own severity ladder; and the deletion hue follows Word, which colours a tracked change by author and separates insert from delete by shape — a product that exists to round-trip Word should not teach a second convention for what Word already taught.",
+    "The anchor engine's remaining limit was not what this project kept saying it was. The claim — in the test header and in DOCX-FIDELITY.md — was that moves are lost because a block that was moved AND reworded defeats exact content matching. Classifying all 242 misses: 238 were short blocks under three tokens and NOT ONE was reworded. Move recovery had inherited a three-token floor from the waypoint skeleton, which needs it for a reason move recovery does not share.",
     "The git pillar is outside the command system entirely: a hand-rolled window keydown in App.tsx. Verified against the live palette — there is no diff, blame, git or changes entry in it. It is also invisible to the binding-collision test, which reads the command table from source.",
     "Open a .docx and the changes pane is a silent empty box: its whole live text is “Changes / Blame / esc”, because the text accessor returns null for binary codecs. The pane carries three carefully written explanations for other dead ends and none for the one where the git feature meets the docx feature.",
     "This page was carrying a false claim until the coherence pass caught it: the app shell's biggest gap still read “opening a .docx is not possible yet”, while a note further down the same page said a Word document opens, edits and saves through the UI. Both were published together.",
